@@ -1,0 +1,144 @@
+webserver : fuzion.std, Java.java.net, Java.java.io is
+
+
+  # open server socket
+  open_server_socket =>
+    port := 8080
+    serversocket := ServerSocket.new port
+    if serversocket!!
+      panic serversocket.err.asString
+
+    serversocket.val
+
+
+  # get input and data output stream from socket
+  get_input_output_stream(s ServerSocket) tuple<InputStream, DataOutputStream> is
+    match s.accept
+      e error => panic e.asString
+      s Socket =>
+        match s.getInputStream
+          e error => panic e.asString
+          i InputStream =>
+            input  := i
+            match s.getOutputStream
+              e error => panic e.asString
+              o OutputStream =>
+                output := DataOutputStream.new o
+                (input,output)
+
+
+  content_types is
+    html is
+      redef asString => "text/html; charset=UTF-8"
+
+    text is # NYI
+
+  content_type : choice<content_types.html, content_types.text> is
+
+
+  # send data to output stream
+  send(output DataOutputStream, data string, content_type content_type, status i32)
+  pre status >= 100 && status < 1000
+    =>
+    ok := output.writeBytes (
+                        "HTTP/1.1 $status OK\n"
+                      + "Connection: close\n"
+                      + "Server: Fuzion WebServer v0.01\n"
+                      + "Content-Length: " + data.byteLength + "\n"
+                      + "Content-Type: $content_type\n"
+                      + "\n"
+                      + data)
+    if ok!!
+      say "#### {ok.err}"
+
+
+  read(i InputStream, max_bytes i32) string is
+    byte_stream stream<option<u8>> is
+      ref : stream<option<u8>>
+          redef hasNext bool is
+            match i.available
+              error => false
+              v i32 => v > 0
+          redef next option<u8>
+          is
+            match i.read
+              error => nil
+              b i32 => if b < 0 then nil else b.as_u8
+
+    ref : string
+      data Sequence<u8> := byte_stream
+        .takeWhile(x -> x??)
+        .map(x -> x.get)
+        .take max_bytes
+        .asArray
+      redef utf8 Sequence<u8> is data
+
+
+  GET is; POST is; UNKNOWN is
+  request_method : choice <GET, POST, UNKNOWN> is
+    redef asString =>
+      match request_method.this
+        GET => "GET"
+        POST => "POST"
+        * => "UNKNOWN"
+
+  http_header_map(s string) map<string,string> is
+    res := (s
+      .split "\r\n")
+      .map(x -> ((x.find " ").map(idx -> (x.substring 0 idx, x.substring idx+1 x.codepointLength))))
+      .filter(x -> x.exists)
+      .mapSequence(x -> x.get)
+      .asArray
+    psMap res.mapSequence(x -> x.values.0) res.mapSequence(x -> x.values.1)
+
+
+  request_payload(method request_method, url string, http_headers map<string,string>) is
+
+
+  parse_request_payload(s string) request_payload is
+    method request_method := if s.startsWith "GET" then GET else if s.startsWith "POST" then POST else UNKNOWN
+    url := strings.fromCodepoints (s
+      .asCodepoints
+      .dropWhile(x -> x /= " ")
+      .dropWhile(x -> x = " ")
+      .takeWhile(x -> x /= " "))
+    map := (http_header_map (strings.fromCodepoints s.asCodepoints.dropWhile(x -> x /= "\n").drop(1)))
+    request_payload method url map
+
+
+  process_request(input InputStream, output DataOutputStream) =>
+
+    send_ok(data string) => send output data content_types.html 200
+
+    req_payload := parse_request_payload (read input 1E3)
+    say "{req_payload.method} {req_payload.url}"
+
+    match req_payload.method
+      GET => send_ok req_payload.url
+      * =>
+
+    # close streams
+    input.close
+    output.close
+
+    # NYI we should not need to return unit here
+    unit
+
+
+  # should the requests be processed in background threads?
+  multi_threaded := false
+
+
+  # start of main program
+  socket := open_server_socket
+  say "successfully acquired server socket"
+
+
+  while true do
+    (input,output) := get_input_output_stream socket
+
+    if multi_threaded
+      concur.thread.spawn(() -> process_request input output)
+    else
+      process_request input output
+
