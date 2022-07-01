@@ -138,7 +138,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io is
     (input,output) := get_input_output_stream socket
 
     if multi_threaded
+      # NYI use thread pool
       concur.thread.spawn(() -> process_request input output)
     else
       process_request input output
-
