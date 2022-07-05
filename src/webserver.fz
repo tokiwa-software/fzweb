@@ -1,4 +1,4 @@
-webserver : fuzion.std, Java.java.net, Java.java.io is
+webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
 
   # open server socket
@@ -117,6 +117,8 @@ webserver : fuzion.std, Java.java.net, Java.java.io is
 
 
     head(method request_method, url string, http_headers map<string,string>) is
+      path => url.split("?").first
+      query_string => (url.split("?").drop 1).first ""
 
     _head := once(() ->
                   s := (read_header 4E3)
@@ -131,6 +133,10 @@ webserver : fuzion.std, Java.java.net, Java.java.io is
                 )
     head => _head.get
 
+    close_streams(close_out bool) is
+      input.close
+      if close_out
+        output.close
 
     # send data to output stream
     # NYI may only be called once
@@ -148,8 +154,24 @@ webserver : fuzion.std, Java.java.net, Java.java.io is
       if ok!!
         say "#### {ok.err}"
 
-      input.close
-      output.close
+      close_streams true
+
+
+    public send(return_code i32, attributes Java.java.lang.String, data fuzion.java.Array<i8>) is
+      header_ok := output.writeBytes (
+                          "HTTP/1.1 $return_code OK\n"
+                        + "Connection: close\n"
+                        + "Server: Fuzion WebServer v0.0.1\n"
+                        + (fuzion.java.javaStringToString attributes)
+                        + "\n")
+      if header_ok!!
+        say "#### {header_ok.err}"
+      else
+        data_ok := output.write data
+        if data_ok!!
+          say "#### {data_ok.err}"
+
+
 
     unit
 
@@ -170,10 +192,27 @@ webserver : fuzion.std, Java.java.net, Java.java.io is
 
 
   handle_request(req_context request_context) is
-    match req_context.head.method
-      GET => req_context.send_response req_context.head.url content_types.html 200
-      POST =>
-      UNKNOWN =>
+
+    # compute response
+    get_response(cmd string) =>
+      post_data := lists.empty u16 #NYI read post data
+      content_type := req_context.head.http_headers["Content-Type"].get ""
+      content_type_boundary := ""
+      form_data := Java.dev.flang.webserver.getFormData post_data cmd req_context.head.query_string content_type content_type_boundary
+      Java.dev.flang.webserver.getResponse req_context.head.path cmd req_context.client form_data.val req_context.head.query_string
+
+    resp := match req_context.head.method
+      GET => get_response "GET"
+      POST => get_response "POST"
+      UNKNOWN => Java.dev.flang.webserver_S_Response_static.new 500 "" (lists.empty i8)
+
+    req_context.send resp.getReturncode resp.getAttributes resp.getData
+    if resp.getSession.isNull
+      req_context.close_streams true
+    else
+      resp.getSession.setContentStream req_context.output
+      req_context.close_streams false
+
     unit
 
 
