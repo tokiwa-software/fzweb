@@ -3,15 +3,13 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
   # open server socket
   open_server_socket(port i32) =>
-    serversocket := ServerSocket.new port
-    if serversocket!!
-      panic serversocket.err.asString
-
-    serversocket.val
+    match ServerSocket.new port
+      e error        => panic $e
+      v ServerSocket => v
 
 
   # get input and data output stream from socket
-  get_input_output_stream(s ServerSocket) tuple<InputStream, DataOutputStream> is
+  get_input_output_stream(s ServerSocket) tuple InputStream DataOutputStream is
     match s.accept
       e error => panic e.asString
       s Socket =>
@@ -23,26 +21,23 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
               e error => panic e.asString
               o OutputStream =>
                 output := DataOutputStream.new o
-                (input,output)
+                (input, output)
 
 
-  content_types is
+  content_type : choice of
+
     html is
       redef asString => "text/html; charset=UTF-8"
 
     text is # NYI
 
-  content_type : choice<content_types.html, content_types.text> is
-
-  GET is; POST is; UNKNOWN is
-  request_method : choice <GET, POST, UNKNOWN> is
-    redef asString =>
-      match request_method.this
-        GET => "GET"
-        POST => "POST"
-        * => "UNKNOWN"
-
-
+  request_method : choice of
+    GET is
+      redef asString => "GET"
+    POST is
+      redef asString => "POST"
+    UNKNOWN is
+      redef asString => "UNKNOWN"
 
   client_from_forwarded_for_header(http_headers map string string) =>
     http_headers["X-Forwarded-For"]
@@ -53,6 +48,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
       )
 
   # this might be a case where linear types are useful?
+  # right, or we should at least have a 'cache' feature in the std lib for this!
   once(T type, f () -> T) is
 
     private cache := mut (option T) nil
@@ -65,13 +61,13 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
   request_context(private client InetAddress, private input InputStream, private output DataOutputStream) is
 
     private read_header(max_bytes i32) string is
-      byte_stream stream<option<u8>> is
-        ref : stream<option<u8>>
+      byte_stream stream (option u8) is
+        ref : stream (option u8)
             redef hasNext bool is
               match input.available
                 error => false
                 v i32 => v > 0
-            redef next option<u8>
+            redef next option u8
             is
               match input.read
                 error => nil
@@ -98,37 +94,39 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
                   true
 
       ref : string
-        data Sequence<u8> := byte_stream
-          .takeWhile(x -> x??)
-          .map(x -> x.get)
+        data := byte_stream
+          .takeWhile (x -> x??)
+          .map (x -> x.get)
           .takeWhile not_empty_line
           .take max_bytes
           .asArray
-        redef utf8 Sequence<u8> is data
+        redef utf8 Sequence u8 is data
 
-    private http_header_map(s string) map<string,string> is
-      res := (s
-        .split "\r\n")
-        .map(x -> ((x.find " ").map(idx -> (x.substring 0 idx, x.substring idx+1 x.codepointLength))))
-        .filter(x -> x.exists)
-        .mapSequence(x -> x.get)
+    private http_header_map(s string) map string string is
+      res := s
+        .split "\r\n"
+        .map (x -> (x.find " ").map (idx -> (x.substring 0 idx, x.substring idx+1 x.byteLength)))
+        .filter (x -> x.exists)
+        .mapSequence (x -> x.get)
         .asArray
-      psMap res.mapSequence(x -> x.values.0) res.mapSequence(x -> x.values.1)
+      psMap (res.mapSequence x->x.values.0) (res.mapSequence x->x.values.1)
 
 
-    head(method request_method, url string, http_headers map<string,string>) is
-      path => url.split("?").first
-      query_string => (url.split("?").drop 1).first ""
+    head(method request_method, url string, http_headers map string string) is
+      path => (url.split "?").first
+      query_string => ((url.split "?").drop 1).first ""
 
     _head := once(() ->
                   s := (read_header 4E3)
                   method request_method := if s.startsWith "GET" then GET else if s.startsWith "POST" then POST else UNKNOWN
                   url := strings.fromCodepoints (s
                     .asCodepoints
-                    .dropWhile(x -> x /= " ")
-                    .dropWhile(x -> x = " ")
-                    .takeWhile(x -> x /= " "))
-                  map := (http_header_map (strings.fromCodepoints s.asCodepoints.dropWhile(x -> x /= "\n").drop(1)))
+                    .dropWhile (x -> x /= " ")
+                    .dropWhile (x -> x = " ")
+                    .takeWhile (x -> x /= " "))
+                  line2ff := (s.asCodepoints.dropWhile (x -> x /= "\n")).drop 1
+                  line2ff := strings.fromCodepoints line2ff
+                  map := http_header_map line2ff
                   head method url map
                 )
     head => _head.get
@@ -157,19 +155,19 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
       close_streams true
 
 
-    public send(return_code i32, attributes Java.java.lang.String, data fuzion.java.Array<i8>) is
+    public send(return_code i32, attributes Java.java.lang.String, data fuzion.java.Array i8) is
       header_ok := output.writeBytes (
                           "HTTP/1.1 $return_code OK\n"
                         + "Connection: close\n"
                         + "Server: Fuzion WebServer v0.0.1\n"
                         + (fuzion.java.javaStringToString attributes)
                         + "\n")
-      if header_ok!!
-        say "#### {header_ok.err}"
-      else
-        data_ok := output.write data
-        if data_ok!!
-          say "#### {data_ok.err}"
+      match header_ok
+        e error => say "#### {header_ok.err}"
+        * =>
+          data_ok := output.write data
+          if data_ok!!
+            say "#### {data_ok.err}"
 
 
 
@@ -177,7 +175,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
   handle_request(client InetAddress, input InputStream, output DataOutputStream) =>
 
-    req_context := (request_context client input output)
+    req_context := request_context client input output
 
     say "{req_context.head.method} {req_context.head.url}"
 
@@ -226,11 +224,11 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
   say "started listening on port: $port"
 
 
-  while true do
-    (input,output) := get_input_output_stream socket
+  do
+    (input, output) := get_input_output_stream socket
 
     if multi_threaded
       # NYI use thread pool
-      concur.thread.spawn(() -> handle_request socket.getInetAddress input output)
+      concur.thread.spawn (() -> handle_request socket.getInetAddress input output)
     else
       handle_request socket.getInetAddress input output
