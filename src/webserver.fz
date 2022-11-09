@@ -131,7 +131,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
                 )
     head => _head.get
 
-    close_streams(close_out bool) is
+    close_streams(close_out bool) =>
       input.close
       if close_out
         output.close
