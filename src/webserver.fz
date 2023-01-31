@@ -11,14 +11,14 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
   # get input and data output stream from socket
   get_input_output_stream(s ServerSocket) tuple InputStream DataOutputStream is
     match s.accept
-      e error => panic e.asString
+      e error => panic e.as_string
       s Socket =>
         match s.getInputStream
-          e error => panic e.asString
+          e error => panic e.as_string
           i InputStream =>
             input  := i
             match s.getOutputStream
-              e error => panic e.asString
+              e error => panic e.as_string
               o OutputStream =>
                 output := DataOutputStream.new o
                 (input, output)
@@ -27,19 +27,19 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
   content_type : choice of
 
     html is
-      redef asString => "text/html; charset=UTF-8"
+      redef as_string => "text/html; charset=UTF-8"
 
     text is # NYI
 
   request_method : choice of
     GET is
-      redef asString => "GET"
+      redef as_string => "GET"
     POST is
-      redef asString => "POST"
+      redef as_string => "POST"
     UNKNOWN is
-      redef asString => "UNKNOWN"
+      redef as_string => "UNKNOWN"
 
-  client_from_forwarded_for_header(http_headers map string string) =>
+  client_from_forwarded_for_header(http_headers Map String String) =>
     http_headers["X-Forwarded-For"]
       .bind InetAddress (v ->
         match InetAddress.getByName v
@@ -60,10 +60,10 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
   request_context(private client InetAddress, private input InputStream, private output DataOutputStream) is
 
-    private read_header(max_bytes i32) string is
+    private read_header(max_bytes i32) String is
       byte_stream stream (option u8) is
         ref : stream (option u8)
-            redef hasNext bool is
+            redef has_next bool is
               match input.available
                 error => false
                 v i32 => v > 0
@@ -93,39 +93,39 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
                     state <- 0
                   true
 
-      ref : string
+      ref : String
         data := byte_stream
-          .takeWhile (x -> x??)
+          .take_while (x -> x??)
           .map (x -> x.get)
-          .takeWhile not_empty_line
+          .take_while not_empty_line
           .take max_bytes
-          .asArray
+          .as_array
         redef utf8 Sequence u8 is data
 
-    private http_header_map(s string) map string string is
+    private http_header_map(s String) Map String String is
       res := s
         .split "\r\n"
-        .map (x -> (x.find " ").map (idx -> (x.substring 0 idx, x.substring idx+1 x.byteLength)))
+        .map (x -> (x.find " ").map (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
         .filter (x -> x.exists)
         .mapSequence (x -> x.get)
-        .asArray
-      psMap (res.mapSequence x->x.values.0) (res.mapSequence x->x.values.1)
+        .as_array
+      ps_map (res.mapSequence x->x.values.0) (res.mapSequence x->x.values.1)
 
 
-    head(method request_method, url string, http_headers map string string) is
+    head(method request_method, url String, http_headers Map String String) is
       path => (url.split "?").first
       query_string => ((url.split "?").drop 1).first ""
 
     _head := once(() ->
                   s := (read_header 4E3)
-                  method request_method := if s.startsWith "GET" then GET else if s.startsWith "POST" then POST else UNKNOWN
-                  url := strings.fromCodepoints (s
-                    .asCodepoints
-                    .dropWhile (x -> x /= " ")
-                    .dropWhile (x -> x = " ")
-                    .takeWhile (x -> x /= " "))
-                  line2ff := (s.asCodepoints.dropWhile (x -> x /= "\n")).drop 1
-                  line2ff := strings.fromCodepoints line2ff
+                  method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
+                  url := String.type.from_codepoint_sequence (s
+                    .as_codepoint_sequence
+                    .drop_while (x -> x /= " ")
+                    .drop_while (x -> x = " ")
+                    .take_while (x -> x /= " "))
+                  line2ff := (s.as_codepoint_sequence.drop_while (x -> x /= "\n")).drop 1
+                  line2ff := String.type.from_codepoint_sequence line2ff
                   map := http_header_map line2ff
                   head method url map
                 )
@@ -138,14 +138,14 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
     # send data to output stream
     # NYI may only be called once
-    public send_response(data string, content_type content_type, status i32)
+    public send_response(data String, content_type content_type, status i32)
     pre status >= 100 && status < 1000
       =>
       ok := output.writeBytes (
                           "HTTP/1.1 $status OK\n"
                         + "Connection: close\n"
                         + "Server: Fuzion WebServer v0.01\n"
-                        + "Content-Length: " + data.byteLength + "\n"
+                        + "Content-Length: " + data.byte_length + "\n"
                         + "Content-Type: $content_type\n"
                         + "\n"
                         + data)
@@ -155,7 +155,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
       close_streams true
 
 
-    public send(return_code i32, attributes Java.java.lang.String, data fuzion.java.Array i8) is
+    public send(return_code i32, attributes fuzion.java.JavaString, data fuzion.java.Array i8) is
       header_ok := output.writeBytes (
                           "HTTP/1.1 $return_code OK\n"
                         + "Connection: close\n"
@@ -192,7 +192,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
   handle_request(req_context request_context) is
 
     # compute response
-    get_response(cmd string) =>
+    get_response(cmd String) =>
       post_data := lists.empty u16 #NYI read post data
       content_type := req_context.head.http_headers["Content-Type"].get ""
       content_type_boundary := ""
