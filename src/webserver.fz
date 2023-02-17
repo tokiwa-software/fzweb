@@ -121,10 +121,10 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
                   method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
                   url := String.type.from_codepoint_sequence (s
                     .as_codepoint_sequence
-                    .drop_while (x -> x /= " ")
+                    .drop_while (x -> x != " ")
                     .drop_while (x -> x = " ")
-                    .take_while (x -> x /= " "))
-                  line2ff := (s.as_codepoint_sequence.drop_while (x -> x /= "\n")).drop 1
+                    .take_while (x -> x != " "))
+                  line2ff := (s.as_codepoint_sequence.drop_while (x -> x != "\n")).drop 1
                   line2ff := String.type.from_codepoint_sequence line2ff
                   map := http_header_map line2ff
                   head method url map
