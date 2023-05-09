@@ -1,26 +1,29 @@
-webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
+webserver is
 
+  jnet   := Java.java.net
+  jio    := Java.java.io
+  jflang := Java.dev.flang
 
   # open server socket
   open_server_socket(port i32) =>
-    match ServerSocket.new port
+    match jnet.ServerSocket.new port
       e error        => panic $e
-      v ServerSocket => v
+      v Java.java.net.ServerSocket => v
 
 
   # get input and data output stream from socket
-  get_input_output_stream(s ServerSocket) tuple InputStream DataOutputStream is
+  get_input_output_stream(s Java.java.net.ServerSocket) tuple Java.java.io.InputStream Java.java.io.DataOutputStream is
     match s.accept
       e error => panic e.as_string
-      s Socket =>
+      s Java.java.net.Socket =>
         match s.getInputStream
           e error => panic e.as_string
-          i InputStream =>
+          i Java.java.io.InputStream =>
             input  := i
             match s.getOutputStream
               e error => panic e.as_string
-              o OutputStream =>
-                output := DataOutputStream.new o
+              o Java.java.io.OutputStream =>
+                output := jio.DataOutputStream.new o
                 (input, output)
 
 
@@ -41,10 +44,10 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
   client_from_forwarded_for_header(http_headers Map String String) =>
     http_headers["X-Forwarded-For"]
-      .bind InetAddress (v ->
-        match InetAddress.getByName v
+      .bind Java.java.net.InetAddress (v ->
+        match jnet.InetAddress.getByName v
           e error => nil
-          v InetAddress => v
+          v Java.java.net.InetAddress => v
       )
 
   # this might be a case where linear types are useful?
@@ -58,7 +61,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
         cache <- f()
       cache.get.get
 
-  request_context(private client InetAddress, private input InputStream, private output DataOutputStream) is
+  request_context(private client Java.java.net.InetAddress, private input Java.java.io.InputStream, private output Java.java.io.DataOutputStream) is
 
     private read_header(max_bytes i32) String is
       byte_stream stream (option u8) is
@@ -107,9 +110,9 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
         .split "\r\n"
         .map (x -> (x.find " ").map (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
         .filter (x -> x.exists)
-        .mapSequence (x -> x.get)
+        .map_sequence (x -> x.get)
         .as_array
-      ps_map (res.mapSequence x->x.values.0) (res.mapSequence x->x.values.1)
+      ps_map (res.map_sequence x->x.values.0) (res.map_sequence x->x.values.1)
 
 
     head(method request_method, url String, http_headers Map String String) is
@@ -173,7 +176,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
     unit
 
-  handle_request(client InetAddress, input InputStream, output DataOutputStream) =>
+  handle_request(client Java.java.net.InetAddress, input Java.java.io.InputStream, output Java.java.io.DataOutputStream) =>
 
     req_context := request_context client input output
 
@@ -182,7 +185,7 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
     # if application sits behind reverse proxy then
     # we need to get the client address from `X-Forwarded-For` field
     match client_from_forwarded_for_header req_context.head.http_headers
-      c InetAddress => handle_request req_context
+      c Java.java.net.InetAddress => handle_request req_context
       * => handle_request req_context
 
     # NYI we should not need to return unit here
@@ -193,16 +196,16 @@ webserver : fuzion.std, Java.java.net, Java.java.io, Java.dev.flang is
 
     # compute response
     get_response(cmd String) =>
-      post_data := lists.empty u16 #NYI read post data
+      post_data := (list u16).type.empty #NYI read post data
       content_type := req_context.head.http_headers["Content-Type"].get ""
       content_type_boundary := ""
-      form_data := Java.dev.flang.webserver.getFormData post_data cmd req_context.head.query_string content_type content_type_boundary
-      Java.dev.flang.webserver.getResponse req_context.head.path cmd req_context.client form_data.val req_context.head.query_string
+      form_data := jflang.webserver.getFormData post_data cmd req_context.head.query_string content_type content_type_boundary
+      jflang.webserver.getResponse req_context.head.path cmd req_context.client form_data.val req_context.head.query_string
 
     resp := match req_context.head.method
       GET => get_response "GET"
       POST => get_response "POST"
-      UNKNOWN => Java.dev.flang.webserver_S_Response_static.new 500 "" (lists.empty i8)
+      UNKNOWN => jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
 
     req_context.send resp.getReturncode resp.getAttributes resp.getData
     if resp.getSession.isNull
