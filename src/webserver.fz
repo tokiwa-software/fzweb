@@ -122,13 +122,13 @@ webserver is
     _head := once(() ->
                   s := (read_header 4E3)
                   method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
-                  url := String.type.from_codepoint_sequence (s
-                    .as_codepoint_sequence
+                  url := String.type.from_codepoints (s
+                    .as_codepoints
                     .drop_while (x -> x != " ")
                     .drop_while (x -> x = " ")
                     .take_while (x -> x != " "))
-                  line2ff := (s.as_codepoint_sequence.drop_while (x -> x != "\n")).drop 1
-                  line2ff := String.type.from_codepoint_sequence line2ff
+                  line2ff := (s.as_codepoints.drop_while (x -> x != "\n")).drop 1
+                  line2ff := String.type.from_codepoints line2ff
                   map := http_header_map line2ff
                   head method url map
                 )
