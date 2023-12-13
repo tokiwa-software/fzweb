@@ -42,7 +42,7 @@ webserver is
     UNKNOWN is
       redef as_string => "UNKNOWN"
 
-  client_from_forwarded_for_header(http_headers Map String String) =>
+  client_from_forwarded_for_header(http_headers container.Map String String) =>
     http_headers["X-Forwarded-For"]
       .bind Java.java.net.InetAddress (v ->
         match jnet.InetAddress.getByName v
@@ -57,7 +57,7 @@ webserver is
     private cache := mut (option T) nil
 
     get T is
-      if cache.get.isNil
+      if cache.get.is_nil
         cache <- f()
       cache.get.get
 
@@ -105,17 +105,17 @@ webserver is
           .as_array
         redef utf8 Sequence u8 is data
 
-    private http_header_map(s String) Map String String is
+    private http_header_map(s String) container.Map String String is
       res := s
         .split "\r\n"
         .map (x -> (x.find " ").map (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
         .filter (x -> x.exists)
-        .map_sequence (x -> x.get)
+        .map (x -> x.get)
         .as_array
-      ps_map (res.map_sequence x->x.values.0) (res.map_sequence x->x.values.1)
+      (container.ps_map String String).type.from_sequence (res.map x->x.values.0) (res.map x->x.values.1)
 
 
-    head(method request_method, url String, http_headers Map String String) is
+    head(method request_method, url String, http_headers container.Map String String) is
       path => (url.split "?").first
       query_string => ((url.split "?").drop 1).first ""
 
@@ -158,12 +158,12 @@ webserver is
       close_streams true
 
 
-    public send(return_code i32, attributes fuzion.java.JavaString, data fuzion.java.Array i8) is
+    public send(return_code i32, attributes fuzion.java.Java_String, data fuzion.java.Array i8) is
       header_ok := output.writeBytes (
                           "HTTP/1.1 $return_code OK\n"
                         + "Connection: close\n"
                         + "Server: Fuzion WebServer v0.0.1\n"
-                        + (fuzion.java.javaStringToString attributes)
+                        + (fuzion.java.Java_String attributes)
                         + "\n")
       match header_ok
         e error => say "#### {header_ok.err}"
@@ -208,7 +208,7 @@ webserver is
       UNKNOWN => jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
 
     req_context.send resp.getReturncode resp.getAttributes resp.getData
-    if resp.getSession.isNull
+    if resp.getSession.is_null
       req_context.close_streams true
     else
       resp.getSession.setContentStream req_context.output
