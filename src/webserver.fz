@@ -12,7 +12,7 @@ webserver is
 
 
   # get input and data output stream from socket
-  get_input_output_stream(s Java.java.net.ServerSocket) tuple Java.java.io.InputStream Java.java.io.DataOutputStream is
+  get_input_output_stream(s Java.java.net.ServerSocket) tuple Java.java.io.InputStream Java.java.io.DataOutputStream =>
     match s.accept
       e error => panic e.as_string
       s Java.java.net.Socket =>
@@ -56,22 +56,22 @@ webserver is
 
     private cache := mut (option T) nil
 
-    get T is
+    get T =>
       if cache.get.is_nil
         cache <- f()
       cache.get.get
 
   request_context(private client Java.java.net.InetAddress, private input Java.java.io.InputStream, private output Java.java.io.DataOutputStream) is
 
-    private read_header(max_bytes i32) String is
-      byte_stream stream (option u8) is
+    private read_header(max_bytes i32) String =>
+      byte_stream stream (option u8) =>
         ref : stream (option u8)
-            redef has_next bool is
+            redef has_next bool =>
               match input.available
                 error => false
                 v i32 => v > 0
             redef next option u8
-            is
+            =>
               match input.read
                 error => nil
                 b i32 => if b < 0 then nil else b.as_u8
@@ -80,7 +80,7 @@ webserver is
       cr := u8 13
       # line feed
       lf := u8 10
-      not_empty_line (u8) -> bool is
+      not_empty_line (u8) -> bool =>
         state := mut (u8 0)
         (x) ->
                 if state.get = 3 & x = lf
@@ -103,12 +103,12 @@ webserver is
           .take_while not_empty_line
           .take max_bytes
           .as_array
-        redef utf8 Sequence u8 is data
+        redef utf8 Sequence u8 => data
 
-    private http_header_map(s String) container.Map String String is
+    private http_header_map(s String) container.Map String String =>
       res := s
         .split "\r\n"
-        .map (x -> (x.find " ").map (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
+        .map (x -> (x.find " ").map_to_option (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
         .filter (x -> x.exists)
         .map (x -> x.get)
         .as_array
