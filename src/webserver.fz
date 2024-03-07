@@ -163,7 +163,7 @@ webserver is
                           "HTTP/1.1 $return_code OK\n"
                         + "Connection: close\n"
                         + "Server: Fuzion WebServer v0.0.1\n"
-                        + (fuzion.java.Java_String attributes)
+                        + attributes
                         + "\n")
       match header_ok
         e error => say "#### {header_ok.err}"
