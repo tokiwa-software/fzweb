@@ -64,17 +64,17 @@ webserver is
   request_context(private client Java.java.net.InetAddress, private input Java.java.io.InputStream, private output Java.java.io.DataOutputStream) is
 
     private read_header(max_bytes i32) String =>
-      byte_stream stream (option u8) =>
-        ref : stream (option u8)
-            redef has_next bool =>
-              match input.available
-                error => false
-                v i32 => v > 0
-            redef next option u8
-            =>
-              match input.read
-                error => nil
-                b i32 => if b < 0 then nil else b.as_u8
+      byte_stream list (option u8) =>
+        for
+          x Sequence (option u8) := [], x ++ [y]
+          y option u8 := (match input.read
+            error => nil
+            b i32 => if b < 0 then nil else b.as_u8)
+        while (match input.available
+          error => false
+          v i32 => v > 0)
+        else
+          x.as_list
 
       # carriage return
       cr := u8 13
