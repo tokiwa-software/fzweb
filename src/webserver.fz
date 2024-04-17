@@ -112,7 +112,7 @@ webserver is
         .filter (x -> x.exists)
         .map (x -> x.get)
         .as_array
-      (container.ps_map String String).type.from_sequence (res.map x->x.values.0) (res.map x->x.values.1)
+      (container.ps_map String String).type.new (res.map x->x.values.0) (res.map x->x.values.1)
 
 
     head(method request_method, url String, http_headers container.Map String String) is
