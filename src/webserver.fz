@@ -86,8 +86,6 @@ webserver is
                 if state.get = 3 & x = lf
                   false
                 else
-                  # NYI the next line exists because issue #329
-                  state.get
                   if (state.get = 0 & x = cr
                     | state.get = 1 & x = lf
                     | state.get = 2 & x = cr)
@@ -135,7 +133,7 @@ webserver is
     head => _head.get
 
     close_streams(close_out bool) =>
-      input.close
+      _ := input.close
       if close_out
         output.close
 
@@ -188,11 +186,8 @@ webserver is
       c Java.java.net.InetAddress => handle_request req_context
       * => handle_request req_context
 
-    # NYI we should not need to return unit here
-    unit
 
-
-  handle_request(req_context request_context) is
+  handle_request(req_context request_context) =>
 
     # compute response
     get_response(cmd String) =>
@@ -207,14 +202,12 @@ webserver is
       POST => get_response "POST"
       UNKNOWN => jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
 
-    req_context.send resp.getReturncode resp.getAttributes resp.getData
+    _ := req_context.send resp.getReturncode resp.getAttributes resp.getData
     if resp.getSession.is_null
-      req_context.close_streams true
+      _ := req_context.close_streams true
     else
       resp.getSession.setContentStream req_context.output
-      req_context.close_streams false
-
-    unit
+      _ := req_context.close_streams false
 
 
   # should the requests be processed in background threads?
@@ -232,6 +225,6 @@ webserver is
 
     if multi_threaded
       # NYI use thread pool
-      concur.thread.spawn (() -> handle_request socket.getInetAddress input output)
+      _ := concur.thread.spawn (() -> _ := handle_request socket.getInetAddress input output)
     else
       handle_request socket.getInetAddress input output
