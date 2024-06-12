@@ -171,9 +171,6 @@ webserver is
             say "#### {data_ok.err}"
 
 
-
-    unit
-
   handle_request(client Java.java.net.InetAddress, input Java.java.io.InputStream, output Java.java.io.DataOutputStream) =>
 
     req_context := request_context client input output
