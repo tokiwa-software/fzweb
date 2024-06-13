@@ -1,5 +1,7 @@
 webserver is
 
+  fuzion.java.create_jvm0 "classes"
+
   jnet   := Java.java.net
   jio    := Java.java.io
   jflang := Java.dev.flang
