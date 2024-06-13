@@ -67,6 +67,7 @@ webserver is
       byte_stream list (option u8) =>
         for
           x Sequence (option u8) := [], x ++ [y]
+          # NYI: do not just read one byte at a time
           y option u8 := (match input.read
             error => nil
             b i32 => if b < 0 then nil else b.as_u8)
