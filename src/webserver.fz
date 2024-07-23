@@ -7,8 +7,8 @@ webserver is
   jflang := Java.dev.flang
 
   # open server socket
-  open_server_socket(port i32) =>
-    match jnet.ServerSocket.new port
+  open_server_socket(portʼ i32) =>
+    match jnet.ServerSocket.new portʼ
       e error        => panic $e
       v Java.java.net.ServerSocket => v
 
@@ -17,12 +17,12 @@ webserver is
   get_input_output_stream(s Java.java.net.ServerSocket) tuple Java.java.io.InputStream Java.java.io.DataOutputStream =>
     match s.accept
       e error => panic e.as_string
-      s Java.java.net.Socket =>
-        match s.getInputStream
+      sʼ Java.java.net.Socket =>
+        match sʼ.getInputStream
           e error => panic e.as_string
           i Java.java.io.InputStream =>
             input  := i
-            match s.getOutputStream
+            match sʼ.getOutputStream
               e error => panic e.as_string
               o Java.java.io.OutputStream =>
                 output := jio.DataOutputStream.new o
@@ -49,7 +49,7 @@ webserver is
       .bind Java.java.net.InetAddress (v ->
         match jnet.InetAddress.getByName v
           e error => nil
-          v Java.java.net.InetAddress => v
+          vʼ Java.java.net.InetAddress => vʼ
       )
 
   # this might be a case where linear types are useful?
@@ -129,8 +129,8 @@ webserver is
                     .drop_while (x -> x = " ")
                     .take_while (x -> x != " "))
                   line2ff := (s.as_codepoints.drop_while (x -> x != "\n")).drop 1
-                  line2ff := String.type.from_codepoints line2ff
-                  map := http_header_map line2ff
+                  line2ffʼ := String.type.from_codepoints line2ff
+                  map := http_header_map line2ffʼ
                   head method url map
                 )
     head => _head.get
