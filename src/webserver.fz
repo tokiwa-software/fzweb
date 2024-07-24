@@ -192,7 +192,7 @@ webserver is
     # compute response
     get_response(cmd String) =>
       post_data := (list u16).type.empty #NYI read post data
-      content_type := req_context.head.http_headers["Content-Type"].or_else ""
+      content_type := req_context.head.http_headers["Content-Type:"].or_else ""
       content_type_boundary := ""
       form_data := jflang.webserver.getFormData post_data cmd req_context.head.query_string content_type content_type_boundary
       match form_data
