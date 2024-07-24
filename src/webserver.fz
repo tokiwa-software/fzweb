@@ -203,10 +203,6 @@ webserver is
       _ := req_context.close_streams false
 
 
-  # should the requests be processed in background threads?
-  multi_threaded := false
-
-
   # start of main program
   port := 8080
   socket := open_server_socket port
@@ -216,8 +212,4 @@ webserver is
   do
     (input, output) := get_input_output_stream socket
 
-    if multi_threaded
-      # NYI use thread pool
-      _ := concur.thread.spawn (() -> _ := handle_request socket.getInetAddress input output)
-    else
-      handle_request socket.getInetAddress input output
+    handle_request socket.getInetAddress input output
