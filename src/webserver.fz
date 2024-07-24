@@ -142,7 +142,7 @@ webserver is
 
     # send data to output stream
     # NYI may only be called once
-    public send_response(data String, content_type content_type, status i32)
+    send_response(data String, content_type content_type, status i32)
     pre status >= 100 && status < 1000
       =>
       ok := output.writeBytes (
@@ -159,7 +159,7 @@ webserver is
       close_streams true
 
 
-    public send(return_code i32, attributes fuzion.java.Java_String, data fuzion.java.Array i8) is
+    send(return_code i32, attributes fuzion.java.Java_String, data fuzion.java.Array i8) is
       header_ok := output.writeBytes (
                           "HTTP/1.1 $return_code OK\n"
                         + "Connection: close\n"
