@@ -29,13 +29,6 @@ webserver is
                 (input, output)
 
 
-  content_type : choice of
-
-    html is
-      redef as_string => "text/html; charset=UTF-8"
-
-    text is # NYI
-
   request_method : choice of
     GET is
       redef as_string => "GET"
@@ -131,25 +124,6 @@ webserver is
       _ := input.close
       if close_out
         output.close
-
-    # send data to output stream
-    # NYI may only be called once
-    send_response(data String, content_type content_type, status i32)
-    pre status >= 100 && status < 1000
-      =>
-      ok := output.writeBytes (
-                          "HTTP/1.1 $status OK\n"
-                        + "Connection: close\n"
-                        + "Server: Fuzion WebServer v0.01\n"
-                        + "Content-Length: " + data.byte_length + "\n"
-                        + "Content-Type: $content_type\n"
-                        + "\n"
-                        + data)
-      if ok!!
-        say "#### {ok.err}"
-
-      close_streams true
-
 
     send(return_code i32, attributes fuzion.java.Java_String, data fuzion.java.Array i8) is
       header_ok := output.writeBytes (
