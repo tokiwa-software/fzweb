@@ -44,14 +44,6 @@ webserver is
     UNKNOWN is
       redef as_string => "UNKNOWN"
 
-  client_from_forwarded_for_header(http_headers container.Map String String) =>
-    http_headers["X-Forwarded-For"]
-      .bind Java.java.net.InetAddress (v ->
-        match jnet.InetAddress.getByName v
-          e error => nil
-          vʼ Java.java.net.InetAddress => vʼ
-      )
-
   # this might be a case where linear types are useful?
   # right, or we should at least have a 'cache' feature in the std lib for this!
   once(T type, f () -> T) is
@@ -180,11 +172,7 @@ webserver is
 
     say "{req_context.head.method} {req_context.head.url}"
 
-    # if application sits behind reverse proxy then
-    # we need to get the client address from `X-Forwarded-For` field
-    match client_from_forwarded_for_header req_context.head.http_headers
-      c Java.java.net.InetAddress => handle_request req_context
-      * => handle_request req_context
+    handle_request req_context
 
 
   handle_request(req_context request_context) =>
