@@ -29,13 +29,6 @@ webserver is
                 (input, output)
 
 
-  content_type : choice of
-
-    html is
-      redef as_string => "text/html; charset=UTF-8"
-
-    text is # NYI
-
   request_method : choice of
     GET is
       redef as_string => "GET"
@@ -43,14 +36,6 @@ webserver is
       redef as_string => "POST"
     UNKNOWN is
       redef as_string => "UNKNOWN"
-
-  client_from_forwarded_for_header(http_headers container.Map String String) =>
-    http_headers["X-Forwarded-For"]
-      .bind Java.java.net.InetAddress (v ->
-        match jnet.InetAddress.getByName v
-          e error => nil
-          vʼ Java.java.net.InetAddress => vʼ
-      )
 
   # this might be a case where linear types are useful?
   # right, or we should at least have a 'cache' feature in the std lib for this!
@@ -140,25 +125,6 @@ webserver is
       if close_out
         output.close
 
-    # send data to output stream
-    # NYI may only be called once
-    send_response(data String, content_type content_type, status i32)
-    pre status >= 100 && status < 1000
-      =>
-      ok := output.writeBytes (
-                          "HTTP/1.1 $status OK\n"
-                        + "Connection: close\n"
-                        + "Server: Fuzion WebServer v0.01\n"
-                        + "Content-Length: " + data.byte_length + "\n"
-                        + "Content-Type: $content_type\n"
-                        + "\n"
-                        + data)
-      if ok!!
-        say "#### {ok.err}"
-
-      close_streams true
-
-
     send(return_code i32, attributes fuzion.java.Java_String, data fuzion.java.Array i8) is
       header_ok := output.writeBytes (
                           "HTTP/1.1 $return_code OK\n"
@@ -180,11 +146,7 @@ webserver is
 
     say "{req_context.head.method} {req_context.head.url}"
 
-    # if application sits behind reverse proxy then
-    # we need to get the client address from `X-Forwarded-For` field
-    match client_from_forwarded_for_header req_context.head.http_headers
-      c Java.java.net.InetAddress => handle_request req_context
-      * => handle_request req_context
+    handle_request req_context
 
 
   handle_request(req_context request_context) =>
@@ -215,10 +177,6 @@ webserver is
       _ := req_context.close_streams false
 
 
-  # should the requests be processed in background threads?
-  multi_threaded := false
-
-
   # start of main program
   port := 8080
   socket := open_server_socket port
@@ -228,8 +186,4 @@ webserver is
   do
     (input, output) := get_input_output_stream socket
 
-    if multi_threaded
-      # NYI use thread pool
-      _ := concur.thread.spawn (() -> _ := handle_request socket.getInetAddress input output)
-    else
-      handle_request socket.getInetAddress input output
+    handle_request socket.getInetAddress input output
