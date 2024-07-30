@@ -1,33 +1,8 @@
-webserver is
-
+webserver =>
   fuzion.java.create_jvm0 "classes"
 
-  jnet   := Java.java.net
-  jio    := Java.java.io
+  jnet := Java.java.net
   jflang := Java.dev.flang
-
-  # open server socket
-  open_server_socket(portʼ i32) =>
-    match jnet.ServerSocket.new portʼ
-      e error        => panic $e
-      v Java.java.net.ServerSocket => v
-
-
-  # get input and data output stream from socket
-  get_input_output_stream(s Java.java.net.ServerSocket) tuple Java.java.io.InputStream Java.java.io.DataOutputStream =>
-    match s.accept
-      e error => panic e.as_string
-      sʼ Java.java.net.Socket =>
-        match sʼ.getInputStream
-          e error => panic e.as_string
-          i Java.java.io.InputStream =>
-            input  := i
-            match sʼ.getOutputStream
-              e error => panic e.as_string
-              o Java.java.io.OutputStream =>
-                output := jio.DataOutputStream.new o
-                (input, output)
-
 
   request_method : choice of
     GET is
@@ -37,10 +12,7 @@ webserver is
     UNKNOWN is
       redef as_string => "UNKNOWN"
 
-  # this might be a case where linear types are useful?
-  # right, or we should at least have a 'cache' feature in the std lib for this!
-  once(T type, f () -> T) is
-
+  once(T type, f ()->T) is
     private cache := mut (option T) nil
 
     get T =>
@@ -48,142 +20,101 @@ webserver is
         cache <- f()
       cache.get.get
 
-  request_context(private client Java.java.net.InetAddress, private input Java.java.io.InputStream, private output Java.java.io.DataOutputStream) is
+  start_webserver(LM type : mutate) =>
+    port u16 := 8080
+    _ := net.server net.family.ipv4 net.protocol.tcp port
+    say "started listening on port: $port"
 
-    private read_header(max_bytes i32) String =>
-      byte_stream list (option u8) =>
-        for
-          x Sequence (option u8) := [], x ++ [y]
-          # NYI: do not just read one byte at a time
-          y option u8 := (match input.read
-            error => nil
-            b i32 => if b < 0 then nil else b.as_u8)
-        while (match input.available
-          error => false
-          v i32 => v > 0)
-        else
-          x.as_list
+    ch : net.Request_Handler unit is
+      request_context is
+        read_header String =>
+          header_lines := io.buffered.read_line_while LM (s -> !s.is_empty)
+          String.type.from_codepoints (header_lines.as_codepoints.drop_while (x -> x = "\n"))
 
-      # carriage return
-      cr := u8 13
-      # line feed
-      lf := u8 10
-      not_empty_line (u8) -> bool =>
-        state := mut (u8 0)
-        (x) ->
-                if state.get = 3 & x = lf
-                  false
-                else
-                  if (state.get = 0 & x = cr
-                    | state.get = 1 & x = lf
-                    | state.get = 2 & x = cr)
-                    state <- (state.get + 1)
-                  else
-                    state <- 0
-                  true
+        http_header_map(s String) container.Map String String =>
+          res := s
+            .split "\n"
+            .map (x -> (x.find " ").map_to_option (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
+            .filter (x -> x.exists)
+            .map (x -> x.get)
+            .as_array
+          (container.ps_map String String).type.new (res.map x->x.values.0) (res.map x->x.values.1)
 
-      ref : String
-        data := byte_stream
-          .take_while (x -> x??)
-          .map (x -> x.get)
-          .take_while not_empty_line
-          .take max_bytes
-          .as_array
-        redef utf8 Sequence u8 => data
+        head(method request_method, url String, http_headers container.Map String String) is
+          path => (url.split "?").first
+          query_string => ((url.split "?").drop 1).first ""
 
-    private http_header_map(s String) container.Map String String =>
-      res := s
-        .split "\r\n"
-        .map (x -> (x.find " ").map_to_option (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
-        .filter (x -> x.exists)
-        .map (x -> x.get)
-        .as_array
-      (container.ps_map String String).type.new (res.map x->x.values.0) (res.map x->x.values.1)
+        _head := once ()->
+          s := read_header
+          method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
+          url := String.type.from_codepoints (s
+            .as_codepoints
+            .drop_while (x -> x != " ")
+            .drop_while (x -> x = " ")
+            .take_while (x -> x != " "))
+          line2ff := (s.as_codepoints.drop_while (x ->  x != "\n")).drop 1
+          line2ff0 := String.type.from_codepoints line2ff
+          map := http_header_map line2ff0
+          head method url map
 
+        head => _head.get
 
-    head(method request_method, url String, http_headers container.Map String String) is
-      path => (url.split "?").first
-      query_string => ((url.split "?").drop 1).first ""
+        client =>
+          match net.channel.env.get_peer_address
+            x list u8 => x
+            e error => [u8 0, 0, 0, 0].as_list
 
-    _head := once(() ->
-                  s := (read_header 4E3)
-                  method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
-                  url := String.type.from_codepoints (s
-                    .as_codepoints
-                    .drop_while (x -> x != " ")
-                    .drop_while (x -> x = " ")
-                    .take_while (x -> x != " "))
-                  line2ff := (s.as_codepoints.drop_while (x -> x != "\n")).drop 1
-                  line2ffʼ := String.type.from_codepoints line2ff
-                  map := http_header_map line2ffʼ
-                  head method url map
-                )
-    head => _head.get
+        send(return_code i32, attributes String, data array u8) is
+          header := """
+            HTTP/1.1 $return_code OK
+            Connection: close
+            Server: Fuzion WebServer v0.0.2
+            {attributes}
+          """
+          header_ok := (io.buffered.writer LM).write header.utf8.as_array
 
-    close_streams(close_out bool) =>
-      _ := input.close
-      if close_out
-        output.close
+          match header_ok.error
+            e error => say "#### {header_ok.error.err}"
+            unit =>
+              data_ok := (io.buffered.writer LM).write data
+              if data_ok.error!!
+                say "#### {data_ok.error.err}"
+              flush_ok := (io.buffered.writer LM).flush
+              if flush_ok!!
+                say "#### {flush_ok.err}"
 
-    send(return_code i32, attributes fuzion.java.Java_String, data fuzion.java.Array i8) is
-      header_ok := output.writeBytes (
-                          "HTTP/1.1 $return_code OK\n"
-                        + "Connection: close\n"
-                        + "Server: Fuzion WebServer v0.0.1\n"
-                        + attributes
-                        + "\n")
-      match header_ok
-        e error => say "#### {header_ok.err}"
-        * =>
-          data_ok := output.write data
-          if data_ok!!
-            say "#### {data_ok.err}"
+      redef handle_request unit =>
+        req_context := request_context
+        say "{req_context.head.method} {req_context.head.url}"
+        handle_request req_context
 
+      handle_request(req_context request_context) =>
+        # compute response
+        get_response(cmd String) =>
+          post_data := (list u16).type.empty # NYI read post data
+          val := (jflang.webserver_S_Value_static.new (req_context.head.http_headers["Content-Type:"].or_else ""))
+          content_type := val.getType
+          content_type_boundary := val.getBoundary
+          form_data := Java.dev.flang.webserver.getFormData post_data cmd req_context.head.query_string content_type content_type_boundary
+          match form_data
+            x Java.java.util.Map =>
+              cl Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (req_context.client.map y->y.cast_to_i8)).val
+              jflang.webserver.getResponse req_context.head.path cmd cl x req_context.head.query_string
+            error =>
+              jflang.webserver_S_Response_static.new 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).type.empty
 
-  handle_request(client Java.java.net.InetAddress, input Java.java.io.InputStream, output Java.java.io.DataOutputStream) =>
+        resp := match req_context.head.method
+          GET => get_response "GET"
+          POST => get_response "POST"
+          UNKNOWN => jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
 
-    req_context := request_context client input output
+        _ := req_context.send resp.getReturncode resp.getAttributes (resp.getData.as_array.map_to_array x->x.as_u8)
 
-    say "{req_context.head.method} {req_context.head.url}"
+    while net.server.is_active && match net.server.accept unit LM ch
+                                    e error => false
+                                    * => true
+    do
 
-    handle_request req_context
-
-
-  handle_request(req_context request_context) =>
-
-    # compute response
-    get_response(cmd String) =>
-      post_data := (list u16).type.empty #NYI read post data
-      val := (jflang.webserver_S_Value_static.new (req_context.head.http_headers["Content-Type:"].or_else ""))
-      content_type := val.getType
-      content_type_boundary := val.getBoundary
-      form_data := jflang.webserver.getFormData post_data cmd req_context.head.query_string content_type content_type_boundary
-      match form_data
-        x Java.java.util.Map =>
-          jflang.webserver.getResponse req_context.head.path cmd req_context.client x req_context.head.query_string
-        error =>
-          jflang.webserver_S_Response_static.new 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).type.empty
-
-    resp := match req_context.head.method
-      GET => get_response "GET"
-      POST => get_response "POST"
-      UNKNOWN => jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
-
-    _ := req_context.send resp.getReturncode resp.getAttributes resp.getData
-    if resp.getSession.is_null
-      _ := req_context.close_streams true
-    else
-      resp.getSession.setContentStream req_context.output
-      _ := req_context.close_streams false
-
-
-  # start of main program
-  port := 8080
-  socket := open_server_socket port
-  say "started listening on port: $port"
-
-
-  do
-    (input, output) := get_input_output_stream socket
-
-    handle_request socket.getInetAddress input output
+  lm : mutate is
+  lm.go ()->
+    start_webserver lm
