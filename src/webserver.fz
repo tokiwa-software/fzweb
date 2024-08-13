@@ -25,7 +25,7 @@ webserver =>
     _ := net.server net.family.ipv4 net.protocol.tcp port
     say "started listening on port: $port"
 
-    ch : net.Request_Handler unit is
+    ch : net.Connection_Handler unit is
       request_context is
         read_header String =>
           header_lines := io.buffered.read_line_while LM (s -> !s.is_empty)
@@ -83,7 +83,7 @@ webserver =>
               if flush_ok!!
                 say "#### {flush_ok.err}"
 
-      redef handle_request unit =>
+      redef handle_connection unit =>
         req_context := request_context
         say "{req_context.head.method} {req_context.head.url}"
         handle_request req_context
