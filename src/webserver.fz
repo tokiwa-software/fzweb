@@ -20,13 +20,13 @@ webserver =>
         cache <- f()
       cache.get.get
 
-  start_webserver(LM type : mutate) =>
+  start_webserver =>
     port u16 := 8080
     _ := net.server net.family.ipv4 net.protocol.tcp port
     say "started listening on port: $port"
 
     ch : net.Connection_Handler unit is
-      request_context is
+      request_context (LM type : mutate) is
         read_header String =>
           header_lines := io.buffered.read_line_while LM (s -> !s.is_empty)
           String.type.from_codepoints (header_lines.as_codepoints.drop_while (x -> x = "\n"))
@@ -83,12 +83,12 @@ webserver =>
               if flush_ok!!
                 say "#### {flush_ok.err}"
 
-      redef handle_connection unit =>
-        req_context := request_context
+      redef handle_connection (LM type : mutate) unit =>
+        req_context := request_context LM
         say "{req_context.head.method} {req_context.head.url}"
-        handle_request req_context
+        handle_request0 LM req_context
 
-      handle_request(req_context request_context) =>
+      handle_request0(LM type : mutate, req_context request_context LM) =>
         # compute response
         get_response(cmd String) =>
           post_len =>
@@ -114,11 +114,9 @@ webserver =>
 
         _ := req_context.send resp.getReturncode resp.getAttributes (resp.getData.as_array.map_to_array x->x.as_u8)
 
-    while net.server.is_active && match net.server.accept unit LM ch
+    while net.server.is_active && match net.server.accept_threaded ch
                                     e error => false
                                     * => true
     do
 
-  lm : mutate is
-  lm.go ()->
-    start_webserver lm
+  start_webserver
