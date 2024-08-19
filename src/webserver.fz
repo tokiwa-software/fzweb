@@ -114,6 +114,8 @@ webserver =>
 
         _ := req_context.send resp.getReturncode resp.getAttributes (resp.getData.as_array.map_to_array x->x.as_u8)
 
+    _ := jflang.RssFeedUpdater_static.Init
+
     while net.server.is_active && match net.server.accept_threaded ch
                                     e error => false
                                     * => true
