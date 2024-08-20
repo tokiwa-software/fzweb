@@ -86,7 +86,11 @@ webserver =>
       redef handle_connection (LM type : mutate) unit =>
         req_context := request_context LM
         say "{req_context.head.method} {req_context.head.url}"
-        handle_request0 LM req_context
+        panic
+          .try unit ()->
+            handle_request0 LM req_context
+          .catch m->
+            say "handling request, got fault: {m}"
 
       handle_request0(LM type : mutate, req_context request_context LM) =>
         # compute response
