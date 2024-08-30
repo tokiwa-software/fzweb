@@ -1,0 +1,2 @@
+module jnet => Java.java.net
+module jflang => Java.dev.flang

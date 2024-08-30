@@ -1,128 +1,20 @@
 webserver =>
+
+  # start a JVM with CLASS_PATH=classes
   fuzion.java.create_jvm0 "classes"
 
-  jnet := Java.java.net
-  jflang := Java.dev.flang
+  port u16 := 8080
+  # start the server
+  _ := net.server net.family.ipv4 net.protocol.tcp port
+  say "started listening on port: $port"
 
-  request_method : choice of
-    GET is
-      redef as_string => "GET"
-    POST is
-      redef as_string => "POST"
-    UNKNOWN is
-      redef as_string => "UNKNOWN"
+  # start the rss feed updater
+  _ := jflang.RssFeedUpdater_static.Init
 
-  once(T type, f ()->T) is
-    private cache := mut (option T) nil
+  # the request accept loop
+  while (net.server.is_active &&
+    match net.server.accept_threaded connection_handler
+      e error => false
+      * => true)
+  do
 
-    get T =>
-      if cache.get.is_nil
-        cache <- f()
-      cache.get.get
-
-  start_webserver =>
-    port u16 := 8080
-    _ := net.server net.family.ipv4 net.protocol.tcp port
-    say "started listening on port: $port"
-
-    ch : net.Connection_Handler unit is
-      request_context (LM type : mutate) is
-        read_header String =>
-          header_lines := io.buffered.read_line_while LM (s -> !s.is_empty)
-          String.type.from_codepoints (header_lines.as_codepoints.drop_while (x -> x = "\n"))
-
-        http_header_map(s String) container.Map String String =>
-          res := s
-            .split "\n"
-            .map (x -> (x.find " ").map_to_option (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
-            .filter (x -> x.exists)
-            .map (x -> x.get)
-            .as_array
-          (container.ps_map String String).type.new (res.map x->x.values.0) (res.map x->x.values.1)
-
-        head(method request_method, url String, http_headers container.Map String String) is
-          path => (url.split "?").first
-          query_string => ((url.split "?").drop 1).first ""
-
-        _head := once ()->
-          s := read_header
-          method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
-          url := String.type.from_codepoints (s
-            .as_codepoints
-            .drop_while (x -> x != " ")
-            .drop_while (x -> x = " ")
-            .take_while (x -> x != " "))
-          line2ff := (s.as_codepoints.drop_while (x ->  x != "\n")).drop 1
-          line2ff0 := String.type.from_codepoints line2ff
-          map := http_header_map line2ff0
-          head method url map
-
-        head => _head.get
-
-        client =>
-          match net.channel.env.get_peer_address
-            x list u8 => x
-            e error => [u8 0, 0, 0, 0].as_list
-
-        send(return_code i32, attributes String, data array u8) is
-          header := """
-            HTTP/1.1 $return_code OK
-            Connection: close
-            Server: Fuzion WebServer v0.0.2
-            {attributes}
-          """
-          header_ok := (io.buffered.writer LM).write header.utf8.as_array
-
-          match header_ok.error
-            e error => say "#### {header_ok.error.err}"
-            unit =>
-              data_ok := (io.buffered.writer LM).write data
-              if data_ok.error!!
-                say "#### {data_ok.error.err}"
-              flush_ok := (io.buffered.writer LM).flush
-              if flush_ok!!
-                say "#### {flush_ok.err}"
-
-      redef handle_connection (LM type : mutate) unit =>
-        req_context := request_context LM
-        say "{req_context.head.method} {req_context.head.url}"
-        panic
-          .try unit ()->
-            handle_request0 LM req_context
-          .catch m->
-            say "handling request, got fault: {m}"
-
-      handle_request0(LM type : mutate, req_context request_context LM) =>
-        # compute response
-        get_response(cmd String) =>
-          post_len =>
-            match (req_context.head.http_headers["Content-Length:"].or_else "0").parse_i32
-              e error => 0
-              i i32 => i
-          post_data := ((io.buffered.read_bytes LM post_len).map (e -> e.as_u16)).as_list
-          val := (jflang.webserver_S_Value_static.new (req_context.head.http_headers["Content-Type:"].or_else ""))
-          content_type := val.getType
-          content_type_boundary := val.getBoundary
-          form_data := Java.dev.flang.webserver.getFormData post_data cmd req_context.head.query_string content_type content_type_boundary
-          match form_data
-            x Java.java.util.Map =>
-              cl Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (req_context.client.map y->y.cast_to_i8)).val
-              jflang.webserver.getResponse req_context.head.path cmd cl x req_context.head.query_string
-            error =>
-              jflang.webserver_S_Response_static.new 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).type.empty
-
-        resp := match req_context.head.method
-          GET => get_response "GET"
-          POST => get_response "POST"
-          UNKNOWN => jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
-
-        _ := req_context.send resp.getReturncode resp.getAttributes (resp.getData.as_array.map_to_array x->x.as_u8)
-
-    _ := jflang.RssFeedUpdater_static.Init
-
-    while net.server.is_active && match net.server.accept_threaded ch
-                                    e error => false
-                                    * => true
-    do
-
-  start_webserver
