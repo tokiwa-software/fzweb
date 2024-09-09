@@ -1,5 +1,5 @@
 //creating get_form_data in Fz instead of calling the java version "getFormData"
-module get_form_data(post_data String, cmd String, raw_query String, content_type String, content_type_boundary String) =>
+module get_form_data(post_data String, cmd String, raw_query String, content_type String, content_type_boundary String) outcome Java.java.util.Map =>
 
   if cmd = "POST"
 
