@@ -101,8 +101,12 @@ module connection_handler : net.Connection_Handler unit is
       content_type_boundary := val.getBoundary
       form_data := get_form_data post_data cmd req_context.head.query_string content_type content_type_boundary
 
-      cl Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (req_context.client.map y->y.cast_to_i8)).val
-      jflang.webserver.getResponse req_context.head.path cmd cl form_data req_context.head.query_string
+      match form_data
+        x Java.java.util.Map =>
+          cl Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (req_context.client.map y->y.cast_to_i8)).val
+          jflang.webserver.getResponse req_context.head.path cmd cl x req_context.head.query_string
+        error =>
+          jflang.webserver_S_Response_static.new 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).type.empty
 
     resp := match req_context.head.method
       GET => get_response "GET"

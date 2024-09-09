@@ -1,5 +1,5 @@
 //creating get_form_data in Fz instead of calling the java version "getFormData"
-module get_form_data(post_data String, cmd String, raw_query String, content_type String, content_type_boundary String) =>
+module get_form_data(post_data String, cmd String, raw_query String, content_type String, content_type_boundary String) outcome Java.java.util.Map =>
 
   if cmd = "POST"
 
@@ -10,7 +10,7 @@ module get_form_data(post_data String, cmd String, raw_query String, content_typ
       Java.dev.flang.webserver.parseMultipartFormData(post_data, content_type_boundary)
 
     else
-      panic "Wrong / unsupported content type in request."
+      error "Wrong / unsupported content type in request."
 
   else
     Java.dev.flang.URLEncoded.parseUrlEncodedMap(raw_query)
