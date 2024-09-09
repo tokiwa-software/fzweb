@@ -99,7 +99,7 @@ module connection_handler : net.Connection_Handler unit is
       val := (jflang.webserver_S_Value_static.new (req_context.head.http_headers["Content-Type:"].or_else ""))
       content_type := val.getType
       content_type_boundary := val.getBoundary
-      form_data outcome Java.java.util.Map := get_form_data post_data cmd req_context.head.query_string content_type content_type_boundary
+      form_data := get_form_data post_data cmd req_context.head.query_string content_type content_type_boundary
 
       match form_data
         x Java.java.util.Map =>
