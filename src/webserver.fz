@@ -11,10 +11,10 @@ webserver =>
   # start the rss feed updater
   _ := jflang.RssFeedUpdater_static.Init
 
-  # the request accept loop
-  while (net.server.is_active &&
-    match net.server.accept_threaded connection_handler
-      e error => false
-      * => true)
-  do
+  # start a thread pool
+  concur.thread_pool 4 ()->
+
+    # the request accept loop
+    while (net.server.is_active &&
+      (net.server.accept_threaded concur.thread_pool connection_handler).ok)
 
