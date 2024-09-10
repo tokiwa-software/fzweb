@@ -1,0 +1,99 @@
+send_ok_or_reload (cmd String, s Java.dev.flang.Session) Java.dev.flang.webserver_S_Response =>
+  send_ok_or_reload cmd s ""
+
+send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) Java.dev.flang.webserver_S_Response =>
+  returncode := if s.is_null || !s.isContentStreamOk then 500 else 200
+  must_message := if s.is_null then "must reload page" else "must reconnect"
+  data := if returncode = 500 then must_message.utf8.map (x->x.cast_to_i8) else datastr.utf8.map (x->x.cast_to_i8)
+  data2 := data.as_array
+  header := "Content-Length: {data2.length}\nContent-Type: text/html\n"
+  jflang.webserver_S_Response_static.new returncode header data2
+
+send_ok (cmd String, datastr String) Java.dev.flang.webserver_S_Response =>
+  data := (datastr.utf8.map (x->x.cast_to_i8)).as_array
+  header := "Content-Length: {data.length}\nContent-Type: text/html\n"
+  jflang.webserver_S_Response_static.new 200 header data
+
+send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.flang.Content_S_Identifier) Java.dev.flang.webserver_S_Response =>
+  # NYI: logging, mime types
+  bytes := content_identifier.getBytes s
+  match bytes
+    bytes2 fuzion.java.Array =>
+      attributes := "Content-Length: {bytes2.length}\n"
+      jflang.webserver_S_Response_static.new 200 attributes bytes2
+    e error =>
+      say e
+      jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
+
+decode_path (raw_path String) String =>
+  uri := Java.java.net.URI_static.new "none" "none" raw_path ""
+  match uri
+    u Java.java.net.URI => u.getPath
+    error => ""
+
+module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress, form_data Java.java.util.Map, query String) Java.dev.flang.webserver_S_Response =>
+  # NYI: Logging
+  if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
+    _ := say "*** unknown request: {cmd}"
+    jflang.webserver_S_Response_static.new 501 "" (list i8).type.empty
+  else
+    sessid_original := "" # NYI form_data.get (Java.java.lang.__jString.new "originalsessionid")
+    sessid := "" # NYI form_data.get (Java.java.lang.__jString.new "sessionid")
+    s := jflang.Session_static.get sessid_original sessid client
+
+    if raw_path.ends_with "/"
+      new_path := raw_path + "index.html"
+      get_response_main new_path cmd client form_data query
+    else if raw_path = "/login"
+      # NYI
+      send_ok_or_reload cmd s s.statusString
+    else if raw_path = "/logout"
+      _ := s.logout
+      send_ok_or_reload cmd s s.statusString
+    else if cmd = "POST" && raw_path = "/register"
+      # NYI
+      send_ok cmd ""
+    else if cmd = "POST" && raw_path = "/delete_account"
+      # NYI
+      jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
+    else if raw_path = "/confirm_registration"
+      # NYI
+      jflang.webserver_S_Response_static.new 302 "Location: /registration_failed" (list i8).type.empty
+    else if raw_path = "/robots.txt"
+      # NYI
+      jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
+    else if raw_path = "/goto"
+      # NYI
+      send_ok_or_reload cmd s
+    else if raw_path = "/run"
+      # NYI
+      send_ok_or_reload cmd s
+    else if raw_path = "/runeff"
+      # NYI
+      send_ok_or_reload cmd s
+    else if raw_path = "/playground"
+      # NYI
+      jflang.webserver_S_Response_static.new 403 "" (list i8).type.empty
+    else if raw_path = "/events"
+      # send one byte to trigger javascript event
+      b array i8 := [0]
+      jflang.webserver_S_Response_static.new 200 "Cache-Control: no-cache\nConnection: keep-alive\nContent-Type: text/event-stream\n" b s
+    else if raw_path = "/contents"
+      # NYI
+      send_ok_or_reload cmd s
+    else if raw_path = "/api/benchmark/logs"
+      # NYI
+      jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
+    else
+      next_session := jflang.Session_static.get "" "" client
+      # NYI: direct login
+      path := decode_path raw_path
+      content_identifier := jflang.Content_static.getContents s path
+      if content_identifier.equals jflang.Content_static.FORBIDDEN
+        say "*** forbidding access to absolute or non-normalized path {path}."
+        jflang.webserver_S_Response_static.new 403 "" (list i8).type.empty
+      else if content_identifier.equals jflang.Content_static.MISSING
+        say "*** error: requested file {path} does not exist"
+        jflang.webserver_S_Response_static.new 404 "" (list i8).type.empty
+      else
+        send_content s cmd content_identifier
