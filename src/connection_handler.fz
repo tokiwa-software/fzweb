@@ -111,5 +111,6 @@ module connection_handler : net.Connection_Handler unit is
 
     _ := req_context.send resp.getReturncode resp.getAttributes (resp.getData.as_array.map_to_array x->x.as_u8)
 
+    # NYI: implement handling of persistent connections
     if (resp.getAttributes.contains "Connection: keep-alive")
       do
