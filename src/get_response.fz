@@ -31,6 +31,20 @@ decode_path (raw_path String) String =>
     u Java.java.net.URI => u.getPath
     error => ""
 
+has_registered_recently (client Java.java.net.InetAddress) bool =>
+  # NYI
+  false
+
+do_register (client Java.java.net.InetAddress, form_data Java.java.util.Map) String =>
+  if has_registered_recently client
+    "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
+  else
+    registration_result := jflang.User_static.register form_data
+    # NYI: registration rate limit
+    match registration_result
+      rr Java.java.lang.__jString => rr.as_string
+      e error => "<div class='text-center'>*** Registration failed: {e}</div>"
+
 module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress, form_data Java.java.util.Map, query String) Java.dev.flang.webserver_S_Response =>
   # NYI: Logging
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
@@ -52,7 +66,7 @@ module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress
       send_ok_or_reload cmd s s.statusString
     else if cmd = "POST" && raw_path = "/register"
       # NYI
-      send_ok cmd ""
+      send_ok cmd (do_register client form_data)
     else if cmd = "POST" && raw_path = "/delete_account"
       # NYI
       jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
