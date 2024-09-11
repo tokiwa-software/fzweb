@@ -31,10 +31,16 @@ decode_path (raw_path String) String =>
     u Java.java.net.URI => u.getPath
     error => ""
 
+
+# check if the given client has registered within the last ten minutes
+#
 has_registered_recently (client Java.java.net.InetAddress) bool =>
   # NYI
   false
 
+
+# create a user account given the data submitted via the form content
+#
 do_register (client Java.java.net.InetAddress, form_data Java.java.util.Map) String =>
   if has_registered_recently client
     "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
