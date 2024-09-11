@@ -6,6 +6,7 @@ request_method : choice of
   UNKNOWN is
     redef as_string => "UNKNOWN"
 
+
 # to be passed to server.accept
 # handle_connection is the feature that
 # is used to handle requests
@@ -88,6 +89,7 @@ module connection_handler : net.Connection_Handler unit is
 
 
   # helper to process the request
+  #
   process_request(LM type : mutate, req_context request_context LM) =>
     # compute response
     get_response(cmd String) =>

@@ -1,6 +1,13 @@
+# like its three-argument counterpart, but sends a blank response
+#
 send_ok_or_reload (cmd String, s Java.dev.flang.Session) Java.dev.flang.webserver_S_Response =>
   send_ok_or_reload cmd s ""
 
+
+# send an HTTP 200 response with the given data if there is a session,
+# and data can be send back over the session, otherwise, return a 500
+# response and ask the client to reload
+#
 send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) Java.dev.flang.webserver_S_Response =>
   returncode := if s.is_null || !s.isContentStreamOk then 500 else 200
   must_message := if s.is_null then "must reload page" else "must reconnect"
@@ -9,11 +16,17 @@ send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) Java.de
   header := "Content-Length: {data2.length}\nContent-Type: text/html\n"
   jflang.webserver_S_Response_static.new returncode header data2
 
+
+# send an HTTP 200 response along with the given data
+#
 send_ok (cmd String, datastr String) Java.dev.flang.webserver_S_Response =>
   data := (datastr.utf8.map (x->x.cast_to_i8)).as_array
   header := "Content-Length: {data.length}\nContent-Type: text/html\n"
   jflang.webserver_S_Response_static.new 200 header data
 
+
+# send an HTTP response provided a Java.dev.flang.Content_S_Identifier
+#
 send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.flang.Content_S_Identifier) Java.dev.flang.webserver_S_Response =>
   # NYI: logging, mime types
   bytes := content_identifier.getBytes s
@@ -25,12 +38,19 @@ send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.
       say e
       jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
 
+# take the unprocessed path as determined by the webserver,
+# and extract the actual path out of it
+#
 decode_path (raw_path String) String =>
   uri := Java.java.net.URI_static.new "none" "none" raw_path ""
   match uri
     u Java.java.net.URI => u.getPath
     error => ""
 
+
+# routes a given request to the code that handles it,
+# and returns the response
+#
 module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress, form_data Java.java.util.Map, query String) Java.dev.flang.webserver_S_Response =>
   # NYI: Logging
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
