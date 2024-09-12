@@ -1,0 +1,44 @@
+# Here there is a loop in a loop that iterates over lines. This means quadratic performance. This is the one thing that really must be changed.
+# O(n) complexicity needed
+module parse_multipart_form_data(data String, boundaryy String) lock_free.map String String =>
+
+  # Convert boundary to Fuzion-friendly format
+  boundary := "--" + boundaryy
+  end_boundary := boundary + "--"
+  # Initialize form data map
+  form_data := (lock_free.map String String).empty
+  lines := data.split "\r\n"
+  i := mut 0
+  while i.get < lines.count do
+    line := lines[i].trim
+    if line = boundary
+      # Start of a new part
+      v := values
+      i <- i.get + 1
+      if i.get < lines.count
+
+        # Read headers
+        while i.get < lines.count && (lines[i].find ":").exists do
+          l := lines[i].trim
+          if l != ""
+            v.add l
+          i <- i.get+1
+        cd := v.get "Content-Disposition"
+
+        if i.get < lines.count
+          valueStr :=
+            for res := "", res + new_val
+            while i.get < lines.count && lines[i] != boundary && lines[i] != end_boundary
+            do
+              new_val := (res.is_empty ? "" : "") + lines[i]
+              i <- i.get + 1
+          name := cd.parameters["name"].as_string
+          if name != ""
+            form_data.add name valueStr
+
+    else if line = end_boundary
+      # End of multipart data
+      i <- lines.count
+    else
+      i <- i.get + 1
+  form_data
