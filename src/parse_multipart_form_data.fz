@@ -1,3 +1,5 @@
+# Here there is a loop in a loop that iterates over lines. This means quadratic performance. This is the one thing that really must be changed.
+# O(n) complexicity needed
 module parse_multipart_form_data(data String, boundaryy String) lock_free.map String String =>
 
   # Convert boundary to Fuzion-friendly format
