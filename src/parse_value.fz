@@ -1,7 +1,7 @@
 module parse_value(type_string String) is
-  public _type := mut ""
+  public typee := mut ""
   # Initialize type and parameters
-  public _parameters := (lock_free.map String String).empty
+  public parameters := (lock_free.map String String).empty
 
   # Helper function to find the index of a character in a string
   index_of(s String, c1 String) i32 =>
@@ -21,48 +21,53 @@ module parse_value(type_string String) is
       rest_of_string := remaining_string.substring(eq + 1).trim
 
       # Handle quoted values
-      if index_of(rest_of_string, "\"") = 0
+      if (index_of rest_of_string "\"") = 0
         rest_of_string_trimmed := rest_of_string.substring(1)
-        quote := index_of(rest_of_string_trimmed, "\"")
+        quote := index_of rest_of_string_trimmed "\""
+
         if quote != -1
-          valuee := rest_of_string_trimmed.substring(0, quote)
+          value0 := rest_of_string_trimmed.substring 0 quote
           remaining_string_next := rest_of_string_trimmed.substring(quote + 1).trim
-          r_parameters.add(key, valuee)
-          parse_pairs(remaining_string_next, r_parameters)
+          r_parameters.add key value0
+          parse_pairs remaining_string_next r_parameters
+
         else
-          valuee := rest_of_string_trimmed
+          value0 := rest_of_string_trimmed
           remaining_string_next := ""
-          r_parameters.add(key, valuee)
-          parse_pairs(remaining_string_next, r_parameters)
+          r_parameters.add(key, value0)
+          parse_pairs remaining_string_next r_parameters
+
       else
-        space := index_of(rest_of_string, " ")
+        space := index_of rest_of_string " "
         if space = -1
-          valuee := rest_of_string
+          value0 := rest_of_string
           remaining_string_next := ""
-          r_parameters.add(key, valuee)
-          parse_pairs(remaining_string_next, r_parameters)
+          r_parameters.add key value0
+          parse_pairs remaining_string_next r_parameters
+
         else
-          valuee := rest_of_string.substring(0, space)
+          value0 := rest_of_string.substring 0 space
           remaining_string_next := rest_of_string.substring(space + 1).trim
-          r_parameters.add(key, valuee)
-          parse_pairs(remaining_string_next, r_parameters)
+          r_parameters.add key value0
+          parse_pairs remaining_string_next r_parameters
 
   # Start parsing
   semi := index_of type_string ";"
   if semi < 0
-    _type <- type_string.trim
+    typee <- type_string.trim
+
   else
-    typee := type_string.substring(0, semi).trim
+    typee <- type_string.substring(0, semi).trim
     remaining_string := type_string.substring(semi + 1).trim
-    _:=parse_pairs(remaining_string, _parameters)
+    _ := parse_pairs remaining_string parameters
 
   # return the type value
   module get_type () String =>
-    _type.get
+    typee.get
 
   # return the value of the boundary key in map "_parameters" and empty string for false case
   module get_boundary () String =>
-    val :=_parameters["boundary"]
+    val := parameters["boundary"]
     if val.exists
       val
     else

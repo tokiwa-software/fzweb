@@ -1,18 +1,18 @@
 module values is
 
   # Initialize an empty map
-  public _map := (lock_free.map String String).empty
+  map := (lock_free.map String String).empty
 
   # Add a key-value pair to the map
   module add(line String) =>
     pairs := line.split ":"
     if pairs.count=2
-      _map.add(pairs[0].trim,pairs[1].trim)
+      map.add(pairs[0].trim,pairs[1].trim)
 
 
   # Get a value from the _map and pass it to parse_value feature
   module get(key String) parse_value =>
-    val:= _map[key]
+    val := map[key]
     if val.exists
       parse_value val.get
     else

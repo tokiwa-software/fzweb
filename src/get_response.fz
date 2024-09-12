@@ -31,7 +31,7 @@ decode_path (raw_path String) String =>
     u Java.java.net.URI => u.getPath
     error => ""
 
-module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress, form_data Java.java.util.Map, query String) Java.dev.flang.webserver_S_Response =>
+module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress, form_data (lock_free.map String String), query String) Java.dev.flang.webserver_S_Response =>
   # NYI: Logging
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
     _ := say "*** unknown request: {cmd}"

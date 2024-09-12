@@ -24,10 +24,10 @@ module url_encoded is
       res
 
   # Parse URL-encoded form data into a map
-  module parse_urlencoded_map(data String) container.ps_map String String =>
+  module parse_urlencoded_map(data String) lock_free.map String String =>
 
     pairs := data.split "&"
-    form_data := (container.ps_map String String).empty
+    form_data := (lock_free.map String String).empty
     for p in pairs do
       nv := p.split "="
       name := from_urlencoded(nv.first).trim

@@ -1,6 +1,7 @@
-module parse_multipart_form_data(data String, boundary String) lock_free.map String String =>
+module parse_multipart_form_data(data String, boundaryy String) lock_free.map String String =>
 
   # Convert boundary to Fuzion-friendly format
+  boundary := "--" + boundaryy
   end_boundary := boundary + "--"
   # Initialize form data map
   form_data := (lock_free.map String String).empty
@@ -29,9 +30,9 @@ module parse_multipart_form_data(data String, boundary String) lock_free.map Str
             do
               new_val := (res.is_empty ? "" : "") + lines[i]
               i <- i.get + 1
-          name := cd._parameters["name"].as_string
+          name := cd.parameters["name"].as_string
           if name != ""
-            form_data.add(name, valueStr)
+            form_data.add name valueStr
 
     else if line = end_boundary
       # End of multipart data
@@ -39,10 +40,3 @@ module parse_multipart_form_data(data String, boundary String) lock_free.map Str
     else
       i <- i.get + 1
   form_data
-
-# **************this example extracted from actual running fuzion webserver**************
-
-post_data:="-----------------------------419873511710485736272313445290\r\nContent-Disposition: form-data; name=\"page\"\r\n/index\r\n/index1\r\n-----------------------------419873511710485736272313445290\r\nContent-Disposition: form-data; name=\"sessionid\"\r\n3n_mT-xpNB7wx6YcmyFVmQ\r\n-----------------------------419873511710485736272313445290--"
-content_type_boundary:= "-----------------------------419873511710485736272313445290"
-
-say (parse_multipart_form_data post_data content_type_boundary)
