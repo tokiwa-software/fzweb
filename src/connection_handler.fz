@@ -34,7 +34,7 @@ module connection_handler : net.Connection_Handler unit is
       path => (url.split "?").first
       query_string => ((url.split "?").drop 1).first ""
 
-    _head := once ()->
+    _head := once LM head ()->
       s := read_header
       method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
       url := String.type.from_codepoints (s
