@@ -88,16 +88,16 @@ module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress
     _ := say "*** unknown request: {cmd}"
     jflang.webserver_S_Response_static.new 501 "" (list i8).type.empty
   else
-    sessid_original := form_data["originalsessionid"].as_string ""
-    sessid := form_data["sessionid"].as_string ""
+    sessid_original := form_data["originalsessionid"].get ""
+    sessid := form_data["sessionid"].get ""
     s := jflang.Session_static.get sessid_original sessid client
 
     if raw_path.ends_with "/"
       new_path := raw_path + "index.html"
       get_response_main new_path cmd client form_data query
     else if raw_path = "/login"
-      login := form_data["login"].as_string ""
-      pw := form_data["password"].as_string ""
+      login := form_data["login"].get ""
+      pw := form_data["password"].get ""
       if !login.is_empty && !pw.is_empty
         s.login login pw
       send_ok_or_reload cmd s s.statusString
