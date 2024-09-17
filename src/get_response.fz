@@ -107,8 +107,7 @@ module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress
     else if cmd = "POST" && raw_path = "/register"
       send_ok cmd (do_register client form_data)
     else if cmd = "POST" && raw_path = "/delete_account"
-      # NYI
-      jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
+      send_ok cmd (jflang.User_static.triggerAccountDeletion client (fuzion_to_java_map form_data))
     else if raw_path = "/confirm_registration"
       # NYI
       jflang.webserver_S_Response_static.new 302 "Location: /registration_failed" (list i8).type.empty
