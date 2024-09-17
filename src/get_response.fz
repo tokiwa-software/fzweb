@@ -54,14 +54,25 @@ has_registered_recently (client Java.java.net.InetAddress) bool =>
   # NYI
   false
 
+# helper feature to convert java map to fuzion map
+#
+module fuzion_to_java_map(fz_map (lock_free.map String String)) Java.java.util.Map =>
+  # Create an instance of Java's Map
+  jv_map := Java.java.util.Map_static.__k__of
+  # Iterate over items in the Fuzion map and put them into the Java Map
+  for p in fz_map.items do
+    key := Java.java.lang.__jString.new p.0
+    value0 := Java.java.lang.__jString.new p.1
+    _ := jv_map.put key value0
+  jv_map
 
 # create a user account given the data submitted via the form content
 #
-do_register (client Java.java.net.InetAddress, form_data Java.java.util.Map) String =>
+do_register (client Java.java.net.InetAddress, form_data (lock_free.map String String)) String =>
   if has_registered_recently client
     "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
   else
-    registration_result := jflang.User_static.register form_data
+    registration_result := jflang.User_static.register (fuzion_to_java_map(form_data))
     # NYI: registration rate limit
     match registration_result
       rr Java.java.lang.__jString => rr.as_string
@@ -77,21 +88,24 @@ module get_response_main (raw_path, cmd String, client Java.java.net.InetAddress
     _ := say "*** unknown request: {cmd}"
     jflang.webserver_S_Response_static.new 501 "" (list i8).type.empty
   else
-    sessid_original := "" # NYI form_data.get (Java.java.lang.__jString.new "originalsessionid")
-    sessid := "" # NYI form_data.get (Java.java.lang.__jString.new "sessionid")
+    sessid_original := form_data["originalsessionid"]
+    sessid := form_data["sessionid"]
     s := jflang.Session_static.get sessid_original sessid client
 
     if raw_path.ends_with "/"
       new_path := raw_path + "index.html"
       get_response_main new_path cmd client form_data query
     else if raw_path = "/login"
-      # NYI
+      login := form_data["login"]
+      pw := form_data["password"]
+      if !s.is_null && login.exists && pw.exists
+        s.login login pw
       send_ok_or_reload cmd s s.statusString
     else if raw_path = "/logout"
-      _ := s.logout
+      if !s.is_null
+        _ := s.logout
       send_ok_or_reload cmd s s.statusString
     else if cmd = "POST" && raw_path = "/register"
-      # NYI
       send_ok cmd (do_register client form_data)
     else if cmd = "POST" && raw_path = "/delete_account"
       # NYI

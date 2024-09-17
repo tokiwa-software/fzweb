@@ -10,7 +10,7 @@ module values is
       map.add(pairs[0].trim,pairs[1].trim)
 
 
-  # Get a value from the _map and pass it to parse_value feature
+  # Get a value from the map and pass it to parse_value feature
   module get(key String) parse_value =>
     val := map[key]
     if val.exists

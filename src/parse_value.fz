@@ -65,7 +65,7 @@ module parse_value(type_string String) is
   module get_type () String =>
     typee.get
 
-  # return the value of the boundary key in map "_parameters" and empty string for false case
+  # return the value of the boundary key in map "parameters" and empty string for false case
   module get_boundary () String =>
     val := parameters["boundary"]
     if val.exists
