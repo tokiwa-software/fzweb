@@ -8,7 +8,7 @@
 
 # like its three-argument counterpart, but sends a blank response
 #
-send_ok_or_reload (cmd String, s Java.dev.flang.Session) Java.dev.flang.webserver_S_Response =>
+module send_ok_or_reload (cmd String, s Java.dev.flang.Session) Java.dev.flang.webserver_S_Response =>
   send_ok_or_reload cmd s ""
 
 
@@ -16,7 +16,7 @@ send_ok_or_reload (cmd String, s Java.dev.flang.Session) Java.dev.flang.webserve
 # and data can be send back over the session, otherwise, return a 500
 # response and ask the client to reload
 #
-send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) Java.dev.flang.webserver_S_Response =>
+module send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) Java.dev.flang.webserver_S_Response =>
   returncode := if s.is_null || !s.isContentStreamOk then 500 else 200
   must_message := if s.is_null then "must reload page" else "must reconnect"
   data := if returncode = 500 then must_message.utf8.map (x->x.cast_to_i8) else datastr.utf8.map (x->x.cast_to_i8)
@@ -27,7 +27,7 @@ send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) Java.de
 
 # send an HTTP 200 response along with the given data
 #
-send_ok (cmd String, datastr String) Java.dev.flang.webserver_S_Response =>
+module send_ok (cmd String, datastr String) Java.dev.flang.webserver_S_Response =>
   data := (datastr.utf8.map (x->x.cast_to_i8)).as_array
   header := "Content-Length: {data.length}\nContent-Type: text/html\n"
   jflang.webserver_S_Response_static.new 200 header data
@@ -35,7 +35,7 @@ send_ok (cmd String, datastr String) Java.dev.flang.webserver_S_Response =>
 
 # send an HTTP response provided a Java.dev.flang.Content_S_Identifier
 #
-send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.flang.Content_S_Identifier) Java.dev.flang.webserver_S_Response =>
+module send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.flang.Content_S_Identifier) Java.dev.flang.webserver_S_Response =>
   # NYI: logging, mime types
   bytes := content_identifier.getBytes s
   match bytes
