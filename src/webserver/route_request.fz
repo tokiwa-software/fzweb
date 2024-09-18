@@ -76,8 +76,8 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
       send_ok cmd (do_register client form_data)
     else if cmd = "POST" && raw_path = "/delete_account"
       send_ok cmd (jflang.User_static.triggerAccountDeletion client (fuzion_to_java_map form_data))
-    else if raw_path = "/confirm_registration"
-      s_q := util.split_query query
+    else if raw_path = "/confirm_account_deletion"
+      s_q := split_query query
       jflang.webserver.log s "got confirm_account_deletion"
       match jflang.User_static.completeAccountDeletion (s_q["token"].get "")
         r unit =>
@@ -86,6 +86,9 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
         e error =>
           jflang.webserver.log s "got confirm_account_deletion send 302 failure"
           jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
+    else if raw_path = "/confirm_registration"
+      # NYI
+      jflang.webserver_S_Response_static.new 302 "Location: /registration_failed" (list i8).type.empty
     else if raw_path = "/robots.txt"
       # NYI
       jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
