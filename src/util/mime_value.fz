@@ -1,0 +1,73 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature mime_value
+#
+# -----------------------------------------------------------------------
+
+module mime_value(mime_type String, parameters lock_free.map String String) is
+
+  # return the type value
+  #
+  module get_type =>
+    mime_type
+
+
+  # return the value of the boundary key in the parameters,
+  # or an empty string if the key does not exist in that map
+  #
+  module get_boundary =>
+    parameters["boundary"].get ""
+
+
+  # return the value of a given key in the parameters,
+  # or an empty string if the given key is not in that map
+  #
+  module get_parameter(param String) =>
+    parameters[param].get ""
+
+
+  module type.from_type_string(type_string String) util.mime_value =>
+    # Recursive function to parse the key-value pairs in the string
+    #
+    parse_pairs(type0 String, params lock_free.map String String) lock_free.map String String =>
+      match type0.find "="
+        nil => params
+        eq i32 =>
+          key := (type0.substring 0 eq).trim
+          rest := (type0.substring (eq + 1)).trim
+
+          # Handle quoted values
+          if rest.starts_with "\""
+            rest_trimmed := rest.substring 1
+
+            match rest_trimmed.find "\""
+              quote i32 =>
+                value0 := rest_trimmed.substring 0 quote
+                next := (rest_trimmed.substring (quote + 1)).trim
+                params.add key value0
+                parse_pairs next params
+              nil =>
+                params.add key rest_trimmed
+                parse_pairs "" params
+          else
+            match rest.find " "
+              nil =>
+                params.add key rest
+                parse_pairs "" params
+              space i32 =>
+                value0 := rest.substring 0 space
+                next := (rest.substring (space + 1)).trim
+                params.add key value0
+                parse_pairs next params
+
+
+    match type_string.find ";"
+      nil =>
+        util.mime_value "" (lock_free.map String String).empty
+      semicolon i32 =>
+        type1 := (type_string.substring 0 semicolon).trim
+        next := (type_string.substring (semicolon + 1)).trim
+        params := parse_pairs next (lock_free.map String String).empty
+        util.mime_value type1 params

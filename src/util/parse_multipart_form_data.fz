@@ -20,7 +20,7 @@ module parse_multipart_form_data(data, boundaryy String) lock_free.map String St
     line := lines[i].trim
     if line = boundary
       # Start of a new part
-      v := values
+      v := mime_values
       i <- i.get + 1
       if i.get < lines.count
 
@@ -39,7 +39,7 @@ module parse_multipart_form_data(data, boundaryy String) lock_free.map String St
             do
               new_val := (res.is_empty ? "" : "") + lines[i]
               i <- i.get + 1
-          name := cd.parameters["name"].as_string
+          name := cd.get_parameter "name"
           if name != ""
             form_data.add name valueStr
 
