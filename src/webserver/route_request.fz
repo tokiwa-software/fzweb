@@ -77,7 +77,7 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
     else if cmd = "POST" && raw_path = "/delete_account"
       send_ok cmd (jflang.User_static.triggerAccountDeletion client (fuzion_to_java_map form_data))
     else if raw_path = "/confirm_account_deletion"
-      s_q := split_query query
+      s_q := util.split_query query
       jflang.webserver.log s "got confirm_account_deletion"
       match jflang.User_static.completeAccountDeletion (s_q["token"].get "")
         r unit =>
