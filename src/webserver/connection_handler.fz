@@ -114,7 +114,7 @@ module connection_handler : net.Connection_Handler unit is
       match form_data
         x (lock_free.map String String) =>
           cl Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (req_context.client.map y->y.cast_to_i8)).val
-          get_response_main req_context.head.path cmd cl x req_context.head.query_string
+          route_request req_context.head.path cmd cl x req_context.head.query_string
         error =>
           jflang.webserver_S_Response_static.new 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).type.empty
 
