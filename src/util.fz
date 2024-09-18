@@ -2,11 +2,11 @@
 #
 #  Tokiwa Software GmbH, Germany
 #
-#  Source code of Fuzion webserver feature webserver
+#  Source code of Fuzion webserver feature util
 #
 # -----------------------------------------------------------------------
 
-# webserver -- unit feature to group features that provide the main
-# functionality for the fuzion-lang.dev service
+# util -- unit feature to group features that provide various utility
+# features to the Fuzion webserver
 #
-module webserver is
+module util is

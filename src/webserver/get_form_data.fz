@@ -1,0 +1,21 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature get_form_data
+#
+# -----------------------------------------------------------------------
+
+# get_form_data -- parse form data submitted to the webserver either as
+# url encoded form data or as multipart/form-data
+#
+module get_form_data(post_data, cmd, raw_query, content_type, content_type_boundary String) outcome (lock_free.map String String) =>
+  if cmd = "POST"
+    if content_type = "application/x-www-form-urlencoded"
+      util.url_encoded.parse_urlencoded_map post_data
+    else if content_type = "multipart/form-data"
+      util.parse_multipart_form_data post_data content_type_boundary
+    else
+      error "Wrong / unsupported content type in request."
+  else
+    util.url_encoded.parse_urlencoded_map raw_query
