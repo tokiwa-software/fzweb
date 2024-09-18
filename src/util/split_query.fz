@@ -1,0 +1,24 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature parse_multipart_form_data
+#
+# -----------------------------------------------------------------------
+
+module split_query(query String) lock_free.map String String =>
+  query_pairs := (lock_free.map String String).empty
+  pairs := query.split "&"
+  for pair in pairs do
+    idx := pair.find "="
+    k := Java.java.net.URLDecoder_static.decode (pair.substring 0 idx.get ) "UTF-8"
+    v := Java.java.net.URLDecoder_static.decode (pair.substring idx.get + 1) "UTF-8"
+    match k
+      jkey Java.java.lang.__jString =>
+        match v
+          jvalue Java.java.lang.__jString =>
+            query_pairs.add (id String jkey) (id String jvalue)
+          e error => panic "type error value not JString"
+      e error => panic "type error key not JString"
+
+  query_pairs
