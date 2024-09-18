@@ -1,6 +1,15 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature url_encoded
+#
+# -----------------------------------------------------------------------
+
 module url_encoded is
 
   # Decode a URL-encoded string
+  #
   module from_urlencoded(data String) String =>
 
     s(c, i) String =>
@@ -23,7 +32,9 @@ module url_encoded is
     else
       res
 
+
   # Parse URL-encoded form data into a map
+  #
   module parse_urlencoded_map(data String) lock_free.map String String =>
 
     pairs := data.split "&"
@@ -34,7 +45,9 @@ module url_encoded is
       _ := form_data.add(name,if nv.count < 2 then "" else from_urlencoded (nv.drop 1).first)
     form_data
 
+
   # Strip non-alphanumeric characters from a string
+  #
   module strip_non_alpha_numeric(s String) String =>
 
     for res := "", (if (("0" <= c) && (c <= "9")) || ("a" <= c && c <= "z") || ("A" <= c && c <= "Z") || c = "_"
@@ -46,7 +59,9 @@ module url_encoded is
     else
       res
 
+
   # HTML-encode a string
+  #
   module html_encode(s String) String =>
 
     for res := "", (if c = "32"
@@ -70,7 +85,9 @@ module url_encoded is
     else
       res
 
+
   # Encode HTML data with newlines preserved
+  #
   module encode_html_data(s String) String =>
 
     for res := "data: ", (if c = "10"

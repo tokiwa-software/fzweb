@@ -1,9 +1,18 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature values
+#
+# -----------------------------------------------------------------------
+
 module values is
 
   # Initialize an empty map
   map := (lock_free.map String String).empty
 
   # Add a key-value pair to the map
+  #
   module add(line String) =>
     pairs := line.split ":"
     if pairs.count=2
@@ -11,6 +20,7 @@ module values is
 
 
   # Get a value from the map and pass it to parse_value feature
+  #
   module get(key String) parse_value =>
     val := map[key]
     if val.exists
