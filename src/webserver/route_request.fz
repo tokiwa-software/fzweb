@@ -87,8 +87,16 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
           jflang.webserver.log s "got confirm_account_deletion send 302 failure"
           jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
     else if raw_path = "/confirm_registration"
-      # NYI
-      jflang.webserver_S_Response_static.new 302 "Location: /registration_failed" (list i8).type.empty
+      s_q := util.split_query query
+      jflang.webserver.log s "got confirm_account_deletion"
+      match jflang.User_static.completeRegistration (s_q["username"].get "") (s_q["token"].get "")
+        r unit =>
+          jflang.webserver.log s "got confirm_registration send 302 success"
+          jflang.webserver_S_Response_static.new 302 "Location: /registration_successful" (list i8).type.empty
+        e error =>
+          jflang.webserver.log s "got confirm_registration send 302 failure: "+e
+          jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
+
     else if raw_path = "/robots.txt"
       # NYI
       jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
