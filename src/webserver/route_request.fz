@@ -102,7 +102,8 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
       x := io.file.use String (array u8) res.as_string io.file.mode.read (()->(io.file.open String).read)
 
       match x
-        robots_txt array u8 =>  jflang.webserver_S_Response_static.new 200 "" (robots_txt.map y->y.cast_to_i8)
+        robots_txt array u8 =>
+          send_ok cmd (String.from_bytes robots_txt)
         e error =>
           jflang.Logger_static.log "robots.txt could not be read."
           jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
