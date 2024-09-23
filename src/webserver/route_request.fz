@@ -111,10 +111,10 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
     else if raw_path = "/goto"
       page := form_data["page"].get ""
       c := jflang.Content_static.getContents s page
-      if c.as_string != jflang.Content_static.FORBIDDEN.as_string
-        jflang.webserver.log(s, "*** forbidding access to absolute or non-normalized path " + page + ".")
-      else if c.as_string!=jflang.Content_static.MISSING.as_string
-        jflang.webserver.log(s,"error: requested file "+page+" does not exist")
+      if c.equals jflang.Content_static.FORBIDDEN
+        jflang.webserver.log s "*** forbidding access to absolute or non-normalized path {page}."
+      else if c.equals jflang.Content_static.MISSING
+        jflang.webserver.log s "error: requested file {page} does not exist"
       else
         if !c.__simplePath.isBlank
           s.setCurrent c.__simplePath
