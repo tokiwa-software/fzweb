@@ -98,9 +98,11 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
           jflang.webserver_S_Response_static.new 302 "Location: /registration_failed" (list i8).type.empty
 
     else if raw_path = "/robots.txt"
-      res := Java.java.nio.file.Files_static.readAllBytes (jflang.Content_static.TEMPLATES__DIR.resolve "robots.txt")
-      match res
-        robots_txt fuzion.java.Array i8 =>  jflang.webserver_S_Response_static.new 200 "" robots_txt
+      res := jflang.Content_static.TEMPLATES__DIR.resolve "robots.txt"
+      x := io.file.use String (array u8) res.as_string io.file.mode.read (()->(io.file.open String).read)
+
+      match x
+        robots_txt array u8 =>  jflang.webserver_S_Response_static.new 200 "" (robots_txt.map y->y.cast_to_i8)
         e error =>
           jflang.Logger_static.log "robots.txt could not be read."
           jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
@@ -138,7 +140,6 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
       # send one byte to trigger javascript event
       b array i8 := [0]
       jflang.webserver_S_Response_static.new 200 "Cache-Control: no-cache\nConnection: keep-alive\nContent-Type: text/event-stream\n" b s
-      send_ok_or_reload cmd s
     else if raw_path = "/contents"
       s.sendContent
       s.sendLoginStatus
@@ -148,14 +149,14 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
       jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
     else
       next_session := jflang.Session_static.get sessid_original sessid client
-      jflang.webserver_static.PerformDirectLogin s fuzion_to_java_map(form_data)
+      jflang.webserver_static.PerformDirectLogin s (fuzion_to_java_map form_data)
       path := decode_path raw_path
       content_identifier := jflang.Content_static.getContents s path
       if content_identifier.equals jflang.Content_static.FORBIDDEN
         jflang.webserver.log s "*** forbidding access to absolute or non-normalized path {path}."
         jflang.webserver_S_Response_static.new 403 "" (list i8).type.empty
       else if content_identifier.equals jflang.Content_static.MISSING
-        jflang.webserver.log s "*** error: requested file "+path+" does not exist"
+        jflang.webserver.log s "*** error: requested file {path} does not exist"
         jflang.webserver_S_Response_static.new 404 "" (list i8).type.empty
       else
         send_content s cmd content_identifier
