@@ -51,7 +51,6 @@ do_register (client Java.java.net.InetAddress, form_data lock_free.map String St
 # and returns the response
 #
 module route_request (raw_path, cmd String, client Java.java.net.InetAddress, form_data (lock_free.map String String), query String) Java.dev.flang.webserver_S_Response =>
-  # NYI: Logging
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
     _ := say "*** unknown request: {cmd}"
     jflang.webserver_S_Response_static.new 501 "" (list i8).type.empty
@@ -85,53 +84,78 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
           jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_successful" (list i8).type.empty
         e error =>
           jflang.webserver.log s "got confirm_account_deletion send 302 failure"
+          jflang.Logger_static.log e.as_string
           jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
     else if raw_path = "/confirm_registration"
       s_q := util.split_query query
-      jflang.webserver.log s "got confirm_account_deletion"
+      jflang.webserver.log s "got confirm_registration"
       match jflang.User_static.completeRegistration (s_q["username"].get "") (s_q["token"].get "")
         r unit =>
           jflang.webserver.log s "got confirm_registration send 302 success"
           jflang.webserver_S_Response_static.new 302 "Location: /registration_successful" (list i8).type.empty
         e error =>
           jflang.webserver.log s "got confirm_registration send 302 failure: "+e
-          jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_failed" (list i8).type.empty
+          jflang.webserver_S_Response_static.new 302 "Location: /registration_failed" (list i8).type.empty
 
     else if raw_path = "/robots.txt"
-      # NYI
-      jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
+      res := Java.java.nio.file.Files_static.readAllBytes (jflang.Content_static.TEMPLATES__DIR.resolve "robots.txt")
+      match res
+        robots_txt fuzion.java.Array i8 =>  jflang.webserver_S_Response_static.new 200 "" robots_txt
+        e error =>
+          jflang.Logger_static.log "robots.txt could not be read."
+          jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
+
     else if raw_path = "/goto"
-      # NYI
+      page := form_data["page"].get ""
+      c := jflang.Content_static.getContents s page
+      if c.as_string != jflang.Content_static.FORBIDDEN.as_string
+        jflang.webserver.log(s, "*** forbidding access to absolute or non-normalized path " + page + ".")
+      else if c.as_string!=jflang.Content_static.MISSING.as_string
+        jflang.webserver.log(s,"error: requested file "+page+" does not exist")
+      else
+        if !c.__simplePath.isBlank
+          s.setCurrent c.__simplePath
+          s.sendContent
+
       send_ok_or_reload cmd s
     else if raw_path = "/run"
-      # NYI
+      code := form_data["code"].get ""
+      results_to := form_data["resultsTo"].get ""
+      jflang.Runner_static.run s code results_to true
       send_ok_or_reload cmd s
     else if raw_path = "/runeff"
-      # NYI
+      code := form_data["code"].get ""
+      results_to := form_data["resultsTo"].get ""
+      jflang.Runner_static.run s code results_to true
       send_ok_or_reload cmd s
     else if raw_path = "/playground"
-      # NYI
-      jflang.webserver_S_Response_static.new 403 "" (list i8).type.empty
+      if s.getLoginStatus.equals jflang.LoginStatus_static.__k__in
+        jflang.Playground_static.start s
+        send_ok_or_reload cmd s
+      else
+        jflang.webserver_S_Response_static.new 403 "" (list i8).type.empty
     else if raw_path = "/events"
       # send one byte to trigger javascript event
       b array i8 := [0]
       jflang.webserver_S_Response_static.new 200 "Cache-Control: no-cache\nConnection: keep-alive\nContent-Type: text/event-stream\n" b s
+      send_ok_or_reload cmd s
     else if raw_path = "/contents"
-      # NYI
+      s.sendContent
+      s.sendLoginStatus
       send_ok_or_reload cmd s
     else if raw_path = "/api/benchmark/logs"
-      # NYI
+      # NYI:
       jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
     else
-      next_session := jflang.Session_static.get "" "" client
-      # NYI: direct login
+      next_session := jflang.Session_static.get sessid_original sessid client
+      jflang.webserver_static.PerformDirectLogin s fuzion_to_java_map(form_data)
       path := decode_path raw_path
       content_identifier := jflang.Content_static.getContents s path
       if content_identifier.equals jflang.Content_static.FORBIDDEN
-        say "*** forbidding access to absolute or non-normalized path {path}."
+        jflang.webserver.log s "*** forbidding access to absolute or non-normalized path {path}."
         jflang.webserver_S_Response_static.new 403 "" (list i8).type.empty
       else if content_identifier.equals jflang.Content_static.MISSING
-        say "*** error: requested file {path} does not exist"
+        jflang.webserver.log s "*** error: requested file "+path+" does not exist"
         jflang.webserver_S_Response_static.new 404 "" (list i8).type.empty
       else
         send_content s cmd content_identifier
