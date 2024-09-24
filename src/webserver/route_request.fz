@@ -24,9 +24,9 @@ has_registered_recently (client Java.java.net.InetAddress) bool =>
 
 # helper feature to convert java map to fuzion map
 #
-module fuzion_to_java_map(fz_map lock_free.map String String) Java.java.util.Map =>
+module fuzion_to_java_map(fz_map lock_free.map String String) Java.java.util.TreeMap =>
   # Create an instance of Java's Map
-  jv_map := Java.java.util.Map_static.__k__of
+  jv_map := Java.java.util.TreeMap.new
   # Iterate over items in the Fuzion map and put them into the Java Map
   for p in fz_map.items do
     key := Java.java.lang.__jString.new p.0
@@ -109,17 +109,7 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
           jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
 
     else if raw_path = "/goto"
-      page := form_data["page"].get ""
-      c := jflang.Content_static.getContents s page
-      if c.equals jflang.Content_static.FORBIDDEN
-        jflang.webserver.log s "*** forbidding access to absolute or non-normalized path {page}."
-      else if c.equals jflang.Content_static.MISSING
-        jflang.webserver.log s "error: requested file {page} does not exist"
-      else
-        if !c.__simplePath.isBlank
-          s.setCurrent c.__simplePath
-          s.sendContent
-
+      # NYI
       send_ok_or_reload cmd s
     else if raw_path = "/run"
       code := form_data["code"].get ""
