@@ -1,0 +1,148 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature user
+#
+# -----------------------------------------------------------------------
+
+# user -- facilities providing the user management for the Fuzion
+# webserver
+#
+module user (base_dir String) is
+
+  config := config_file (base_dir + "/" + user_file)
+  log_path := base_dir + "/" + log_file
+  run_dir_path := base_dir + "/" + run_dir
+
+
+  # verify username password combination
+  #
+  module verify_login (username, password String) =>
+    # compare a value of type T with a value of type option T,
+    # returns true iff the option is not nil and a = b.get
+    #
+    compare_with_option (T type : property.equatable, a T, b option T) =>
+      match b
+        nil => false
+        x T => a = x
+
+    if compare_with_option username name || compare_with_option username email || compare_with_option username login
+      match password_hash
+        nil => false
+        hash String => panic "NYI: BCrypt verification"
+    else
+      false
+
+
+  # name of the user
+  #
+  module name =>
+    config.get "name"
+
+
+  # email of the user
+  #
+  module email =>
+    config.get "email"
+
+
+  # login of the user
+  #
+  module login =>
+    config.get "login"
+
+
+  # password pepper-id of the user
+  #
+  module password_pepper_id =>
+    config.get "password.pepper-id"
+
+
+  # password pepper-id of the user
+  #
+  module password_pepper_id =>
+    config.get "password.pepper-id"
+
+
+  # password hash of the user
+  #
+  module password_hash =>
+    config.get "password.hash"
+
+
+  # does the user have a registration token?
+  #
+  module has_registration_token =>
+    (config.get "registration_token").exists
+
+
+  # groups of the user
+  #
+  module groups =>
+    config.get "groups"
+
+
+  # deletion token of the user
+  #
+  deletion_token =>
+    config.get "deletion_token"
+
+
+  # checks if groups_to_check contains a group in groups
+  #
+  # groups_to_check and groups are both separated by " "
+  #
+  module check_group_access (groups_to_check String) =>
+    groups0 := set_of_ordered (groups.get "").split
+    checked_groups := set_of_ordered groups_to_check.split
+    common_groups := groups0 ∩ checked_groups
+
+    match common_groups.size_option
+      nil => false
+      size i32 =>
+        if size > 0
+          true
+        else
+          check_for_all := checked_groups.contains "all"
+          access_to_all := groups0.contains "all"
+          check_for_any := (groups0.size_option.get 0) > 0 && checked_groups.contains "any"
+          check_for_all || check_for_any || access_to_all
+
+
+  # verify the password of the given user, and return the user
+  # in case the password is correct
+  #
+  module type.get (username, password String) outcome user =>
+    panic "NYI"
+
+
+  # get user by loginname or email
+  #
+  module type.get (login_or_email String) outcome user =>
+    panic "NYI"
+
+
+  # get user by a deletion token
+  #
+  module type.get_by_deletion_token (token String) outcome user =>
+    panic "NYI"
+
+
+  # get the default user
+  #
+  module type.default_user user =>
+    user (users_dir + "/" + no_user)
+
+
+  # constants
+  #
+  type.noreply_tokiwa_software => "noreply@tokiwa.software"
+
+  type.users_dir => "./users"
+  type.deleted_users_dir => "./users_deleted"
+  type.user_file => "user.txt"
+  type.log_file => "log.txt"
+  type.run_dir => "runDir"
+
+  type.no_user => "--no-user--"
