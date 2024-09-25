@@ -11,9 +11,9 @@
 #
 module user (base_dir String) is
 
-  config := config_file (base_dir + "/" + user_file)
-  log_path := base_dir + "/" + log_file
-  run_dir_path := base_dir + "/" + run_dir
+  config := config_file.open (base_dir + "/" + user.user_file)
+  log_path := base_dir + "/" + user.log_file
+  run_dir_path := base_dir + "/" + user.run_dir
 
 
   # verify username password combination
@@ -59,12 +59,6 @@ module user (base_dir String) is
     config.get "password.pepper-id"
 
 
-  # password pepper-id of the user
-  #
-  module password_pepper_id =>
-    config.get "password.pepper-id"
-
-
   # password hash of the user
   #
   module password_hash =>
@@ -94,8 +88,8 @@ module user (base_dir String) is
   # groups_to_check and groups are both separated by " "
   #
   module check_group_access (groups_to_check String) =>
-    groups0 := set_of_ordered (groups.get "").split
-    checked_groups := set_of_ordered groups_to_check.split
+    groups0 := container.set_of_ordered (groups.get "").split
+    checked_groups := container.set_of_ordered groups_to_check.split
     common_groups := groups0 ∩ checked_groups
 
     match common_groups.size_option
