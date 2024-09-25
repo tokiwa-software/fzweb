@@ -25,6 +25,6 @@ module logger is
       _ := (io.file.open some_type).write "\r\n".utf8
       say m
     match x
-      e error => panic "*** failed to write to log : {e}"
+      e error => log "*** failed to write to log : {e}"
       f String => say f
 
