@@ -23,7 +23,7 @@ module logger is
       m := logger.thread_id.as_string+": "+msg
       _ := (io.file.open some_type).write m.utf8
       _ := (io.file.open some_type).write "\r\n".utf8
-      say m
+      m
     match x
       e error => log "*** failed to write to log : {e}"
       f String => say f
