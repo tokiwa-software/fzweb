@@ -7,24 +7,26 @@
 # -----------------------------------------------------------------------
 
 module logger is
+
   # Atomic integer to maintain a unique thread ID
-  thread_id_count := Java.java.util.concurrent.atomic.AtomicInteger.new
+  thread_id_count := concur.atomic 0
 
   # Thread local storage for thread IDs
-  thread_id := thread_id_count.getAndIncrement
+  thread_id :=
+    for x := thread_id_count.read
+    while !(thread_id_count.compare_and_set x x+1)
+    else x+1
 
+  # Logger function that outputs to the console
   module log(s2 String) =>
     say "{logger.thread_id}: {s2}"
 
-  module log (logpath String,msg String) =>
-    some_type is
-    x := io.file.use some_type (String) logpath.as_string io.file.mode.write ()->
-      _ := (io.file.open some_type).read
-      m := logger.thread_id.as_string+": "+msg
-      _ := (io.file.open some_type).write m.utf8
-      _ := (io.file.open some_type).write "\r\n".utf8
-      m
-    match x
-      e error => log "*** failed to write to log : {e}"
-      f String => say f
+  # Logger function that writes to a file
+  module log(log_path String, msg String) =>
+    res := io.file.use unit log_path io.file.mode.append ()->
+      m := "{logger.thread_id}: {msg}"
+      io.file.open.write "{m}\n".utf8
 
+    match res
+      unit => say "{logger.thread_id}: {msg}"  # Also log to console
+      e error => say "*** failed to write to log: {e}"
