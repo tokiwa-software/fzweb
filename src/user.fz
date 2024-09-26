@@ -187,6 +187,20 @@ module user (base_dir String) is
             unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
 
 
+  # complete registration with token from email
+  #
+  module type.complete_registration (username, token String) outcome unit =>
+    if username.contains "." || username.contains "/" || username.is_empty
+      error "Dots and slashes in username are not allowed."
+    else
+      user_text := "{user.users_dir}/{username}/{user.user_file}"
+      c := config_file.open user_text
+
+      if (c.get "registration_token").get "" = token
+        _ := c.remove "registration_token"
+        c.save
+
+
   # create and store user information on the file system
   #
   type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
