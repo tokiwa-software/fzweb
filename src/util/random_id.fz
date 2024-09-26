@@ -1,0 +1,12 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature random_id
+#
+# -----------------------------------------------------------------------
+
+module random_id is
+
+  module get_password (bits i32) String =>
+    get bits
