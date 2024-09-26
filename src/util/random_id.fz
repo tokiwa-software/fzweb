@@ -6,6 +6,9 @@
 #
 # -----------------------------------------------------------------------
 
+#
+# generate random id basedon byte number
+#
 module random_id is
 
   rnd := random
