@@ -190,7 +190,37 @@ module user (base_dir String) is
   # create and store user information on the file system
   #
   type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
-    panic "NYI"
+    user_dir := "{user.users_dir}/{username}"
+    user_text := "{user_dir}/{user.user_file}"
+    if util.exists user_text
+      error "*** user already exists: {username}"
+    else
+      match io.dir.make user_dir
+        e error => e
+        unit =>
+          token := generate_uuid
+
+          entries := [
+            ("name", full_name),
+            ("first_name", first_name),
+            ("last_name", last_name),
+            ("affiliation", affiliation),
+            ("email", email),
+            ("login", username),
+            ("password.pepper-id", "0".as_string),
+            ("password.hash", "NYI"), # NYI
+            ("groups", "users"),
+            ("terms_accepted", terms.as_string),
+            ("newsletter", newsletter.as_string),
+            ("registration_date", date),
+            ("registration_token", token)
+          ]
+          m := (lock_free.map String String).from_entries entries
+
+          c := config_file m user_text
+          c.save
+
+          token
 
 
   # generate a uuid
@@ -233,12 +263,7 @@ module user (base_dir String) is
     match get_by_deletion_token token
       error => error "no user found with token: {token}"
       u user =>
-        exists (path String) bool =>
-          match io.file.stat path true
-            io.file.meta_data => true
-            error => false
-
-        if !(exists deleted_users_dir)
+        if !(util.exists deleted_users_dir)
           _ := io.dir.make deleted_users_dir
 
         io.file.move u.base_dir "{deleted_users_dir}/{time.now}"
