@@ -104,6 +104,24 @@ module user (base_dir String) is
           check_for_all || check_for_any || access_to_all
 
 
+  # send email for account deletion confirmation
+  #
+  trigger_deletion outcome unit =>
+    token := user.generate_uuid
+    config.set0 "deletion_token" token
+    config.save
+    subject := "[fuzion-lang.dev] - Confirm account deletion"
+    message_content := """
+      Dear {name},
+
+      Please confirm the deletion of your account by clicking the following link:
+
+        https://fuzion-lang.dev/confirm_account_deletion?token={token}
+    """
+    Java.dev.flang.EmailService_static.getInstance.sendTextMailWithFooter user.noreply_tokiwa_software email subject message_content
+
+
+
   # verify the password of the given user, and return the user
   # in case the password is correct
   #
@@ -173,6 +191,57 @@ module user (base_dir String) is
   #
   type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
     panic "NYI"
+
+
+  # generate a uuid
+  #
+  type.generate_uuid String =>
+    Java.java.util.UUID_static.randomUUID.toString
+
+
+  module type.trigger_account_deletion (client array u8, form_data lock_free.map String String) String =>
+    if has_triggered_account_deletion_recently client
+      "<div class='text-center'>Only one deletion request per IP possible within 10 minutes.</div>"
+    else
+      standard_text := "<div class='text-center'>If the account exists an E-Mail has been sent to complete the deletion</div>"
+      match form_data["username_or_email"]
+        nil => standard_text
+        username_or_email String =>
+          match get username_or_email
+            error => standard_text
+            u user =>
+              match { x := u.trigger_deletion; say "User requested deletion: {u.email}."; x }
+                e error =>
+                  say "user.delete_account not successful."
+                  say e
+                  "<div class='text-center'>There was an error sending the E-Mail.</div>"
+                unit => standard_text
+
+
+  # has given client triggered an account deletion
+  # in the last 10 minutes?
+  #
+  type.has_triggered_account_deletion_recently (client array u8) bool =>
+    # NYI
+    false
+
+
+  #
+  #
+  module type.complete_account_deletion (token String) outcome unit =>
+    # simplify by passing username in link
+    match get_by_deletion_token token
+      error => error "no user found with token: {token}"
+      u user =>
+        exists (path String) bool =>
+          match io.file.stat path true
+            io.file.meta_data => true
+            error => false
+
+        if !(exists deleted_users_dir)
+          _ := io.dir.make deleted_users_dir
+
+        io.file.move u.base_dir "{deleted_users_dir}/{time.now}"
 
 
   # send email with account confirmation link
