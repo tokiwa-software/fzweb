@@ -6,6 +6,9 @@
 #
 # -----------------------------------------------------------------------
 
+# session -- facilities providing the session management for the Fuzion
+# webserver
+#
 module session is
 
   module attribute_map(entry String) lock_free.map String String =>
