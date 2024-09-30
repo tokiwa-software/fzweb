@@ -6,18 +6,13 @@
 #
 # -----------------------------------------------------------------------
 
-#
 # generate random id basedon byte number
 #
 module random_id is
 
-   #
    # Create a Base64.url encoded id from the given number of random bits.
    #
   module get (bits i32) String =>
     bytes := ((bits+7)/8)
     res := random.next_u64 bytes.as_u64
     (encodings.base64url.encode res.as_bytes.as_array).as_string
-
-  module get_password (bits i32) String =>
-    get bits
