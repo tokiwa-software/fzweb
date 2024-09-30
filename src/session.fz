@@ -22,12 +22,20 @@ module session is
         res.add pair.0 pair.1
     res
 
-  module get_tag(s String, tag String) outcome(lock_free.map String String) =>
-    x :=  (s.find tag).bind (lock_free.map String String) (c -> ((s.find "/>" c+tag.byte_length).bind (lock_free.map String String) (ce -> entry := s.substring c+tag.byte_length ce
-                                                                                                                                           attribute_map entry) ))
+  module get_tag(s String, tag String) option(lock_free.map String String) =>
+
+    match s.find tag
+      c i32 =>
+        match s.find "/>" c+tag.byte_length
+          ce i32 =>
+            entry := s.substring c+tag.byte_length ce
+            attribute_map entry
+          nil => nil
+      nil => nil
+
   # NYI
-  module read_all_lines(path String, return_null_on_error bool,pretty_print bool) list String =>
-    res := (list String).type.empty
+  module read_all_lines(path String, return_null_on_error bool,pretty_print bool) String =>
+    ""
 
   module strip_html(page String) String =>
     if page.ends_with ".html" || page.ends_with ".htm"
@@ -45,5 +53,4 @@ module session is
 
   module has_embedded_html(html String) bool =>
     !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
-  module send_event(event,html_encoded_data String) =>
-    jflang.webser
+
