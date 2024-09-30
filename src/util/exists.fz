@@ -1,0 +1,15 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature exists
+#
+# -----------------------------------------------------------------------
+
+# exists -- check if a file or directory exists
+# at the given path
+#
+module exists (path String) bool =>
+  match io.file.stat path true
+    io.file.meta_data => true
+    error => false

@@ -23,6 +23,12 @@ module config_file (values lock_free.map String String, path String) is
     values.add key val
 
 
+  # remove a key from the config file
+  #
+  module remove (key String) =>
+    values.remove key
+
+
   # save the config file as it is currently in memory to
   # its path
   #

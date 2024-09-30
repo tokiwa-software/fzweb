@@ -1,0 +1,321 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature user
+#
+# -----------------------------------------------------------------------
+
+# user -- facilities providing the user management for the Fuzion
+# webserver
+#
+module user (base_dir String) is
+
+  config := config_file.open (base_dir + "/" + user.user_file)
+  log_path := base_dir + "/" + user.log_file
+  run_dir_path := base_dir + "/" + user.run_dir
+
+
+  # verify username password combination
+  #
+  module verify_login (username, password String) =>
+    # compare a value of type T with a value of type option T,
+    # returns true iff the option is not nil and a = b.get
+    #
+    compare_with_option (T type : property.equatable, a T, b option T) =>
+      match b
+        nil => false
+        x T => a = x
+
+    if compare_with_option username name || compare_with_option username email || compare_with_option username login
+      match password_hash
+        nil => false
+        hash String => panic "NYI: BCrypt verification"
+    else
+      false
+
+
+  # name of the user
+  #
+  module name =>
+    config.get "name"
+
+
+  # email of the user
+  #
+  module email =>
+    config.get "email"
+
+
+  # login of the user
+  #
+  module login =>
+    config.get "login"
+
+
+  # password pepper-id of the user
+  #
+  module password_pepper_id =>
+    config.get "password.pepper-id"
+
+
+  # password hash of the user
+  #
+  module password_hash =>
+    config.get "password.hash"
+
+
+  # does the user have a registration token?
+  #
+  module has_registration_token =>
+    (config.get "registration_token").exists
+
+
+  # groups of the user
+  #
+  module groups =>
+    config.get "groups"
+
+
+  # deletion token of the user
+  #
+  deletion_token =>
+    config.get "deletion_token"
+
+
+  # checks if groups_to_check contains a group in groups
+  #
+  # groups_to_check and groups are both separated by " "
+  #
+  module check_group_access (groups_to_check String) =>
+    groups0 := container.set_of_ordered (groups.get "").split
+    checked_groups := container.set_of_ordered groups_to_check.split
+    common_groups := groups0 ∩ checked_groups
+
+    match common_groups.size_option
+      nil => false
+      size i32 =>
+        if size > 0
+          true
+        else
+          check_for_all := checked_groups.contains "all"
+          access_to_all := groups0.contains "all"
+          check_for_any := (groups0.size_option.get 0) > 0 && checked_groups.contains "any"
+          check_for_all || check_for_any || access_to_all
+
+
+  # send email for account deletion confirmation
+  #
+  trigger_deletion outcome unit =>
+    token := user.generate_uuid
+    config.set0 "deletion_token" token
+    config.save
+    subject := "[fuzion-lang.dev] - Confirm account deletion"
+    message_content := """
+      Dear {name},
+
+      Please confirm the deletion of your account by clicking the following link:
+
+        https://fuzion-lang.dev/confirm_account_deletion?token={token}
+    """
+    Java.dev.flang.EmailService_static.getInstance.sendTextMailWithFooter user.noreply_tokiwa_software email subject message_content
+
+
+
+  # verify the password of the given user, and return the user
+  # in case the password is correct
+  #
+  module type.get (username, password String) outcome user =>
+    panic "NYI"
+
+
+  # get user by loginname or email
+  #
+  module type.get (login_or_email String) outcome user =>
+    panic "NYI"
+
+
+  # get user by a deletion token
+  #
+  module type.get_by_deletion_token (token String) outcome user =>
+    panic "NYI"
+
+
+  # get the default user
+  #
+  module type.default_user user =>
+    user (users_dir + "/" + no_user)
+
+
+  # register a using the data submitted by the form
+  #
+  module type.register (form_data lock_free.map String String) outcome String =>
+    full_name (first, last, email String) =>
+      full0 := "{first} {last}".trim
+      full0.is_empty ? email : full0
+
+    first_name := (form_data[form_data_first_name].get "").trim
+    last_name := (form_data[form_data_last_name].get "").trim
+    affiliation := (form_data[form_data_affiliation].get "").trim
+    username0 := form_data[form_data_username]
+    email0 := form_data[form_data_email]
+    password0 := form_data[form_data_password]
+    terms := "on" = form_data[form_data_terms].get "off"
+    newsletter := "off" = form_data[form_data_newsletter].get "off"
+
+    if email0.is_nil || username0.is_nil || password0.is_nil || !terms
+      error "Required fields not present: email, username, password, accepting terms."
+    else if email0.get.contains "," || email0.get.contains ";"
+      # TODO check if really true
+      error "Comma or semicolon in email are not allowed."
+    else if (Java.javax.mail.internet.InternetAddress_static.parse email0.get).is_error
+      error "Email address invalid."
+    else if false # NYI
+      error "Username contains illegal characters. Only A-Z, a-z, 0-9, and _ are allowed."
+    else if !(3 < username0.get.codepoint_length < 100)
+      error "Username must have at least three characters and must not be longer than 100 characters."
+    else
+      full_name := full_name first_name last_name email0.get
+
+      match create_user_txt first_name last_name full_name affiliation username0.get email0.get password0.get terms newsletter "NYI: time"
+        error => "<div class='text-center'>Registration failed. Already registered?</div>"
+        token String =>
+          say "send registration token email to: {email0}"
+
+          match send_user_registration_email full_name email0.get token username0.get
+            error => "<div class='text-center'>Registration failed. Already registered?</div>"
+            unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
+
+
+  # complete registration with token from email
+  #
+  module type.complete_registration (username, token String) outcome unit =>
+    if username.contains "." || username.contains "/" || username.is_empty
+      error "Dots and slashes in username are not allowed."
+    else
+      user_text := "{user.users_dir}/{username}/{user.user_file}"
+      c := config_file.open user_text
+
+      if (c.get "registration_token").get "" = token
+        _ := c.remove "registration_token"
+        c.save
+
+
+  # create and store user information on the file system
+  #
+  type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
+    user_dir := "{user.users_dir}/{username}"
+    user_text := "{user_dir}/{user.user_file}"
+    if util.exists user_text
+      error "*** user already exists: {username}"
+    else
+      match io.dir.make user_dir
+        e error => e
+        unit =>
+          token := generate_uuid
+
+          entries := [
+            ("name", full_name),
+            ("first_name", first_name),
+            ("last_name", last_name),
+            ("affiliation", affiliation),
+            ("email", email),
+            ("login", username),
+            ("password.pepper-id", "0".as_string),
+            ("password.hash", "NYI"), # NYI
+            ("groups", "users"),
+            ("terms_accepted", terms.as_string),
+            ("newsletter", newsletter.as_string),
+            ("registration_date", date),
+            ("registration_token", token)
+          ]
+          m := (lock_free.map String String).from_entries entries
+
+          c := config_file m user_text
+          c.save
+
+          token
+
+
+  # generate a uuid
+  #
+  type.generate_uuid String =>
+    Java.java.util.UUID_static.randomUUID.toString
+
+
+  module type.trigger_account_deletion (client array u8, form_data lock_free.map String String) String =>
+    if has_triggered_account_deletion_recently client
+      "<div class='text-center'>Only one deletion request per IP possible within 10 minutes.</div>"
+    else
+      standard_text := "<div class='text-center'>If the account exists an E-Mail has been sent to complete the deletion</div>"
+      match form_data["username_or_email"]
+        nil => standard_text
+        username_or_email String =>
+          match get username_or_email
+            error => standard_text
+            u user =>
+              match { x := u.trigger_deletion; say "User requested deletion: {u.email}."; x }
+                e error =>
+                  say "user.delete_account not successful."
+                  say e
+                  "<div class='text-center'>There was an error sending the E-Mail.</div>"
+                unit => standard_text
+
+
+  # has given client triggered an account deletion
+  # in the last 10 minutes?
+  #
+  type.has_triggered_account_deletion_recently (client array u8) bool =>
+    # NYI
+    false
+
+
+  #
+  #
+  module type.complete_account_deletion (token String) outcome unit =>
+    # simplify by passing username in link
+    match get_by_deletion_token token
+      error => error "no user found with token: {token}"
+      u user =>
+        if !(util.exists deleted_users_dir)
+          _ := io.dir.make deleted_users_dir
+
+        io.file.move u.base_dir "{deleted_users_dir}/{time.now}"
+
+
+  # send email with account confirmation link
+  #
+  type.send_user_registration_email (name, email, token, username String) outcome unit =>
+    # NYI - prevent abuse
+    subject := "[fuzion-lang.dev] - Confirm registration"
+    mail_content := """
+      Dear {send_user_registration_email.this.name},
+
+      Thank you for registering with fuzion-lang.dev Please confirm your
+      registration by clicking the following link:
+
+        https://fuzion-lang.dev/confirm_registration?username={username}&token={token}
+    """
+    Java.dev.flang.EmailService_static.getInstance.sendTextMailWithFooter noreply_tokiwa_software email subject mail_content
+
+
+  # constants
+  #
+  type.noreply_tokiwa_software => "noreply@tokiwa.software"
+
+  type.users_dir => "./users"
+  type.deleted_users_dir => "./users_deleted"
+  type.user_file => "user.txt"
+  type.log_file => "log.txt"
+  type.run_dir => "runDir"
+
+  type.no_user => "--no-user--"
+
+  type.form_data_first_name => "first_name"
+  type.form_data_last_name => "last_name"
+  type.form_data_affiliation => "affiliation"
+  type.form_data_username => "username"
+  type.form_data_email => "email"
+  type.form_data_password => "password"
+  type.form_data_newsletter => "newsletter"
+  type.form_data_terms => "terms"
