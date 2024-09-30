@@ -12,11 +12,11 @@
 module session is
 
   module attribute_map(entry String) lock_free.map String String =>
-    map := url_encoded.parse_urlencoded_map entry
+    map := util.url_encoded.parse_urlencoded_map entry
     res := (lock_free.map String String).empty
     for pair in map.items do
-      if (pair.1.starts_with "\"") && (pairs.1.ends_with "\"")
-        v := pair.1.substring 1 pairs.1.byte_length
+      if (pair.1.starts_with "\"") && (pair.1.ends_with "\"")
+        v := pair.1.substring 1 pair.1.byte_length
         res.add pair.0 v
       else
         res.add pair.0 pair.1
@@ -54,3 +54,12 @@ module session is
   module has_embedded_html(html String) bool =>
     !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
 
+  module embedded_html_in_frame(html String) option String =>
+    match html.find "<!DOCTYPE html>"
+      c i32 =>
+        match html.find "</html>"
+          c2 i32 =>
+            embedded_html := html.substring c c2+7
+            html.replace  embedded_html "<div class=\"responsive-container aspect-16-by-9\"><iframe class=\"responsive-iframe\" sandbox=\"allow-same-origin allow-scripts\" id='iframe-embedded-content' data-src-doc-content=\"" + embedded_html.replace("&quot;", "REPLACEDHTMLQUOTE").replace("\"", "REPLACEDDOUBLEQUOTE") +  "\"></iframe></div>"
+          nil => nil
+      nil => nil
