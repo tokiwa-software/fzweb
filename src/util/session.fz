@@ -1,0 +1,48 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature session
+#
+# -----------------------------------------------------------------------
+
+module session is
+
+  # NYI
+  module is_null bool =>
+    true
+
+  # module log (m String) =>
+  #   say m
+  module log(msg String) =>
+    u := ""
+    if u.is_blank
+      logger.log msg
+    else
+      # u.log msg
+
+  module attribute_map(entry String) lock_free.map String String =>
+    map := url_encoded.parse_urlencoded_map entry
+    res := (lock_free.map String String).empty
+    for pair in map.items do
+      if (pair.1.starts_with "\"") && (pairs.1.ends_with "\"")
+        v := pair.1.substring 1 pairs.1.byte_length
+        res.add pair.0 v
+      else
+        res.add pair.0 pair.1
+    res
+
+  module get_tag(s String, tag String) outcome(lock_free.map String String) =>
+    x :=  (s.find tag).bind (lock_free.map String String) (c -> ((s.find "/>" c+tag.byte_length).bind (lock_free.map String String) (ce -> entry := s.substring c+tag.byte_length ce
+                                                                                                                                           attribute_map entry) ))
+  # NYI
+  module read_all_lines(path String, return_null_on_error bool,pretty_print bool) list String =>
+    res := (list String).type.empty
+
+  module strip_html(page String) String =>
+    if page.ends_with ".html" || page.ends_with ".htm"
+      page.substring 0 (page.find ".")
+    else if page = ""
+      "index"
+    else
+      page
