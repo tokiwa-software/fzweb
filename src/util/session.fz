@@ -8,19 +8,6 @@
 
 module session is
 
-  # NYI
-  module is_null bool =>
-    true
-
-  # module log (m String) =>
-  #   say m
-  module log(msg String) =>
-    u := ""
-    if u.is_blank
-      logger.log msg
-    else
-      # u.log msg
-
   module attribute_map(entry String) lock_free.map String String =>
     map := url_encoded.parse_urlencoded_map entry
     res := (lock_free.map String String).empty
