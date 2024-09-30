@@ -46,3 +46,11 @@ module session is
       "index"
     else
       page
+  module add_html(page String) String =>
+    if !jflang.Content_static.isKnownPreformattedFile page
+      page + ".html"
+    else
+      page
+
+  module has_embedded_html(html String) bool =>
+    !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
