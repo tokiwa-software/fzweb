@@ -19,14 +19,6 @@ module user (base_dir String) is
   # verify username password combination
   #
   module verify_login (username, password String) =>
-    # compare a value of type T with a value of type option T,
-    # returns true iff the option is not nil and a = b.get
-    #
-    compare_with_option (T type : property.equatable, a T, b option T) =>
-      match b
-        nil => false
-        x T => a = x
-
     if compare_with_option username name || compare_with_option username email || compare_with_option username login
       match password_hash
         nil => false
@@ -122,23 +114,66 @@ module user (base_dir String) is
 
 
 
+  # get a list of the directory entries
+  #
+  type.list_dir (path String) list String =>
+    res_list := io.dir.use (list String) path ()->
+      for
+        next := io.dir.open.read, io.dir.open.read
+        entries := list next.get nil, entries ++ [ next.get ]
+      until !next.ok
+        entries
+
+    match res_list
+      error => nil
+      l list String => l
+
+
+  # given a path of a user directory, check if the given predicate applies
+  #
+  type.check_user (predicate user->bool, path String) bool =>
+    match io.file.stat path true
+      error => false
+      m io.file.meta_data =>
+        if m.is_dir
+          u := user path
+          predicate u
+        else
+          false
+
+
   # verify the password of the given user, and return the user
   # in case the password is correct
   #
   module type.get (username, password String) outcome user =>
-    panic "NYI"
+    for
+      f in (list_dir users_dir)
+    until check_user (u->u.verify_login username password && !u.has_registration_token) "{users_dir}/f"
+      outcome user (user "{users_dir}/f")
+    else
+      outcome user (error "no user found")
 
 
   # get user by loginname or email
   #
   module type.get (login_or_email String) outcome user =>
-    panic "NYI"
+    for
+      f in (list_dir users_dir)
+    until check_user (u->compare_with_option login_or_email u.login || compare_with_option login_or_email u.email) "{users_dir}/f"
+      outcome user (user "{users_dir}/f")
+    else
+      outcome user (error "no user found")
 
 
   # get user by a deletion token
   #
   module type.get_by_deletion_token (token String) outcome user =>
-    panic "NYI"
+    for
+      f in (list_dir users_dir)
+    until check_user (u->compare_with_option token u.deletion_token) "{users_dir}/f"
+      outcome user (user "{users_dir}/f")
+    else
+      outcome user (error "no user found")
 
 
   # get the default user
@@ -319,3 +354,12 @@ module user (base_dir String) is
   type.form_data_password => "password"
   type.form_data_newsletter => "newsletter"
   type.form_data_terms => "terms"
+
+
+# compare a value of type T with a value of type option T,
+# returns true iff the option is not nil and a = b.get
+#
+compare_with_option (T type : property.equatable, a T, b option T) =>
+  match b
+    nil => false
+    x T => a = x
