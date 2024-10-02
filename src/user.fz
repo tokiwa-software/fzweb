@@ -30,7 +30,12 @@ module user (base_dir String) is
     if compare_with_option username name || compare_with_option username email || compare_with_option username login
       match password_hash
         nil => false
-        hash String => panic "NYI: BCrypt verification"
+        hash String =>
+          p := password.utf8.map x->x.cast_to_i8
+          h := hash.utf8.map x->x.cast_to_i8
+          res := (Java.at.favre.lib.crypto.bcrypt.BCrypt_static.verifyer.verify__u00005b_B_u00005b_B p h).verified
+          say (res ? "successful login" : "*** failed login attempt")
+          res
     else
       false
 
@@ -222,7 +227,7 @@ module user (base_dir String) is
             ("email", email),
             ("login", username),
             ("password.pepper-id", "0".as_string),
-            ("password.hash", "NYI"), # NYI
+            ("password.hash", id String (Java.dev.flang.password_static.getHash pazzword)),
             ("groups", "users"),
             ("terms_accepted", terms.as_string),
             ("newsletter", newsletter.as_string),
