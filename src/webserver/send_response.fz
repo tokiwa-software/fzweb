@@ -8,7 +8,7 @@
 
 # like its three-argument counterpart, but sends a blank response
 #
-module send_ok_or_reload (cmd String, s Java.dev.flang.Session) Java.dev.flang.webserver_S_Response =>
+module send_ok_or_reload (cmd String, s Java.dev.flang.Session) response =>
   send_ok_or_reload cmd s ""
 
 
@@ -16,32 +16,32 @@ module send_ok_or_reload (cmd String, s Java.dev.flang.Session) Java.dev.flang.w
 # and data can be send back over the session, otherwise, return a 500
 # response and ask the client to reload
 #
-module send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) Java.dev.flang.webserver_S_Response =>
+module send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) response =>
   returncode := if s.is_null || !s.isContentStreamOk then 500 else 200
   must_message := if s.is_null then "must reload page" else "must reconnect"
   data := if returncode = 500 then must_message.utf8.map (x->x.cast_to_i8) else datastr.utf8.map (x->x.cast_to_i8)
   data2 := data.as_array
   header := "Content-Length: {data2.length}\nContent-Type: text/html\n"
-  jflang.webserver_S_Response_static.new returncode header data2
+  response returncode header data2
 
 
 # send an HTTP 200 response along with the given data
 #
-module send_ok (cmd String, datastr String) Java.dev.flang.webserver_S_Response =>
+module send_ok (cmd String, datastr String) response =>
   data := (datastr.utf8.map (x->x.cast_to_i8)).as_array
   header := "Content-Length: {data.length}\nContent-Type: text/html\n"
-  jflang.webserver_S_Response_static.new 200 header data
+  response 200 header data
 
 
 # send an HTTP response provided a Java.dev.flang.Content_S_Identifier
 #
-module send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.flang.Content_S_Identifier) Java.dev.flang.webserver_S_Response =>
+module send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.flang.Content_S_Identifier) response =>
   # NYI: logging, mime types
   bytes := content_identifier.getBytes s
   match bytes
     bytes2 fuzion.java.Array =>
       attributes := "Content-Length: {bytes2.length}\n"
-      jflang.webserver_S_Response_static.new 200 attributes bytes2
+      response 200 attributes bytes2
     e error =>
       say e
-      jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
+      response 500 "" (list i8).type.empty
