@@ -78,7 +78,7 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
     else if raw_path = "/confirm_account_deletion"
       s_q := util.split_query query
       jflang.webserver.log s "got confirm_account_deletion"
-      match jflang.User_static.completeAccountDeletion (s_q["token"].get "")
+      match user.complete_account_deletion (s_q["token"].get "")
         r unit =>
           jflang.webserver.log s "got confirm_account_deletion send 302 success"
           jflang.webserver_S_Response_static.new 302 "Location: /account_deletion_successful" (list i8).type.empty
@@ -89,7 +89,7 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
     else if raw_path = "/confirm_registration"
       s_q := util.split_query query
       jflang.webserver.log s "got confirm_registration"
-      match jflang.User_static.completeRegistration (s_q["username"].get "") (s_q["token"].get "")
+      match user.complete_registration (s_q["username"].get "") (s_q["token"].get "")
         r unit =>
           jflang.webserver.log s "got confirm_registration send 302 success"
           jflang.webserver_S_Response_static.new 302 "Location: /registration_successful" (list i8).type.empty
