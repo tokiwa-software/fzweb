@@ -1,0 +1,100 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature content
+#
+# -----------------------------------------------------------------------
+
+# content -- features for working with the content stored on the file system
+#
+module content is
+
+  # Base directory corresponding to simple_path.
+  #
+  # This base directory will contain the pages subdirectory
+  # and the access.txt file.
+  #
+  type.base_dir (simple_path String) Java.java.nio.file.Path =>
+    bp := base_simple_path simple_path
+    bp?? ? content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ bp : content_dir
+
+
+  # Base directory corresponding to simple_path, or nil
+  # if it could not be found.
+  #
+  # This base directory will contain the pages subdirectory
+  # and the access.txt file.
+  #
+  type.base_simple_path (simple_path String) option Java.java.nio.file.Path =>
+    sp := jpath_of simple_path
+
+    for
+      i := sp.getNameCount, i - 1
+      base_simple_path := sp.subpath 0 i
+      base_dir0 := content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ base_simple_path
+      access := base_dir0.resolve "access.txt"
+    while i > 0
+    until Java.java.nio.file.Files_static.exists access (list Java.java.nio.file.LinkOption).empty
+      option Java.java.nio.file.Path base_simple_path
+    else
+      option Java.java.nio.file.Path nil
+
+
+  # The file part of a simple_path.
+  #
+  type.file_path (simple_path String) Java.java.nio.file.Path =>
+    bp := base_simple_path simple_path
+    sp := jpath_of simple_path
+    start i32 := bp!! ? 0 : bp.get.getNameCount
+    end i32 := sp.getNameCount
+    start < end ? sp.subpath start end : jpath_of ""
+
+
+  # look the given attribute in the access.txt file
+  # for simple_path
+  #
+  type.access_attr (simple_path, attribute, default String) String =>
+    access_file := (base_dir simple_path).resolve "access.txt"
+    c := config_file.open access_file.toString
+    a := c.get attribute
+    a.get default
+
+
+  # Check if access to a given path is permitted for user u.
+  #
+  type.access_permitted (u option user, simple_path String) bool =>
+    groups := access_attr simple_path "groups" ""
+    match u
+      u0 user => u0.check_group_access groups
+      nil =>
+        for
+          s in (groups.split " ")
+        until s = "all"
+          true
+        else
+          false
+
+
+  # check if a file is known to be preformatted
+  #
+  module type.is_known_preformatted_file (file_name String) bool =>
+    file_name.ends_with ".c" ||
+      file_name.ends_with ".fz" ||
+      file_name.ends_with ".fuzion" ||
+      file_name.ends_with ".sh" ||
+      file_name.ends_with ".txt" ||
+      file_name.ends_with ".ebnf" ||
+      file_name.ends_with ".wiki"
+
+
+  # constants
+  #
+  type.content_dir Java.java.nio.file.Path => (jpath_of "./content").normalize
+
+
+# short-hand to invoke java.nio.file.Path.of
+# with a single string argument
+#
+jpath_of (path String) Java.java.nio.file.Path =>
+  Java.java.nio.file.Path_static.__k__of path (list Java.java.lang.__jString).empty
