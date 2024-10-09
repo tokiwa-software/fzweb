@@ -44,4 +44,4 @@ module send_content (s Java.dev.flang.Session, cmd String, content_identifier Ja
       jflang.webserver_S_Response_static.new 200 attributes bytes2
     e error =>
       say e
-      jflang.webserver_S_Response_static.new 500 "" (list i8).type.empty
+      jflang.webserver_S_Response_static.new 500 "" (list i8).empty
