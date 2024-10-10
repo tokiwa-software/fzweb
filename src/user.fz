@@ -9,7 +9,7 @@
 # user -- facilities providing the user management for the Fuzion
 # webserver
 #
-module user (base_dir String) is
+module user (module base_dir String) is
 
   config := config_file.open (base_dir + "/" + user.user_file)
   log_path := base_dir + "/" + user.log_file

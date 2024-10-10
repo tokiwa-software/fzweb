@@ -76,6 +76,34 @@ module content is
           false
 
 
+  # pages dir for a given path prefix
+  #
+  type.pages_dir (simple_path String) Java.java.nio.file.Path =>
+    (base_dir simple_path).resolve_Ljava_7_nio_7_file_7_Path_s_ pages_dir_relative
+
+
+  # index file for a given directory containing pages
+  #
+  type.index_file (pages Java.java.nio.file.Path) Java.java.nio.file.Path =>
+    pages.resolve "index.html"
+
+
+  # Get the relative directory from a <browse> tag. This is either
+  # the value of the attribute "dir" or, if attribute "userdata" is
+  # "true", the user directory.
+  #
+  type.get_dir_from_browse (u option user, data_path Java.java.nio.file.Path, map lock_free.map String String) option String =>
+    if "true" = (map["userdata"].get "false")
+      match u
+        u0 user =>
+          ud := jpath_of u0.base_dir
+          ru := data_path.getParent.relativize ud
+          ru.toString
+        nil => nil
+    else
+      map["dir"]
+
+
   # check if a file is known to be preformatted
   #
   module type.is_known_preformatted_file (file_name String) bool =>
@@ -88,9 +116,42 @@ module content is
       file_name.ends_with ".wiki"
 
 
+  # Get the data path to the contents of the given simple URL path after it had
+  # been checked that we have permission to access it.
+  type.get_data_path2 (u option user, simple_path String) Java.java.nio.file.Path =>
+    jpath_of "NYI"
+
+
+  type.path_from_access (simple_path, attribute, default String) Java.java.nio.file.Path =>
+    val := access_attr simple_path attribute default
+    bd := base_dir simple_path
+    bd.resolve val
+
+
+  # Get the data path to the contents of the given simple URL path and check if
+  # the given user (or nil if none) is allowed to access it.
+  #
+  type.get_data_path (u option user, simple_path String) Java.java.nio.file.Path =>
+    if access_permitted u simple_path
+      get_data_path2 u simple_path
+    else
+      if u!!
+        path_from_access simple_path "alternative.need.login" "need_login.html"
+      else
+        path_from_access simple_path "alternative.access.denied" "access_denied.html"
+
+
+  # Determine the index.html file located in simple_path's base dir.
+  #
+  type.index_path (simple_path String) Java.java.nio.file.Path =>
+    index_file (pages_dir simple_path)
+
+
   # constants
   #
   type.content_dir Java.java.nio.file.Path => (jpath_of "./content").normalize
+  type.pages_dir_relative Java.java.nio.file.Path => jpath_of "pages"
+  type.templates_dir Java.java.nio.file.Path => (jpath_of "./templates").normalize
 
 
 # short-hand to invoke java.nio.file.Path.of
