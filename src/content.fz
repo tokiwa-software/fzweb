@@ -36,7 +36,7 @@ module content is
       access := base_dir0.resolve "access.txt"
     while i > 0
     until Java.java.nio.file.Files_static.exists access (list Java.java.nio.file.LinkOption).empty
-      option Java.java.nio.file.Path base_simple_path
+      option base_simple_path
     else
       option Java.java.nio.file.Path nil
 
@@ -83,15 +83,15 @@ module content is
     if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
       x := io.file.use (lock_free.map String String) jndex.toString io.file.mode.read ()->
         io.file.open.read
-          .bind (lock_free.map String String) (data ->
+          .bind (lock_free.map String String) data->
             lines := (String.from_bytes data).split "\n"
             for
               l in lines
               m := session.get_tag l "<browse"
             until m.exists
-              outcome (lock_free.map String String) m.get
+              outcome m.get
             else
-              outcome (lock_free.map String String) (error "not found"))
+              outcome (lock_free.map String String) (error "not found")
       match x
         y lock_free.map String String => y
         error => nil
@@ -117,12 +117,10 @@ module content is
   #
   type.get_dir_from_browse (u option user, data_path Java.java.nio.file.Path, map lock_free.map String String) option String =>
     if "true" = (map["userdata"].get "false")
-      match u
-        u0 user =>
-          ud := jpath_of u0.base_dir
-          ru := data_path.getParent.relativize ud
-          ru.toString
-        nil => nil
+      u.bind String u0->
+        ud := jpath_of u0.base_dir
+        ru := data_path.getParent.relativize ud
+        ru.toString
     else
       map["dir"]
 
