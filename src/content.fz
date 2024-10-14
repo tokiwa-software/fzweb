@@ -76,6 +76,29 @@ module content is
           false
 
 
+  # Check if the given path points to a directory that contains an index.html
+  # file that contains a <browse> tag to browse a directory.
+  #
+  type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.map String String) =>
+    if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
+      x := io.file.use (lock_free.map String String) jndex.toString io.file.mode.read ()->
+        io.file.open.read
+          .bind (lock_free.map String String) (data ->
+            lines := (String.from_bytes data).split "\n"
+            for
+              l in lines
+              m := session.get_tag l "<browse"
+            until m.exists
+              outcome (lock_free.map String String) m.get
+            else
+              outcome (lock_free.map String String) (error "not found"))
+      match x
+        y lock_free.map String String => y
+        error => nil
+    else
+      nil
+
+
   # pages dir for a given path prefix
   #
   type.pages_dir (simple_path String) Java.java.nio.file.Path =>
