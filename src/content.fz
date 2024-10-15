@@ -1,0 +1,182 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature content
+#
+# -----------------------------------------------------------------------
+
+# content -- features for working with the content stored on the file system
+#
+module content is
+
+  # Base directory corresponding to simple_path.
+  #
+  # This base directory will contain the pages subdirectory
+  # and the access.txt file.
+  #
+  type.base_dir (simple_path String) Java.java.nio.file.Path =>
+    bp := base_simple_path simple_path
+    bp?? ? content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ bp : content_dir
+
+
+  # Base directory corresponding to simple_path, or nil
+  # if it could not be found.
+  #
+  # This base directory will contain the pages subdirectory
+  # and the access.txt file.
+  #
+  type.base_simple_path (simple_path String) option Java.java.nio.file.Path =>
+    sp := jpath_of simple_path
+
+    for
+      i := sp.getNameCount, i - 1
+      base_simple_path := sp.subpath 0 i
+      base_dir0 := content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ base_simple_path
+      access := base_dir0.resolve "access.txt"
+    while i > 0
+    until Java.java.nio.file.Files_static.exists access (list Java.java.nio.file.LinkOption).empty
+      option base_simple_path
+    else
+      option Java.java.nio.file.Path nil
+
+
+  # The file part of a simple_path.
+  #
+  type.file_path (simple_path String) Java.java.nio.file.Path =>
+    bp := base_simple_path simple_path
+    sp := jpath_of simple_path
+    start i32 := bp!! ? 0 : bp.get.getNameCount
+    end i32 := sp.getNameCount
+    start < end ? sp.subpath start end : jpath_of ""
+
+
+  # look the given attribute in the access.txt file
+  # for simple_path
+  #
+  type.access_attr (simple_path, attribute, default String) String =>
+    access_file := (base_dir simple_path).resolve "access.txt"
+    c := config_file.open access_file.toString
+    a := c.get attribute
+    a.get default
+
+
+  # Check if access to a given path is permitted for user u.
+  #
+  type.access_permitted (u option user, simple_path String) bool =>
+    groups := access_attr simple_path "groups" ""
+    match u
+      u0 user => u0.check_group_access groups
+      nil =>
+        for
+          s in (groups.split " ")
+        until s = "all"
+          true
+        else
+          false
+
+
+  # Check if the given path points to a directory that contains an index.html
+  # file that contains a <browse> tag to browse a directory.
+  #
+  type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.map String String) =>
+    if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
+      x := io.file.use (lock_free.map String String) jndex.toString io.file.mode.read ()->
+        io.file.open.read
+          .bind (lock_free.map String String) data->
+            lines := (String.from_bytes data).split "\n"
+            for
+              l in lines
+              m := session.get_tag l "<browse"
+            until m.exists
+              outcome m.get
+            else
+              outcome (lock_free.map String String) (error "not found")
+      match x
+        y lock_free.map String String => y
+        error => nil
+    else
+      nil
+
+
+  # pages dir for a given path prefix
+  #
+  type.pages_dir (simple_path String) Java.java.nio.file.Path =>
+    (base_dir simple_path).resolve_Ljava_7_nio_7_file_7_Path_s_ pages_dir_relative
+
+
+  # index file for a given directory containing pages
+  #
+  type.index_file (pages Java.java.nio.file.Path) Java.java.nio.file.Path =>
+    pages.resolve "index.html"
+
+
+  # Get the relative directory from a <browse> tag. This is either
+  # the value of the attribute "dir" or, if attribute "userdata" is
+  # "true", the user directory.
+  #
+  type.get_dir_from_browse (u option user, data_path Java.java.nio.file.Path, map lock_free.map String String) option String =>
+    if "true" = (map["userdata"].get "false")
+      u.bind String u0->
+        ud := jpath_of u0.base_dir
+        ru := data_path.getParent.relativize ud
+        ru.toString
+    else
+      map["dir"]
+
+
+  # check if a file is known to be preformatted
+  #
+  module type.is_known_preformatted_file (file_name String) bool =>
+    file_name.ends_with ".c" ||
+      file_name.ends_with ".fz" ||
+      file_name.ends_with ".fuzion" ||
+      file_name.ends_with ".sh" ||
+      file_name.ends_with ".txt" ||
+      file_name.ends_with ".ebnf" ||
+      file_name.ends_with ".wiki"
+
+
+  # Get the data path to the contents of the given simple URL path after it had
+  # been checked that we have permission to access it.
+  type.get_data_path2 (u option user, simple_path String) Java.java.nio.file.Path =>
+    jpath_of "NYI"
+
+
+  type.path_from_access (simple_path, attribute, default String) Java.java.nio.file.Path =>
+    val := access_attr simple_path attribute default
+    bd := base_dir simple_path
+    bd.resolve val
+
+
+  # Get the data path to the contents of the given simple URL path and check if
+  # the given user (or nil if none) is allowed to access it.
+  #
+  type.get_data_path (u option user, simple_path String) Java.java.nio.file.Path =>
+    if access_permitted u simple_path
+      get_data_path2 u simple_path
+    else
+      if u!!
+        path_from_access simple_path "alternative.need.login" "need_login.html"
+      else
+        path_from_access simple_path "alternative.access.denied" "access_denied.html"
+
+
+  # Determine the index.html file located in simple_path's base dir.
+  #
+  type.index_path (simple_path String) Java.java.nio.file.Path =>
+    index_file (pages_dir simple_path)
+
+
+  # constants
+  #
+  type.content_dir Java.java.nio.file.Path => (jpath_of "./content").normalize
+  type.pages_dir_relative Java.java.nio.file.Path => jpath_of "pages"
+  type.templates_dir Java.java.nio.file.Path => (jpath_of "./templates").normalize
+
+
+# short-hand to invoke java.nio.file.Path.of
+# with a single string argument
+#
+jpath_of (path String) Java.java.nio.file.Path =>
+  Java.java.nio.file.Path_static.__k__of path (list Java.java.lang.__jString).empty
