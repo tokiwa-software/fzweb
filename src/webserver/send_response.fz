@@ -44,4 +44,4 @@ module send_content (s Java.dev.flang.Session, cmd String, content_identifier Ja
       response 200 attributes bytes2
     e error =>
       say e
-      response 500 "" (list i8).type.empty
+      response 500 "" (list i8).empty

@@ -27,7 +27,7 @@ module connection_handler : net.Connection_Handler unit is
   request_context (LM type : mutate) is
     read_header String =>
       header_lines := io.buffered.read_line_while LM (s -> !s.is_empty)
-      String.type.from_codepoints (header_lines.as_codepoints.drop_while (x -> x = "\n"))
+      String.from_codepoints (header_lines.as_codepoints.drop_while (x -> x = "\n"))
 
     http_header_map(s String) container.Map String String =>
       res := s
@@ -36,7 +36,7 @@ module connection_handler : net.Connection_Handler unit is
         .filter (x -> x.exists)
         .map (x -> x.get)
         .as_array
-      (container.ps_map String String).type.new (res.map x->x.values.0) (res.map x->x.values.1)
+      (container.ps_map String String).new (res.map x->x.values.0) (res.map x->x.values.1)
 
     head(method request_method, url String, http_headers container.Map String String) is
       path => (url.split "?").first
@@ -45,13 +45,13 @@ module connection_handler : net.Connection_Handler unit is
     _head := once LM head ()->
       s := read_header
       method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
-      url := String.type.from_codepoints (s
+      url := String.from_codepoints (s
         .as_codepoints
         .drop_while (x -> x != " ")
         .drop_while (x -> x = " ")
         .take_while (x -> x != " "))
       line2ff := (s.as_codepoints.drop_while (x ->  x != "\n")).drop 1
-      line2ff0 := String.type.from_codepoints line2ff
+      line2ff0 := String.from_codepoints line2ff
       map := http_header_map line2ff0
       head method url map
 
@@ -105,7 +105,7 @@ module connection_handler : net.Connection_Handler unit is
         match (req_context.head.http_headers["Content-Length:"].or_else "0").parse_i32
           e error => 0
           i i32 => i
-      post_data := String.type.from_bytes (io.buffered.read_bytes LM post_len).as_list
+      post_data := String.from_bytes (io.buffered.read_bytes LM post_len).as_list
       val := (jflang.webserver_S_Value_static.new (req_context.head.http_headers["Content-Type:"].or_else ""))
       content_type := val.getType
       content_type_boundary := val.getBoundary
@@ -116,11 +116,11 @@ module connection_handler : net.Connection_Handler unit is
           cl Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (req_context.client.map y->y.cast_to_i8)).val
           route_request req_context.head.path cmd cl x req_context.head.query_string
         error =>
-          response 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).type.empty
+          response 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).empty
 
     resp := match req_context.head.method
       GET => get_response "GET"
       POST => get_response "POST"
-      UNKNOWN => response 500 "" (list i8).type.empty
+      UNKNOWN => response 500 "" (list i8).empty
 
     _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array x->x.as_u8)
