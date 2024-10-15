@@ -53,13 +53,7 @@ do_register (client Java.java.net.InetAddress, form_data lock_free.map String St
 module route_request (raw_path, cmd String, client Java.java.net.InetAddress, form_data (lock_free.map String String), query String) response =>
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
     _ := say "*** unknown request: {cmd}"
-<<<<<<< HEAD
-    response 501 "" (list i8).type.empty
-||||||| e688bd6f
-    jflang.webserver_S_Response_static.new 501 "" (list i8).type.empty
-=======
-    jflang.webserver_S_Response_static.new 501 "" (list i8).empty
->>>>>>> origin/main
+    response 501 "" (list i8).empty
   else
     sessid_original := form_data["originalsessionid"].get ""
     sessid := form_data["sessionid"].get ""
