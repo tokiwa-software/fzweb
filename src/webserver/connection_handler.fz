@@ -32,7 +32,7 @@ module connection_handler : net.Connection_Handler unit is
     http_header_map(s String) container.Map String String =>
       res := s
         .split "\n"
-        .map (x -> (x.find " ").map_to_option (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
+        .map (x -> (x.find " ").bind (tuple String String) (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
         .filter (x -> x.exists)
         .map (x -> x.get)
         .as_array
