@@ -172,7 +172,7 @@ module content is
   #
   type.content_dir Java.java.nio.file.Path => (jpath_of "./content").normalize
   type.pages_dir_relative Java.java.nio.file.Path => jpath_of "pages"
-  type.templates_dir Java.java.nio.file.Path => (jpath_of "./templates").normalize
+  module type.templates_dir Java.java.nio.file.Path => (jpath_of "./templates").normalize
 
 
 # short-hand to invoke java.nio.file.Path.of
