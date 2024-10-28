@@ -15,7 +15,7 @@ run =>
 
   port u16 := 8080
   # start the server
-  _ := net.server net.family.ipv4 net.protocol.tcp port
+  _ := net.server.start net.family.ipv4 net.protocol.tcp port
   say "started listening on port: $port"
 
   # start the rss feed updater
@@ -25,5 +25,15 @@ run =>
   concur.thread_pool 4 ()->
 
     # the request accept loop
-    while (net.server.is_active &&
-      (net.server.accept_threaded concur.thread_pool webserver.connection_handler).ok)
+    while net.server.is_active
+      _ := net.server.accept.bind unit conn->
+        submit_success => concur.thread_pool.env.submit ()->
+          lm : mutate.
+          _ := lm.instate_self ()->
+            _ := net.connections.with unit lm conn ()->
+              webserver.handle_connection lm conn
+
+        if submit_success
+          unit
+        else
+          error "error submitting task to thread pool"
