@@ -39,7 +39,7 @@ module connection_handler : net.Connection_Handler unit is
       (container.ps_map String String).new (res.map x->x.values.0) (res.map x->x.values.1)
 
     head(method request_method, url String, http_headers container.Map String String) is
-      path => (url.split "?").first
+      path => (url.split "?").first.get
       query_string => ((url.split "?").drop 1).first ""
 
     _head := once LM head ()->
