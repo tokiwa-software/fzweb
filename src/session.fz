@@ -11,6 +11,8 @@
 #
 module session is
 
+  # create attribute_map based on the entry provided
+  #
   module attribute_map(entry String) lock_free.map String String =>
     map := util.url_encoded.parse_urlencoded_map entry
     res := (lock_free.map String String).empty
@@ -22,6 +24,8 @@ module session is
         res.add pair.0 pair.1
     res
 
+  # extraction of the tag content from the string s
+  #
   module get_tag(s String, tag String) option(lock_free.map String String) =>
 
     match s.find tag
@@ -34,9 +38,12 @@ module session is
       nil => nil
 
   # NYI
-  module read_all_lines(path String, return_null_on_error bool,pretty_print bool) String =>
-    ""
+  #
+  module read_all_lines(path String) =>
+    jflang.Session.readAllLines path
 
+  # return the html content in the page
+  #
   module strip_html(page String) String =>
     if page.ends_with ".html" || page.ends_with ".htm"
       page.substring 0 (page.find ".")
@@ -45,15 +52,21 @@ module session is
     else
       page
 
+  # added the html extenson to the page string
+  #
   module add_html(page String) String =>
     if !jflang.Content_static.isKnownPreformattedFile page
       page + ".html"
     else
       page
 
+  # check if the html string have a tag "</html>"
+  #
   module has_embedded_html(html String) bool =>
     !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
 
+  # check if the html structure correct than replace the iframe tag
+  #
   module embedded_html_in_frame(html String) option String =>
     match html.find "<!DOCTYPE html>"
       c i32 =>
@@ -61,21 +74,68 @@ module session is
           c2 i32 =>
             embedded_html := html.substring c c2+7
             html.replace  embedded_html """
-              <div class="responsive-container aspect-16-by-9">
-                <iframe class="responsive-iframe" sandbox="allow-same-origin allow-scripts" id='iframe-embedded-content' data-src-doc-content="{(embedded_html.replace "&quot;" "REPLACEDHTMLQUOTE").replace "" "REPLACEDDOUBLEQUOTE"}">
-                </iframe>
-              </div>
-              """
+                                          <div class="responsive-container aspect-16-by-9">
+                                            <iframe class="responsive-iframe" sandbox="allow-same-origin allow-scripts" id='iframe-embedded-content' data-src-doc-content="{(embedded_html.replace "&quot;" "REPLACEDHTMLQUOTE").replace "" "REPLACEDDOUBLEQUOTE"}">
+                                            </iframe>
+                                          </div>
+                                        """
           nil => nil
       nil => nil
+
   # NYI
-  module send_data(event,field_name,field_data String) : String =>
+  #
+  module send_data(event,field_name,field_data String) String =>
     msg := "event: {event}\n"+(util.url_encoded.encode_html_data field_name+"\n"+field_data)+"\n"
     msg
 
-  module append_data(data String) : String =>
+  #
+  #
+  module append_data(data String) String =>
     entry := data.split "\n"
     for msg := "",msg + "data: {l}\n"
         l in entry
     else
       msg
+
+  # return the "attractivelink" template
+  #
+  module attractive_link(to,title String) String =>
+    jflang.Session.getTemplate "attractivelink.html" "##LINK##" "/{to}" "##TITLE##" title
+
+  # return the link
+  #
+  module page_link(p String) String =>
+    page_link p (jflang.Session.getTitleFromLink p)
+
+  # return the "page" template
+  #
+  module page_link(to,title String) String =>
+    jflang.Session.getTemplate "page.html ##LINK## /{to} ##TITLE##" title
+
+  # dispatch the html content
+  #
+  module doc_links(doc_file_name String) String =>
+    parts := doc_file_name.split "/"
+    if parts.count < 2
+      ""
+    else
+      for res := "", res +  """
+                              <a class="shylink shylinkfix" href="/docs/{doc_path}">
+                                  {name}
+                              </a> •
+                            """
+          part in parts
+          name0 := Java.java.net.URLDecoder_static.decode part "UTF-8"
+          name1 := name0.get.split "("
+          name := name1[0]
+          end := (doc_file_name.find part).get + parts.count
+          doc_path := doc_file_name.substring 0
+      else
+        res
+
+  #
+  #
+  module get_item_recent_commits() String =>
+    """
+    NYI
+    """
