@@ -21,19 +21,10 @@ run =>
   # start the rss feed updater
   _ := jflang.RssFeedUpdater_static.Init
 
-  # start a thread pool
-  concur.thread_pool 4 ()->
-
-    # the request accept loop
-    while net.server.is_active
-      _ := net.server.accept.bind unit conn->
-        submit_success => concur.thread_pool.env.submit ()->
-          lm : mutate.
-          _ := lm.instate_self ()->
-            _ := net.connections.with unit lm conn ()->
-              webserver.handle_connection lm conn
-
-        if submit_success
-          unit
-        else
-          error "error submitting task to thread pool"
+  # the request accept loop
+  while net.server.is_active
+    _ := net.server.accept.bind unit conn->
+        lm : mutate.
+        _ := lm.instate_self ()->
+          _ := net.connections.with unit lm conn ()->
+            webserver.handle_connection lm conn
