@@ -135,7 +135,7 @@ module session is
 
   #
   #
-  module get_item_recent_commits() String =>
+  module get_item_recent_commits String =>
     """
     NYI
     """
