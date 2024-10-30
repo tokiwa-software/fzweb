@@ -17,7 +17,7 @@ module content is
   #
   type.base_dir (simple_path String) Java.java.nio.file.Path =>
     bp := base_simple_path simple_path
-    bp?? ? content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ bp : content_dir
+    bp?? ? content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ bp.get : content_dir
 
 
   # Base directory corresponding to simple_path, or nil
