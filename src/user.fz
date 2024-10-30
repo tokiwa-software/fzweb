@@ -109,13 +109,13 @@ module user (module base_dir String) is
     config.save
     subject := "[fuzion-lang.dev] - Confirm account deletion"
     message_content := """
-      Dear {name},
+      Dear {name.get "fuzion-lang.dev user"},
 
       Please confirm the deletion of your account by clicking the following link:
 
         https://fuzion-lang.dev/confirm_account_deletion?token={token}
     """
-    Java.dev.flang.EmailService_static.getInstance.sendTextMailWithFooter user.noreply_tokiwa_software email subject message_content
+    Java.dev.flang.EmailService_static.getInstance.sendTextMailWithFooter user.noreply_tokiwa_software (email.get "") subject message_content
 
 
 

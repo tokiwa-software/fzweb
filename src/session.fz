@@ -39,7 +39,7 @@ module session is
 
   module strip_html(page String) String =>
     if page.ends_with ".html" || page.ends_with ".htm"
-      page.substring 0 (page.find ".")
+      page.substring 0 (page.find ".").get
     else if page = ""
       "index"
     else
