@@ -29,5 +29,5 @@ run =>
     while net.server.is_active
       _ := net.server.accept.bind unit conn->
         lm : mutate.
-        _ := net.connections.in_thread_pool unit concur.thread_pool lm lm conn ()->
+        _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
           webserver.handle_connection lm conn
