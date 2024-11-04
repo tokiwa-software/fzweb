@@ -23,9 +23,11 @@ module logger is
 
   # Logger function that writes to a file
   module log(log_path String, msg String) =>
-    res := io.file.use unit log_path io.file.mode.append ()->
-      m := "{logger.thread_id}: {msg}"
-      io.file.open.write "{m}\n".utf8
+    lm : mutate is
+    res := lm.instate_self (outcome unit) ()->
+      io.file.use unit lm log_path io.file.mode.append ()->
+        m := "{logger.thread_id}: {msg}"
+        ((io.buffered.writer lm).write "{m}\n".utf8).error
 
     match res
       unit => say "{logger.thread_id}: {msg}"  # Also log to console

@@ -99,7 +99,10 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
 
     else if raw_path = "/robots.txt"
       res := content.templates_dir.resolve "robots.txt"
-      x := io.file.use String (array u8) res.as_string io.file.mode.read (()->(io.file.open String).read)
+      lm : mutate is
+      x := lm.instate_self (outcome (array u8)) ()->
+        io.file.use (array u8) lm res.toString io.file.mode.read ()->
+          io.buffered.read_fully lm
 
       match x
         robots_txt array u8 =>

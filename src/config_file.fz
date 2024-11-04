@@ -33,11 +33,14 @@ module config_file (values lock_free.map String String, path String) is
   # its path
   #
   module save =>
-    res := io.file.use unit path io.file.mode.write ()->
-      data := values.items
-                    .map (e -> "{e.0}: {e.1}")
-                    .as_string "\n"
-      io.file.open.write data.utf8
+    lm : mutate is
+
+    res := lm.instate_self (outcome unit) ()->
+      io.file.use unit lm path io.file.mode.write ()->
+        data := values.items
+                      .map (e -> "{e.0}: {e.1}")
+                      .as_string "\n"
+        ((io.buffered.writer lm).write data.utf8).error
 
     match res
       unit => unit
@@ -55,17 +58,18 @@ module config_file (values lock_free.map String String, path String) is
 
     # ignore any errors here.
     # config file can still be populated and created.
-    _ := io.file.use unit p io.file.mode.read ()->
-      _ := io.file.open.read
-             .bind unit (data ->
-               lines := String.from_bytes data
-               lines.split "\n"
-                    .for_each (line ->
-                      match line.find ":"
-                        colon i32 =>
-                          key := (line.substring 0 colon).trim
-                          val := (line.substring (colon + 1)).trim
-                          m.add key val
-                        nil => unit))
+    lm : mutate is
+    _ := lm.instate_self ()->
+      _ := io.file.use unit lm p io.file.mode.read ()->
+        data := io.buffered.read_fully lm
+        lines := String.from_bytes data
+        lines.split "\n"
+             .for_each line->
+               match line.find ":"
+                 colon i32 =>
+                   key := (line.substring 0 colon).trim
+                   val := (line.substring (colon + 1)).trim
+                   m.add key val
+                 nil => unit
 
     config_file m p
