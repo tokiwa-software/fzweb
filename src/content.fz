@@ -81,10 +81,9 @@ module content is
   #
   type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.map String String) =>
     if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
-      lm : mutate is
-      x := lm.instate_self (outcome (lock_free.map String String)) ()->
-        io.file.use (lock_free.map String String) lm jndex.toString io.file.mode.read ()->
-          data := io.buffered.read_fully lm
+      x := lm_content.instate_self (outcome (lock_free.map String String)) ()->
+        io.file.use (lock_free.map String String) lm_content jndex.toString io.file.mode.read ()->
+          data := io.buffered.read_fully lm_content
           lines := (String.from_bytes data).split "\n"
           for
             l in lines
@@ -181,3 +180,8 @@ module content is
 #
 jpath_of (path String) Java.java.nio.file.Path =>
   Java.java.nio.file.Path_static.__k__of path (list Java.java.lang.__jString).empty
+
+
+# local mutate effect used in this file
+#
+lm_content : mutate is

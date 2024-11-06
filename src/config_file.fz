@@ -33,14 +33,12 @@ module config_file (values lock_free.map String String, path String) is
   # its path
   #
   module save =>
-    lm : mutate is
-
-    res := lm.instate_self (outcome unit) ()->
-      io.file.use unit lm path io.file.mode.write ()->
+    res := lm_config_file.instate_self (outcome unit) ()->
+      io.file.use unit lm_config_file path io.file.mode.write ()->
         data := values.items
                       .map (e -> "{e.0}: {e.1}")
                       .as_string "\n"
-        ((io.buffered.writer lm).write data.utf8).error
+        ((io.buffered.writer lm_config_file).write data.utf8).error
 
     match res
       unit => unit
@@ -58,10 +56,9 @@ module config_file (values lock_free.map String String, path String) is
 
     # ignore any errors here.
     # config file can still be populated and created.
-    lm : mutate is
-    _ := lm.instate_self ()->
-      _ := io.file.use unit lm p io.file.mode.read ()->
-        data := io.buffered.read_fully lm
+    _ := lm_config_file.instate_self ()->
+      _ := io.file.use unit lm_config_file p io.file.mode.read ()->
+        data := io.buffered.read_fully lm_config_file
         lines := String.from_bytes data
         lines.split "\n"
              .for_each line->
@@ -73,3 +70,8 @@ module config_file (values lock_free.map String String, path String) is
                  nil => unit
 
     config_file m p
+
+
+# local mutate effect used in this file
+#
+lm_config_file : mutate is
