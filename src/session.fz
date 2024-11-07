@@ -144,7 +144,7 @@ module session is
       re list String => re
 
   #
-  #
+  # returns the content of the file
   module get_template(filename String,repl list String) String =>
     p := (jflang.Content_static.template filename).__fileToSend
     if p.is_null
