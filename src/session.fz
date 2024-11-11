@@ -83,7 +83,7 @@ module session is
     msg := "event: {event}\n"+(util.url_encoded.encode_html_data field_name+"\n"+field_data)+"\n"
     msg
 
-  #
+  # NYI: comment
   #
   module append_data(data String) String =>
     entry := data.split "\n"
@@ -97,8 +97,8 @@ module session is
   module attractive_link(to,title String) String =>
     get_template "attractivelink.html" ["##LINK##","/{to}","##TITLE##",title].as_list
 
-  #
   # return the "page" template
+  #
   module page_link(to,title String) String =>
     get_template "page.html" ["##LINK##","/{to}","#TITLE##",title].as_list
 
@@ -123,13 +123,13 @@ module session is
       else
         res
 
-  #
   # NYI
+  #
   module get_item_recent_commits String =>
     "NYI"
 
-  #
   # read lines from the path and return them in a list of string
+  #
   module read_all_lines(file Java.java.nio.file.Path, return_null_on_error,pretty_print bool) list String =>
     lm : mutate is
     res := lm.instate_self (outcome (list String)) ()->
@@ -141,8 +141,8 @@ module session is
       e error => panic "error reading from path: {file}"
       re list String => re
 
-  #
   # returns the content of the file
+  #
   module get_template(filename String,repl list String) String =>
     p := (jflang.Content_static.template filename).__fileToSend
     if p.is_null
