@@ -18,7 +18,7 @@ decode_path (raw_path String) String =>
 
 # check if the given client has registered within the last ten minutes
 #
-has_registered_recently (client Java.java.net.InetAddress) bool =>
+has_registered_recently (client list u8) bool =>
   # NYI
   false
 
@@ -36,28 +36,29 @@ module fuzion_to_java_map(fz_map lock_free.map String String) Java.java.util.Tre
 
 # create a user account given the data submitted via the form content
 #
-do_register (client Java.java.net.InetAddress, form_data lock_free.map String String) String =>
+do_register (client list u8, form_data lock_free.map String String) String =>
   if has_registered_recently client
     "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
   else
-    registration_result := jflang.User_static.register (fuzion_to_java_map form_data)
+    registration_result := user.register form_data
     # NYI: registration rate limit
     match registration_result
-      rr Java.java.lang.__jString => rr.as_string
+      rr String => rr
       e error => "<div class='text-center'>*** Registration failed: {e}</div>"
 
 
 # routes a given request to the code that handles it,
 # and returns the response
 #
-module route_request (raw_path, cmd String, client Java.java.net.InetAddress, form_data (lock_free.map String String), query String) response =>
+module route_request (raw_path, cmd String, client list u8, form_data (lock_free.map String String), query String) response =>
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
     _ := say "*** unknown request: {cmd}"
     response 501 "" (list i8).empty
   else
     sessid_original := form_data["originalsessionid"].get ""
     sessid := form_data["sessionid"].get ""
-    s := jflang.Session_static.get sessid_original sessid client
+    cl Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (client.map y->y.cast_to_i8)).val
+    s := jflang.Session_static.get sessid_original sessid cl
 
     if raw_path.ends_with "/"
       new_path := raw_path + "index.html"
@@ -74,7 +75,7 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
     else if cmd = "POST" && raw_path = "/register"
       send_ok cmd (do_register client form_data)
     else if cmd = "POST" && raw_path = "/delete_account"
-      send_ok cmd (jflang.User_static.triggerAccountDeletion client (fuzion_to_java_map form_data))
+      send_ok cmd (user.trigger_account_deletion client form_data)
     else if raw_path = "/confirm_account_deletion"
       s_q := util.split_query query
       webserver.this.log s "got confirm_account_deletion"
@@ -142,7 +143,7 @@ module route_request (raw_path, cmd String, client Java.java.net.InetAddress, fo
       # NYI:
       response 500 "" (list i8).empty
     else
-      next_session := jflang.Session_static.get sessid_original sessid client
+      next_session := jflang.Session_static.get sessid_original sessid cl
       jflang.webserver_static.PerformDirectLogin s (fuzion_to_java_map form_data)
       path := decode_path raw_path
       content_identifier := jflang.Content_static.getContents s path
