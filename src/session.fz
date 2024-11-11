@@ -24,6 +24,7 @@ module session is
         res.add pair.0 pair.1
     res
 
+
   # extraction of the tag content from the string s
   #
   module get_tag(s String, tag String) option(lock_free.map String String) =>
@@ -37,6 +38,7 @@ module session is
           nil => nil
       nil => nil
 
+
   # return the html content in the page
   #
   module strip_html(page String) String =>
@@ -47,6 +49,7 @@ module session is
     else
       page
 
+
   # added the html extenson to the page string
   #
   module add_html(page String) String =>
@@ -55,10 +58,12 @@ module session is
     else
       page
 
+
   # check if the html string have a tag "</html>"
   #
   module has_embedded_html(html String) bool =>
     !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
+
 
   # check if the html structure correct than replace the iframe tag
   #
@@ -77,11 +82,13 @@ module session is
           nil => nil
       nil => nil
 
+
   # NYI
   #
   module send_data(event,field_name,field_data String) String =>
     msg := "event: {event}\n"+(util.url_encoded.encode_html_data field_name+"\n"+field_data)+"\n"
     msg
+
 
   # NYI: comment
   #
@@ -92,15 +99,18 @@ module session is
     else
       msg
 
+
   # return the "attractivelink" template
   #
   module attractive_link(to,title String) String =>
     get_template "attractivelink.html" ["##LINK##","/{to}","##TITLE##",title].as_list
 
+
   # return the "page" template
   #
   module page_link(to,title String) String =>
     get_template "page.html" ["##LINK##","/{to}","#TITLE##",title].as_list
+
 
   # dispatch the html content
   #
@@ -123,10 +133,12 @@ module session is
       else
         res
 
+
   # NYI
   #
   module get_item_recent_commits String =>
     "NYI"
+
 
   # read lines from the path and return them in a list of string
   #
@@ -140,6 +152,7 @@ module session is
     match res
       e error => panic "error reading from path: {file}"
       re list String => re
+
 
   # returns the content of the file
   #
