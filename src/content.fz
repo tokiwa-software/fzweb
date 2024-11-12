@@ -87,7 +87,7 @@ module content is
           lines := (String.from_bytes data).split "\n"
           for
             l in lines
-            m := session.get_tag l "<browse"
+            m := Session.get_tag l "<browse"
           until m.exists
             outcome m.get
           else
