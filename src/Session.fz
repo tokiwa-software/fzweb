@@ -9,7 +9,7 @@
 # Session -- facilities providing the session management for the Fuzion
 # webserver
 #
-module Session ref is
+module Session (client list u8, old_session option Session) ref is
 
   # create attribute_map based on the entry provided
   #
