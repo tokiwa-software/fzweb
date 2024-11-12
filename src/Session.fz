@@ -11,6 +11,18 @@
 #
 module Session (client list u8, old_session option Session) ref is
 
+  user option universe.user := nil # NYI: mutate
+
+
+  # log a message for this session, either to the general log if
+  # the session is not authenticated, or to the users' individual log
+  #
+  module log (msg String) =>
+    match Session.this.user
+      nil => logger.log msg
+      u user => u.log msg
+
+
   # create attribute_map based on the entry provided
   #
   module type.attribute_map(entry String) lock_free.map String String =>
