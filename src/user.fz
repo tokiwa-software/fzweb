@@ -32,6 +32,12 @@ module user (module base_dir String) is
       false
 
 
+  # log a message to this users' log file
+  #
+  module log (s String) =>
+    logger.log log_path s # NYI: add timestamp
+
+
   # name of the user
   #
   module name =>
