@@ -63,15 +63,15 @@ request_context (LM type : mutate) is
       Server: Fuzion WebServer v0.0.2
       {attributes}
     """
-    header_ok := (io.buffered.writer LM).write header.utf8.as_array
+    header_ok := io.buffered.writer.env.write header.utf8.as_array
 
     match header_ok.error
       e error => say "#### {header_ok.error.err}"
       unit =>
-        data_ok := (io.buffered.writer LM).write data
+        data_ok := io.buffered.writer.env.write data
         if data_ok.error!!
           say "#### {data_ok.error.err}"
-        flush_ok := (io.buffered.writer LM).flush
+        flush_ok := io.buffered.writer.env.flush
         if flush_ok!!
           say "#### {flush_ok.err}"
 

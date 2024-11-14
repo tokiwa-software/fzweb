@@ -40,7 +40,6 @@ module Session (client list u8, old_session option Session) ref is
   # extraction of the tag content from the string s
   #
   module type.get_tag(s, tag String) option (lock_free.map String String) =>
-
     match s.find tag
       c i32 =>
         match s.find "/>" c+tag.byte_length
