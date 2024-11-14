@@ -21,6 +21,9 @@ run =>
   # start the rss feed updater
   _ := jflang.RssFeedUpdater_static.Init
 
+  # global list of sessions
+  sessions := (lock_free.map String Session).empty
+
 
   # start a thread pool
   concur.thread_pool 4 ()->
@@ -30,4 +33,4 @@ run =>
       _ := net.server.accept.bind unit conn->
         lm : mutate.
         _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
-          webserver.handle_connection lm conn
+          (webserver sessions).handle_connection lm conn

@@ -23,6 +23,18 @@ module Session (client list u8, old_session option Session) ref is
       u user => u.log msg
 
 
+  # find a session by id and client
+  #
+  module type.get (sessions lock_free.map String Session, id String, c list u8) option Session =>
+    match sessions[id]
+      nil => nil
+      s Session =>
+        if s.client = c
+          s
+        else
+          nil
+
+
   # create attribute_map based on the entry provided
   #
   module type.attribute_map(entry String) lock_free.map String String =>
