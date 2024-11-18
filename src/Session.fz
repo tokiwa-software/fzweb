@@ -25,7 +25,7 @@ module Session (client list u8, old_session option Session) ref is
 
   # find a session by id and client
   #
-  module type.get (sessions lock_free.map String Session, id String, c list u8) option Session =>
+  module type.get (sessions lock_free.Map String Session, id String, c list u8) option Session =>
     match sessions[id]
       nil => nil
       s Session =>
@@ -37,9 +37,9 @@ module Session (client list u8, old_session option Session) ref is
 
   # create attribute_map based on the entry provided
   #
-  module type.attribute_map(entry String) lock_free.map String String =>
+  module type.attribute_map(entry String) lock_free.Map String String =>
     map := util.url_encoded.parse_urlencoded_map entry
-    res := (lock_free.map String String).empty
+    res := (lock_free.Map String String).empty
     for pair in map.items do
       if (pair.1.starts_with "\"") && (pair.1.ends_with "\"")
         v := pair.1.substring 1 pair.1.byte_length
@@ -51,7 +51,7 @@ module Session (client list u8, old_session option Session) ref is
 
   # extraction of the tag content from the string s
   #
-  module type.get_tag(s, tag String) option (lock_free.map String String) =>
+  module type.get_tag(s, tag String) option (lock_free.Map String String) =>
     match s.find tag
       c i32 =>
         match s.find "/>" c+tag.byte_length

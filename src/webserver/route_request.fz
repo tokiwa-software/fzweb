@@ -24,7 +24,7 @@ has_registered_recently (client list u8) bool =>
 
 # helper feature to convert java map to fuzion map
 #
-module fuzion_to_java_map(fz_map lock_free.map String String) Java.java.util.TreeMap =>
+module fuzion_to_java_map(fz_map lock_free.Map String String) Java.java.util.TreeMap =>
   # Create an instance of Java's Map
   jv_map := Java.java.util.TreeMap.new
   # Iterate over items in the Fuzion map and put them into the Java Map
@@ -36,7 +36,7 @@ module fuzion_to_java_map(fz_map lock_free.map String String) Java.java.util.Tre
 
 # create a user account given the data submitted via the form content
 #
-do_register (client list u8, form_data lock_free.map String String) String =>
+do_register (client list u8, form_data lock_free.Map String String) String =>
   if has_registered_recently client
     "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
   else
@@ -50,7 +50,7 @@ do_register (client list u8, form_data lock_free.map String String) String =>
 # routes a given request to the code that handles it,
 # and returns the response
 #
-module route_request (raw_path, cmd String, client list u8, form_data (lock_free.map String String), query String) response =>
+module route_request (raw_path, cmd String, client list u8, form_data (lock_free.Map String String), query String) response =>
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
     _ := say "*** unknown request: {cmd}"
     response 501 "" (list i8).empty

@@ -7,13 +7,13 @@
 # -----------------------------------------------------------------------
 
 # NYI: current complexity is O(n^2). this should be reduced.
-module parse_multipart_form_data(data, boundaryy String) lock_free.map String String =>
+module parse_multipart_form_data(data, boundaryy String) lock_free.Map String String =>
 
   # Convert boundary to Fuzion-friendly format
   boundary := "--" + boundaryy
   end_boundary := boundary + "--"
   # Initialize form data map
-  form_data := (lock_free.map String String).empty
+  form_data := (lock_free.Map String String).empty
   lines := data.split "\r\n"
   i := mut 0
   while i.get < lines.count do

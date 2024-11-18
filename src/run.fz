@@ -22,7 +22,7 @@ run =>
   _ := jflang.RssFeedUpdater_static.Init
 
   # global list of sessions
-  sessions := (lock_free.map String Session).empty
+  sessions := (lock_free.Map String Session).empty
 
 
   # start a thread pool

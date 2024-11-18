@@ -106,7 +106,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
     form_data := get_form_data post_data cmd req_context.head.query_string content_type content_type_boundary
 
     match form_data
-      x (lock_free.map String String) =>
+      x (lock_free.Map String String) =>
         route_request req_context.head.path cmd req_context.client x req_context.head.query_string
       error =>
         response 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).empty

@@ -79,10 +79,10 @@ module content is
   # Check if the given path points to a directory that contains an index.html
   # file that contains a <browse> tag to browse a directory.
   #
-  type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.map String String) =>
+  type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.Map String String) =>
     if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
-      x := lm.instate_self (outcome (lock_free.map String String)) ()->
-        io.file.use (lock_free.map String String) lm jndex.toString io.file.mode.read ()->
+      x := lm.instate_self (outcome (lock_free.Map String String)) ()->
+        io.file.use (lock_free.Map String String) lm jndex.toString io.file.mode.read ()->
           data := io.buffered.read_fully lm
           lines := (String.from_bytes data).split "\n"
           for
@@ -91,9 +91,9 @@ module content is
           until m.exists
             outcome m.get
           else
-            outcome (lock_free.map String String) (error "not found")
+            outcome (lock_free.Map String String) (error "not found")
       match x
-        y lock_free.map String String => y
+        y lock_free.Map String String => y
         error => nil
     else
       nil
@@ -115,7 +115,7 @@ module content is
   # the value of the attribute "dir" or, if attribute "userdata" is
   # "true", the user directory.
   #
-  type.get_dir_from_browse (u option user, data_path Java.java.nio.file.Path, map lock_free.map String String) option String =>
+  type.get_dir_from_browse (u option user, data_path Java.java.nio.file.Path, map lock_free.Map String String) option String =>
     if "true" = (map["userdata"].get "false")
       u.bind String u0->
         ud := jpath_of u0.base_dir

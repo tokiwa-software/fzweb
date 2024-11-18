@@ -195,7 +195,7 @@ module user (module base_dir String) is
 
   # register a using the data submitted by the form
   #
-  module type.register (form_data lock_free.map String String) outcome String =>
+  module type.register (form_data lock_free.Map String String) outcome String =>
     full_name (first, last, email String) =>
       full0 := "{first} {last}".trim
       full0.is_empty ? email : full0
@@ -275,7 +275,7 @@ module user (module base_dir String) is
             ("registration_date", date),
             ("registration_token", token)
           ]
-          m := (lock_free.map String String).from_entries entries
+          m := (lock_free.Map String String).from_entries entries
 
           c := config_file m user_text
           c.save
@@ -289,7 +289,7 @@ module user (module base_dir String) is
     Java.java.util.UUID_static.randomUUID.toString
 
 
-  module type.trigger_account_deletion (client list u8, form_data lock_free.map String String) String =>
+  module type.trigger_account_deletion (client list u8, form_data lock_free.Map String String) String =>
     if has_triggered_account_deletion_recently client
       "<div class='text-center'>Only one deletion request per IP possible within 10 minutes.</div>"
     else

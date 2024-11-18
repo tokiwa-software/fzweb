@@ -8,8 +8,8 @@
 #
 # decode the url in the query and add (k,v) to the query_pairs map
 #
-module split_query(query String) lock_free.map String String =>
-  query_pairs := (lock_free.map String String).empty
+module split_query(query String) lock_free.Map String String =>
+  query_pairs := (lock_free.Map String String).empty
   pairs := query.split "&"
   for pair in pairs do
     idx := pair.find "="

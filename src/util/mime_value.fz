@@ -6,7 +6,7 @@
 #
 # -----------------------------------------------------------------------
 
-module mime_value(mime_type String, parameters lock_free.map String String) is
+module mime_value(mime_type String, parameters lock_free.Map String String) is
 
   # return the type value
   #
@@ -31,7 +31,7 @@ module mime_value(mime_type String, parameters lock_free.map String String) is
   module type.from_type_string(type_string String) util.mime_value =>
     # Recursive function to parse the key-value pairs in the string
     #
-    parse_pairs(type0 String, params lock_free.map String String) lock_free.map String String =>
+    parse_pairs(type0 String, params lock_free.Map String String) lock_free.Map String String =>
       match type0.find "="
         nil => params
         eq i32 =>
@@ -65,9 +65,9 @@ module mime_value(mime_type String, parameters lock_free.map String String) is
 
     match type_string.find ";"
       nil =>
-        util.mime_value "" (lock_free.map String String).empty
+        util.mime_value "" (lock_free.Map String String).empty
       semicolon i32 =>
         type1 := (type_string.substring 0 semicolon).trim
         next := (type_string.substring (semicolon + 1)).trim
-        params := parse_pairs next (lock_free.map String String).empty
+        params := parse_pairs next (lock_free.Map String String).empty
         util.mime_value type1 params

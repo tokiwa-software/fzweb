@@ -8,7 +8,7 @@
 
 module mime_values is
 
-  map := (lock_free.map String String).empty
+  map := (lock_free.Map String String).empty
 
   # Add a key-value pair to the map
   #
