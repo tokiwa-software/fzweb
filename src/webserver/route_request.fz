@@ -80,7 +80,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       s_q := util.split_query query
       webserver.this.log s "got confirm_account_deletion"
       match user.complete_account_deletion (s_q["token"].get "")
-        r unit =>
+        unit =>
           webserver.this.log s "got confirm_account_deletion send 302 success"
           response 302 "Location: /account_deletion_successful" (list i8).empty
         e error =>
@@ -91,7 +91,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       s_q := util.split_query query
       webserver.this.log s "got confirm_registration"
       match user.complete_registration (s_q["username"].get "") (s_q["token"].get "")
-        r unit =>
+        unit =>
           webserver.this.log s "got confirm_registration send 302 success"
           response 302 "Location: /registration_successful" (list i8).empty
         e error =>
@@ -108,7 +108,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       match x
         robots_txt array u8 =>
           send_ok cmd (String.from_bytes robots_txt)
-        e error =>
+        error =>
           jflang.Logger_static.log "robots.txt could not be read."
           response 500 "" (list i8).empty
 
@@ -143,7 +143,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       # NYI:
       response 500 "" (list i8).empty
     else
-      next_session := jflang.Session_static.get sessid_original sessid cl
+      _ /* next_session */ := jflang.Session_static.get sessid_original sessid cl
       jflang.webserver_static.PerformDirectLogin s (fuzion_to_java_map form_data)
       path := decode_path raw_path
       content_identifier := jflang.Content_static.getContents s path

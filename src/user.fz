@@ -13,7 +13,7 @@ module user (module base_dir String) is
 
   config := config_file.open (base_dir + "/" + user.user_file)
   log_path := base_dir + "/" + user.log_file
-  run_dir_path := base_dir + "/" + user.run_dir
+  _ /* run_dir_path */ := base_dir + "/" + user.run_dir
 
 
   # verify username password combination

@@ -54,7 +54,7 @@ request_context (LM type : mutate) is
   client =>
     match net.channel.env.get_peer_address
       x list u8 => x
-      e error => [u8 0, 0, 0, 0].as_list
+      error => [u8 0, 0, 0, 0].as_list
 
   send(return_code i32, attributes String, data array u8) is
     header := """
@@ -66,7 +66,7 @@ request_context (LM type : mutate) is
     header_ok := io.buffered.writer.env.write header.utf8.as_array
 
     match header_ok.error
-      e error => say "#### {header_ok.error.err}"
+      e error => say "#### {e}"
       unit =>
         data_ok := io.buffered.writer.env.write data
         if data_ok.error!!
@@ -97,7 +97,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
   get_response(cmd String) =>
     post_len =>
       match (req_context.head.http_headers["Content-Length:"].or_else "0").parse_i32
-        e error => 0
+        error => 0
         i i32 => i
     post_data := String.from_bytes (io.buffered.read_bytes LM post_len).as_list
     val := (jflang.webserver_S_Value_static.new (req_context.head.http_headers["Content-Type:"].or_else ""))

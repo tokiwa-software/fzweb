@@ -173,7 +173,7 @@ module Session (client list u8, old_session option Session) ref is
         lines := String.from_bytes data
         lines.split "\n"
     match res
-      e error => panic "error reading from path: {file}"
+      e error => panic "error reading from path {file}: {e}"
       re list String => re
 
 
