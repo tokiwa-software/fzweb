@@ -9,16 +9,60 @@
 # Session -- facilities providing the session management for the Fuzion
 # webserver
 #
-module Session (client list u8, old_session option Session) ref is
+module Session (sessions lock_free.Map String Session,
+                client list u8,
+                old_session option Session) ref is
 
-  user option universe.user := nil # NYI: mutate
+
+  # session belongs to which user, if at all?
+  # NYI: this is a hack for effect-free thread-safe mutation
+  #
+  user lock_free.Map util.hashable_unit user
+    := (lock_free.Map util.hashable_unit user).empty
+
+
+  # login state of the session
+  # NYI: this is a hack for effect-free thread-safe mutation
+  #
+  login lock_free.Map util.hashable_unit util.login_status
+    := (lock_free.Map util.hashable_unit util.login_status).empty
+
+
+  # initialize user and login state
+  # NYI: thread-safety!
+  #
+  match old_session
+    nil => unit
+    old_s Session =>
+      match old_s.user[util.hashable_unit]
+        nil => unit
+        old_user user => Session.this.user.add util.hashable_unit old_user
+
+      match old_s.login[util.hashable_unit]
+        nil => unit
+        old_login util.login_status => login.add util.hashable_unit old_login
+
+
+  # session id
+  #
+  session_id String := Java.dev.flang.RandomId_static.get Session.safe_number_of_bits
+
+
+  # put session in global session list
+  #
+  sessions.add session_id Session.this
+
+
+  # and log session creation
+  #
+  log "new session {sessions.size} {session_id} for {client} user {user[util.hashable_unit].bind x->x.login}"
 
 
   # log a message for this session, either to the general log if
   # the session is not authenticated, or to the users' individual log
   #
   module log (msg String) =>
-    match Session.this.user
+    match Session.this.user[util.hashable_unit]
       nil => logger.log msg
       u user => u.log msg
 
@@ -33,6 +77,24 @@ module Session (client list u8, old_session option Session) ref is
           s
         else
           nil
+
+
+  # find session and attach original session, or create new
+  # session
+  #
+  module type.get (sessions lock_free.Map String Session,
+                   old_id, id option String,
+                   c list u8) Session =>
+    lm.instate_self Session ()->
+      res := lm.env.new (option Session) nil
+      orig := lm.env.new (option Session) nil
+
+      if old_id??
+        orig <- get sessions old_id.get c
+      else if id??
+        res <- get sessions id.get c
+
+      res.get.get (Session sessions c orig.get)
 
 
   # create attribute_map based on the entry provided
@@ -166,7 +228,6 @@ module Session (client list u8, old_session option Session) ref is
   # read lines from the path and return them in a list of string
   #
   module read_all_lines(file Java.java.nio.file.Path, return_null_on_error,pretty_print bool) list String =>
-    lm : mutate is
     res := lm.instate_self (outcome (list String)) ()->
       io.file.use (list String) lm file.as_string io.file.mode.read ()->
         data := io.buffered.read_fully lm
@@ -193,3 +254,13 @@ module Session (client list u8, old_session option Session) ref is
             i <- i.get+1
       else
         res
+
+
+  # make sure no one is stealing a session by brute-force
+  #
+  type.safe_number_of_bits => 128
+
+
+# local mutate effect used in this file
+#
+lm : mutate is

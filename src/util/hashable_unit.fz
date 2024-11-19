@@ -1,0 +1,23 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature hashable_unit
+#
+# -----------------------------------------------------------------------
+
+# hashable_unit -- a unit feature that is hashable
+#
+module hashable_unit : property.hashable is
+
+
+  # create hash code for this instance
+  #
+  public redef type.hash_code(a hashable_unit.this) u64 =>
+    0
+
+
+  # two instances of hashable_unit are by definition equal
+  #
+  public redef type.equality(a, b hashable_unit.this) bool =>
+    true
