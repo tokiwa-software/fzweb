@@ -21,11 +21,16 @@ module Session (sessions lock_free.Map String Session,
     := (lock_free.Map util.hashable_unit user).empty
 
 
+  # NYI: hack
+  #
+  unauthenticated_status util.login_status =>
+    util.unauthenticated
+
   # login state of the session
   # NYI: this is a hack for effect-free thread-safe mutation
   #
   login lock_free.Map util.hashable_unit util.login_status
-    := (lock_free.Map util.hashable_unit util.login_status).empty
+    := (lock_free.Map util.hashable_unit util.login_status).from_entries [(util.hashable_unit, unauthenticated_status)]
 
 
   # initialize user and login state
