@@ -45,6 +45,12 @@ module Session (sessions lock_free.Map String Session,
   connection := (lock_free.Map util.hashable_unit net.connection).empty
 
 
+  # session history information
+  #
+  current_page := (lock_free.Map util.hashable_unit String).from_entries [(util.hashable_unit, "index")]
+  last_pushed_history :=  (lock_free.Map util.hashable_unit String).empty
+
+
   # initialize user and login state
   # NYI: thread-safety!
   #
@@ -120,6 +126,20 @@ module Session (sessions lock_free.Map String Session,
   send_event (event String, html_encoded_data option String) =>
     data := html_encoded_data.get ""
     send_data "event: {event}\ndata: {data}\n\n"
+
+
+  # send history information about session's visited pages
+  # NYI: thread-safety!
+  #
+  send_push_history =>
+    last := last_pushed_history[util.hashable_unit]
+    cur := current_page[util.hashable_unit]
+    match cur
+      nil => _ := last_pushed_history.remove util.hashable_unit
+      c String => last_pushed_history.add util.hashable_unit c
+
+    if cur?? && last!! || cur != last
+      send_event "pushHistory" "/{cur.get}"
 
 
   # send data on the session's connection
