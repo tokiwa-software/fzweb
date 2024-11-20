@@ -84,6 +84,31 @@ module Session (sessions lock_free.Map String Session,
     last_activity.add util.hashable_unit time.now.get
 
 
+  # login state easy access
+  #
+  module get_login_status util.login_status =>
+    login[util.hashable_unit].get unauthenticated_status
+
+
+  # send login status to client
+  # NYI: thread-safety!
+  #
+  module send_login_status unit =>
+    match login[util.hashable_unit].get
+      util.authenticated => send_event "isLoggedIn" user[util.hashable_unit].get.name
+      * => send_event "isNotLoggedIn"
+
+
+  # session status string
+  # NYI: thread-safety!
+  #
+  module status_string =>
+    match login[util.hashable_unit].get
+      util.unauthenticated => "not logged in"
+      util.auth_fail => "failed"
+      util.authenticated => "ok: {user[util.hashable_unit].get.name}"
+
+
   # send an event on the session's connection
   #
   send_event (event String) =>
