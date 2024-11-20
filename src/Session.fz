@@ -33,6 +33,11 @@ module Session (sessions lock_free.Map String Session,
     := (lock_free.Map util.hashable_unit util.login_status).from_entries [(util.hashable_unit, unauthenticated_status)]
 
 
+  # connection tied to this session for sending events to the client
+  #
+  connection := (lock_free.Map util.hashable_unit net.connection).empty
+
+
   # initialize user and login state
   # NYI: thread-safety!
   #
@@ -61,6 +66,65 @@ module Session (sessions lock_free.Map String Session,
   # and log session creation
   #
   log "new session {sessions.size} {session_id} for {client} user {user[util.hashable_unit].bind x->x.login}"
+
+
+  # send an event on the session's connection
+  #
+  send_event (event String) =>
+    send_event event nil
+
+
+  # send events along with data on the session's connection
+  #
+  send_event (event String, html_encoded_data option String) =>
+    data := html_encoded_data.get ""
+    send_data "event: {event}\ndata: {data}\n\n"
+
+
+  # send data on the session's connection
+  # NYI: thread-safety!
+  #
+  module send_data (msg String) =>
+    match connection[util.hashable_unit]
+      nil => log "failed to send {(msg.split "\n").head.get}, connection is nil"
+      c net.connection =>
+        reset_connection_timer
+
+        r := c.with (outcome unit) lm ()->
+          (io.buffered.writer.env.write msg.utf8).error
+            >>= _->io.buffered.writer.env.flush
+
+        match r
+          unit => unit
+          e error => close_connection e
+
+
+  # resets connection timer
+  #
+  reset_connection_timer =>
+    unit # NYI
+
+
+  # close session connection
+  # NYI: thread-safety!
+  #
+  close_connection (e error) =>
+    log "exception when sending content: {e}"
+
+    match connection[util.hashable_unit]
+      nil => unit
+      c net.connection =>
+        log "closing connection of session: {session_id}"
+        match c.close
+          unit =>
+          e1 error => log "error closing connection: {e1}"
+        _ := connection.remove util.hashable_unit
+
+
+  # does this session have a connection associated?
+  #
+  module is_connection_ok =>
+    connection[util.hashable_unit].ok
 
 
   # log a message for this session, either to the general log if
