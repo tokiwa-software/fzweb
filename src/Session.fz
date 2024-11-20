@@ -33,6 +33,13 @@ module Session (sessions lock_free.Map String Session,
     := (lock_free.Map util.hashable_unit util.login_status).from_entries [(util.hashable_unit, unauthenticated_status)]
 
 
+  # activity information
+  # NYI: not thread-safe!
+  #
+  last_activity := (lock_free.Map util.hashable_unit time.date_time).empty
+  count_activities := (lock_free.Map util.hashable_unit u64).from_entries [(util.hashable_unit, u64 0)]
+
+
   # connection tied to this session for sending events to the client
   #
   connection := (lock_free.Map util.hashable_unit net.connection).empty
@@ -66,6 +73,15 @@ module Session (sessions lock_free.Map String Session,
   # and log session creation
   #
   log "new session {sessions.size} {session_id} for {client} user {user[util.hashable_unit].bind x->x.login}"
+
+
+  # log session activity
+  # NYI: thread-safety!
+  #
+  activity =>
+    activity_count := count_activities[util.hashable_unit].get 0
+    count_activities.add util.hashable_unit (activity_count + 1)
+    last_activity.add util.hashable_unit time.now.get
 
 
   # send an event on the session's connection
