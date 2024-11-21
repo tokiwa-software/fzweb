@@ -496,7 +496,7 @@ module Session (sessions lock_free.Map String Session,
 
   # send current page content to the client
   #
-  send_content =>
+  module send_content =>
     c := get_content
     msg := """
       id: 0
