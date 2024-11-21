@@ -305,7 +305,8 @@ module Session (sessions lock_free.Map String Session,
     msg
 
 
-  # NYI: comment
+  # NYI: comment, revisit (originally intended for StringBuilder),
+  # rename to prepend_data?
   #
   module append_data(data String) String =>
     entry := data.split "\n"
@@ -463,6 +464,19 @@ module Session (sessions lock_free.Map String Session,
   #
   add_session_info_to_html (s String) String =>
     s.replace "##SESSION_ID##" session_id
+
+
+  # send current page content to the client
+  #
+  send_content =>
+    c := get_content
+    msg := """
+      id: 0
+      event: content
+      {append_data (String.join c "\n")}
+    """
+    send_data msg
+    send_push_history
 
 
   # make sure no one is stealing a session by brute-force
