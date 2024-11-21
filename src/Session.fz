@@ -90,6 +90,34 @@ module Session (sessions lock_free.Map String Session,
     last_activity.add util.hashable_unit time.now.get
 
 
+  # authenticate the session with a user account
+  # NYI: thread-safety!
+  #
+  module login (name, password String) =>
+    activity
+
+    match user.get name password
+      error =>
+        login.add util.hashable_unit util.auth_fail
+      u user =>
+        Session.this.user.add util.hashable_unit u
+        login.add util.hashable_unit util.authenticated
+
+    send_content
+
+
+  # logout the session
+  # NYI: thread-safety!
+  #
+  module logout =>
+    activity
+
+    _ := user.remove util.hashable_unit
+    login.add util.hashable_unit util.unauthenticated
+
+    send_content
+
+
   # login state easy access
   #
   module get_login_status util.login_status =>
