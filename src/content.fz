@@ -43,7 +43,7 @@ module content is
 
   # The file part of a simple_path.
   #
-  type.file_path (simple_path String) Java.java.nio.file.Path =>
+  module type.file_path (simple_path String) Java.java.nio.file.Path =>
     bp := base_simple_path simple_path
     sp := jpath_of simple_path
     start i32 := bp!! ? 0 : bp.get.getNameCount
@@ -63,7 +63,7 @@ module content is
 
   # Check if access to a given path is permitted for user u.
   #
-  type.access_permitted (u option user, simple_path String) bool =>
+  module type.access_permitted (u option user, simple_path String) bool =>
     groups := access_attr simple_path "groups" ""
     match u
       u0 user => u0.check_group_access groups
@@ -152,7 +152,7 @@ module content is
   # Get the data path to the contents of the given simple URL path and check if
   # the given user (or nil if none) is allowed to access it.
   #
-  type.get_data_path (u option user, simple_path String) Java.java.nio.file.Path =>
+  module type.get_data_path (u option user, simple_path String) Java.java.nio.file.Path =>
     if access_permitted u simple_path
       get_data_path2 u simple_path
     else
