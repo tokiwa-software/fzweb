@@ -194,11 +194,32 @@ module Session (sessions lock_free.Map String Session,
     unit # NYI
 
 
+  # associate a session with a connection
+  # NYI: thread-safety!
+  #
+  set_connection (c net.connection) =>
+    reset_connection_timer
+
+    match connection[util.hashable_unit]
+      nil =>
+        log "Set original connection"
+        connection.add util.hashable_unit c
+        send_login_status
+      net.connection =>
+        log "Set new connection"
+        close_connection unit
+        connection.add util.hashable_unit c
+        send_content
+        send_login_status
+
+
   # close session connection
   # NYI: thread-safety!
   #
-  close_connection (e error) =>
-    log "exception when sending content: {e}"
+  close_connection (o outcome unit) =>
+    match o
+      e error => log "exception when sending content: {e}"
+      unit =>
 
     match connection[util.hashable_unit]
       nil => unit
@@ -206,7 +227,7 @@ module Session (sessions lock_free.Map String Session,
         log "closing connection of session: {session_id}"
         match c.close
           unit =>
-          e1 error => log "error closing connection: {e1}"
+          e error => log "error closing connection: {e}"
         _ := connection.remove util.hashable_unit
 
 
