@@ -18,7 +18,7 @@ request_method : choice of
 # contains convenient access of request
 # like header fields, a send feature etc.
 #
-request_context (LM type : mutate) is
+request_context (LM type : mutate, connection net.connection) is
   read_header String =>
     header_lines := io.buffered.read_line_while LM (s -> !s.is_empty)
     String.from_codepoints (header_lines.as_codepoints.drop_while (x -> x = "\n"))
@@ -79,7 +79,7 @@ request_context (LM type : mutate) is
 # entry point to the handling the request
 #
 module handle_connection (LM type : mutate, conn net.connection) unit =>
-  req_context := request_context LM
+  req_context := request_context LM conn
   say "{req_context.head.method} {req_context.head.url}"
 
   # calls to java may sometimes trigger panic
@@ -117,3 +117,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
     UNKNOWN => response 500 "" (list i8).empty
 
   _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array x->x.as_u8)
+  match resp.session
+    nil =>
+    s Session =>
+      s.set_connection req_context.connection

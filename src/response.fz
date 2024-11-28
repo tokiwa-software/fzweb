@@ -11,7 +11,7 @@
 module response (module returncode i32,
                  module attributes String,
                  module data Sequence i8,
-                 module session option Java.dev.flang.Session).
+                 module session option Session).
 
 
 # short-hand for creating a response with an empty session field

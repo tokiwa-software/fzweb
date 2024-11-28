@@ -59,6 +59,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
     sessid := form_data["sessionid"]
     java_client Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (client.map y->y.cast_to_i8)).val
     java_session := jflang.Session_static.get (sessid_original.get "") (sessid.get "") java_client
+    s := Session.get sessions sessid_original sessid client
 
     if raw_path.ends_with "/"
       new_path := raw_path + "index.html"
@@ -134,7 +135,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
     else if raw_path = "/events"
       # send one byte to trigger javascript event
       b array i8 := [0]
-      response 200 "Cache-Control: no-cache\nConnection: keep-alive\nContent-Type: text/event-stream\n" b java_session
+      response 200 "Cache-Control: no-cache\nConnection: keep-alive\nContent-Type: text/event-stream\n" b s
     else if raw_path = "/contents"
       java_session.sendContent
       java_session.sendLoginStatus

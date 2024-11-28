@@ -179,9 +179,10 @@ module Session (sessions lock_free.Map String Session,
       c net.connection =>
         reset_connection_timer
 
-        r := c.with (outcome unit) lm ()->
-          (io.buffered.writer.env.write msg.utf8).error
-            >>= _->io.buffered.writer.env.flush
+        r := lm.instate_self (outcome unit) ()->
+          c.with (outcome unit) lm ()->
+            (io.buffered.writer.env.write msg.utf8).error
+              >>= _->io.buffered.writer.env.flush
 
         match r
           unit => unit
@@ -197,7 +198,7 @@ module Session (sessions lock_free.Map String Session,
   # associate a session with a connection
   # NYI: thread-safety!
   #
-  set_connection (c net.connection) =>
+  module set_connection (c net.connection) =>
     reset_connection_timer
 
     match connection[util.hashable_unit]
