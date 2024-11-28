@@ -8,8 +8,5 @@
 
 # log -- log to the session if existent, or to the general log
 #
-module log(s Java.dev.flang.Session, msg String) =>
-  if !s.is_null
-    s.log msg
-  else
-    logger.log msg
+module log(s Session, msg String) =>
+  s.log msg
