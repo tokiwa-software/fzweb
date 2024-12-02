@@ -69,10 +69,10 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       pw := form_data["password"].get ""
       if !login.is_empty && !pw.is_empty
         java_session.login login pw
-      send_ok_or_reload cmd java_session java_session.statusString
+      send_ok_or_reload cmd s s.status_string
     else if raw_path = "/logout"
       _ := java_session.logout
-      send_ok_or_reload cmd java_session java_session.statusString
+      send_ok_or_reload cmd s s.status_string
     else if cmd = "POST" && raw_path = "/register"
       send_ok cmd (do_register client form_data)
     else if cmd = "POST" && raw_path = "/delete_account"
@@ -115,21 +115,21 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
 
     else if raw_path = "/goto"
       # NYI
-      send_ok_or_reload cmd java_session
+      send_ok_or_reload cmd s
     else if raw_path = "/run"
       code := form_data["code"].get ""
       results_to := form_data["resultsTo"].get ""
       jflang.Runner_static.run java_session code results_to true
-      send_ok_or_reload cmd java_session
+      send_ok_or_reload cmd s
     else if raw_path = "/runeff"
       code := form_data["code"].get ""
       results_to := form_data["resultsTo"].get ""
       jflang.Runner_static.run java_session code results_to true
-      send_ok_or_reload cmd java_session
+      send_ok_or_reload cmd s
     else if raw_path = "/playground"
       if java_session.getLoginStatus.equals jflang.LoginStatus_static.__k__in
         jflang.Playground_static.start java_session
-        send_ok_or_reload cmd java_session
+        send_ok_or_reload cmd s
       else
         response 403 "" (list i8).empty
     else if raw_path = "/events"
@@ -139,7 +139,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
     else if raw_path = "/contents"
       java_session.sendContent
       java_session.sendLoginStatus
-      send_ok_or_reload cmd java_session
+      send_ok_or_reload cmd s
     else if raw_path = "/api/benchmark/logs"
       # NYI:
       response 500 "" (list i8).empty

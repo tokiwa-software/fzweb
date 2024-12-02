@@ -8,7 +8,7 @@
 
 # like its three-argument counterpart, but sends a blank response
 #
-module send_ok_or_reload (cmd String, s Java.dev.flang.Session) response =>
+module send_ok_or_reload (cmd String, s Session) response =>
   send_ok_or_reload cmd s ""
 
 
@@ -16,9 +16,9 @@ module send_ok_or_reload (cmd String, s Java.dev.flang.Session) response =>
 # and data can be send back over the session, otherwise, return a 500
 # response and ask the client to reload
 #
-module send_ok_or_reload (cmd String, s Java.dev.flang.Session, datastr String) response =>
-  returncode := if s.is_null || !s.isContentStreamOk then 500 else 200
-  must_message := if s.is_null then "must reload page" else "must reconnect"
+module send_ok_or_reload (cmd String, s Session, datastr String) response =>
+  returncode := if !s.is_connection_ok then 500 else 200
+  must_message := "must reconnect"
   data := if returncode = 500 then must_message.utf8.map (x->x.cast_to_i8) else datastr.utf8.map (x->x.cast_to_i8)
   data2 := data.as_array
   header := "Content-Length: {data2.length}\nContent-Type: text/html\n"
