@@ -131,7 +131,7 @@ module user (module base_dir String) is
     res_list := io.dir.use (list String) path ()->
       for
         next := io.dir.open.read, io.dir.open.read
-        entries := list next.get nil, entries ++ [ next.get ]
+        entries := list next.get nil, entries.concat_list [ next.get ].as_list
       until !next.ok
         entries
 

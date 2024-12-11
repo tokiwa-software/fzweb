@@ -53,7 +53,7 @@ request_context (LM type : mutate, connection net.connection) is
 
   client =>
     match net.channel.env.get_peer_address
-      x list u8 => x
+      x Sequence u8 => x.as_list
       error => [u8 0, 0, 0, 0].as_list
 
   send(return_code i32, attributes String, data array u8) is
