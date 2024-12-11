@@ -6,13 +6,16 @@
 #
 # -----------------------------------------------------------------------
 
-request_method : choice of
-  GET is
-    redef as_string => "GET"
-  POST is
-    redef as_string => "POST"
-  UNKNOWN is
-    redef as_string => "UNKNOWN"
+GET is
+POST is
+UNKNOWN is
+
+request_method : choice GET POST UNKNOWN is
+  redef as_string =>
+    match request_method.this
+      GET => "GET"
+      POST => "POST"
+      UNKNOWN => "UNKNOWN"
 
 
 # contains convenient access of request
