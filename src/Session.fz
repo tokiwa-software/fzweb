@@ -181,8 +181,8 @@ module Session (sessions lock_free.Map String Session,
 
         r := lm.instate_self (outcome unit) ()->
           c.with (outcome unit) lm ()->
-            (io.buffered.writer.env.write msg.utf8).error
-              >>= _->io.buffered.writer.env.flush
+            ((io.buffered lm).writer.env.write msg.utf8).error
+              >>= _->(io.buffered lm).writer.env.flush
 
         match r
           unit => unit
@@ -409,7 +409,7 @@ module Session (sessions lock_free.Map String Session,
                         option (list String) =>
     res := lm.instate_self (outcome (list String)) ()->
       io.file.use (list String) lm file.as_string io.file.mode.read ()->
-        data := io.buffered.read_fully lm
+        data := (io.buffered lm).read_fully
         lines := String.from_bytes data
         lines.split "\n"
 

@@ -38,7 +38,7 @@ module config_file (values lock_free.Map String String, path String) is
         data := values.items
                       .map (e -> "{e.0}: {e.1}")
                       .as_string "\n"
-        (io.buffered.writer.env.write data.utf8).error
+        ((io.buffered lm).writer.env.write data.utf8).error
 
     match res
       unit => unit
@@ -58,7 +58,7 @@ module config_file (values lock_free.Map String String, path String) is
     # config file can still be populated and created.
     _ := lm.instate_self ()->
       _ := io.file.use unit lm p io.file.mode.read ()->
-        data := io.buffered.read_fully lm
+        data := (io.buffered lm).read_fully
         lines := String.from_bytes data
         lines.split "\n"
              .for_each line->

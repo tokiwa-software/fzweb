@@ -104,7 +104,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       lm : mutate is
       x := lm.instate_self (outcome (array u8)) ()->
         io.file.use (array u8) lm res.toString io.file.mode.read ()->
-          io.buffered.read_fully lm
+          (io.buffered lm).read_fully
 
       match x
         robots_txt array u8 =>

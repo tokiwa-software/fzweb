@@ -83,7 +83,7 @@ module content is
     if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
       x := lm.instate_self (outcome (lock_free.Map String String)) ()->
         io.file.use (lock_free.Map String String) lm jndex.toString io.file.mode.read ()->
-          data := io.buffered.read_fully lm
+          data := (io.buffered lm).read_fully
           lines := (String.from_bytes data).split "\n"
           for
             l in lines
