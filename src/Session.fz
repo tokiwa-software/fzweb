@@ -511,6 +511,15 @@ module Session (sessions lock_free.Map String Session,
     s.replace "##SESSION_ID##" session_id
 
 
+  module add_session_info_to_html_bytes (b array u8) array u8 =>
+    s := String.from_bytes b
+    activity
+    # NYI
+    # - ByteArray from flang_dev
+    # - rest of the variables
+    (s.replace "##SESSION_ID##" session_id).utf8.as_array
+
+
   # send current page content to the client
   #
   module send_content =>
@@ -522,6 +531,13 @@ module Session (sessions lock_free.Map String Session,
     """
     send_data msg
     send_push_history
+
+
+  # set the current page
+  #
+  module set_current (page String) =>
+    p := strip_html page
+    current_page.add util.hashable_unit p
 
 
   # make sure no one is stealing a session by brute-force

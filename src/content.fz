@@ -175,6 +175,36 @@ module content is
   module type.templates_dir Java.java.nio.file.Path => (jpath_of "./templates").normalize
 
 
+module identifier (file_to_send option Java.java.nio.file.Path,
+                   simple_path option String,
+                   content_path option Java.java.nio.file.Path) is
+
+  is_html_template := content_path.exists
+
+
+  module type.new (file_to_send option Java.java.nio.file.Path,
+                   simple_path option String) identifier =>
+    identifier file_to_send simple_path nil
+
+
+  module get_bytes (s Session) outcome (array u8) =>
+    match file_to_send
+      fts Java.java.nio.file.Path =>
+        data := lm.instate_self (outcome (array u8)) ()->
+          io.file.use (array u8) lm fts.toString io.file.mode.read ()->
+            (io.buffered lm).read_fully
+
+        match data
+          ba array u8 =>
+            if is_html_template
+              s.set_current (simple_path.get "")
+              s.add_session_info_to_html_bytes ba
+            else
+              ba
+          e error => e
+      nil => error "no file to send"
+
+
 # short-hand to invoke java.nio.file.Path.of
 # with a single string argument
 #
