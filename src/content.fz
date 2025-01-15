@@ -168,6 +168,54 @@ module content is
     index_file (pages_dir simple_path)
 
 
+  # From a URL path, find the corresponding content identifier, or FORBIDDEN /
+  # MISSING in case this does not exist.
+  #
+  module type.get_contents (s Session, path_from_url0 String) choice identifier missing forbidden =>
+    res := mut (choice identifier missing forbidden) forbidden
+    path_from_url := mut path_from_url0
+
+    if path_from_url.get.starts_with "/"
+      path_from_url <- path_from_url.get.substring 1
+      p := jpath_of path_from_url.get
+
+      if !p.isAbsolute && (p.equals p.normalize) && (content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ p).normalize.startsWith_Ljava_7_nio_7_file_7_Path_s_ content_dir
+        if path_from_url.get.ends_with ".html"
+          path_from_url <- path_from_url.get.substring 0 (path_from_url.get.find_last ".html").get
+
+        match template path_from_url.get
+          missing =>
+            dir := base_dir path_from_url.get
+            access_file := dir.resolve "access.txt"
+            access := config_file.open access_file.toString
+            content_path := dir.resolve_Ljava_7_nio_7_file_7_Path_s_ (file_path path_from_url.get)
+
+            if path_from_url.get.ends_with ".png" || path_from_url.get.ends_with ".svg" || path_from_url.get.ends_with ".jpg" || path_from_url.get.ends_with ".jpeg" || path_from_url.get.ends_with ".pdf"
+              if access_permitted s.get_user path_from_url.get
+                res <- identifier.new content_path path_from_url.get
+            else
+              res <- missing
+              match access.get "template"
+                nil => s.log "no template defined in {access_file}"
+                t String =>
+                  res <- identifier (dir.resolve t) path_from_url.get content_path
+          * => res <- template path_from_url.get
+
+    res.get
+
+
+  # helper to find a template's identifier
+  #
+  module type.template (path_from_url String) choice identifier missing forbidden =>
+    res := mut (choice identifier missing forbidden) missing
+
+    p := templates_dir.resolve path_from_url
+    if (Java.java.nio.file.Files_static.exists p (list Java.java.nio.file.LinkOption).empty) && !(Java.java.nio.file.Files_static.isDirectory p (list Java.java.nio.file.LinkOption).empty)
+      res <- identifier.new p nil
+
+    res.get
+
+
   # constants
   #
   type.content_dir Java.java.nio.file.Path => (jpath_of "./content").normalize
@@ -175,6 +223,8 @@ module content is
   module type.templates_dir Java.java.nio.file.Path => (jpath_of "./templates").normalize
 
 
+# identifies a page alongside a template to send to the user
+#
 module identifier (file_to_send option Java.java.nio.file.Path,
                    simple_path option String,
                    content_path option Java.java.nio.file.Path) is
@@ -203,6 +253,16 @@ module identifier (file_to_send option Java.java.nio.file.Path,
               ba
           e error => e
       nil => error "no file to send"
+
+
+# indicates a page that is missing
+#
+module missing is
+
+
+# indicates a page that the user is not allowed to access
+#
+module forbidden is
 
 
 # short-hand to invoke java.nio.file.Path.of
