@@ -124,6 +124,12 @@ module Session (sessions lock_free.Map String Session,
     login[util.hashable_unit].get unauthenticated_status
 
 
+  # access to session user
+  #
+  module get_user option user =>
+    Session.this.user[util.hashable_unit]
+
+
   # send login status to client
   # NYI: thread-safety!
   #
