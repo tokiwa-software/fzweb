@@ -207,13 +207,11 @@ module content is
   # helper to find a template's identifier
   #
   module type.template (path_from_url String) choice identifier missing forbidden =>
-    res := mut (choice identifier missing forbidden) missing
-
     p := templates_dir.resolve path_from_url
     if (Java.java.nio.file.Files_static.exists p (list Java.java.nio.file.LinkOption).empty) && !(Java.java.nio.file.Files_static.isDirectory p (list Java.java.nio.file.LinkOption).empty)
-      res <- identifier.new p nil
-
-    res.get
+      identifier.new p nil
+    else
+      missing
 
 
   # constants
