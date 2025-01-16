@@ -139,8 +139,20 @@ module content is
 
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
+  #
   type.get_data_path2 (u option user, simple_path String) Java.java.nio.file.Path =>
-    jpath_of "NYI"
+    pages := pages_dir simple_path
+    html_file := mut simple_path
+
+    if !(html_file.get.ends_with ".html") && !(is_known_preformatted_file html_file.get)
+      html_file <- html_file.get + ".html"
+
+    r := pages.resolve_Ljava_7_nio_7_file_7_Path_s_ (file_path html_file.get)
+    if !(Java.java.nio.file.Files_static.exists r (list Java.java.nio.file.LinkOption).empty)
+      index_file pages
+      # NYI browsing
+    else
+      r
 
 
   type.path_from_access (simple_path, attribute, default String) Java.java.nio.file.Path =>
