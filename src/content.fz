@@ -29,16 +29,20 @@ module content is
   type.base_simple_path (simple_path String) option Java.java.nio.file.Path =>
     sp := jpath_of simple_path
 
-    for
-      i := sp.getNameCount, i - 1
-      base_simple_path := sp.subpath 0 i
-      base_dir0 := content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ base_simple_path
-      access := base_dir0.resolve "access.txt"
-    while i > 0
-    until Java.java.nio.file.Files_static.exists access (list Java.java.nio.file.LinkOption).empty
-      option base_simple_path
-    else
-      option Java.java.nio.file.Path nil
+    base_simple_path_loop_helper (i i32) option Java.java.nio.file.Path =>
+      if i > 0
+        base_simple_path := sp.subpath 0 i
+        base_dir0 := content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ base_simple_path
+        access := base_dir0.resolve "access.txt"
+
+        if Java.java.nio.file.Files_static.exists access (list Java.java.nio.file.LinkOption).empty
+          option base_simple_path
+        else
+          base_simple_path_loop_helper i-1
+      else
+        option Java.java.nio.file.Path nil
+
+    base_simple_path_loop_helper sp.getNameCount
 
 
   # The file part of a simple_path.
