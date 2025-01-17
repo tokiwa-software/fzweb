@@ -236,7 +236,7 @@ module content is
 # identifies a page alongside a template to send to the user
 #
 module identifier (file_to_send option Java.java.nio.file.Path,
-                   simple_path option String,
+                   module simple_path option String,
                    content_path option Java.java.nio.file.Path) is
 
   is_html_template := content_path.exists

@@ -114,7 +114,19 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
           response 500 "" (list i8).empty
 
     else if raw_path = "/goto"
-      # NYI
+      match form_data["page"]
+        page String =>
+          c := content.get_contents s page
+          match c
+            forbidden => webserver.this.log s "*** forbidding access to absolute or non-normalized path {page}."
+            missing => webserver.this.log s "error: requested file {page} does not exist"
+            i identifier =>
+              match i.simple_path
+                sp String =>
+                  s.set_current sp
+                  s.send_content
+                nil =>
+        nil =>
       send_ok_or_reload cmd s
     else if raw_path = "/run"
       code := form_data["code"].get ""
