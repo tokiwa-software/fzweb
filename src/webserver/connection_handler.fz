@@ -85,12 +85,7 @@ module handle_connection (LM type : mutate, conn net.connection) unit =>
   req_context := request_context LM conn
   say "{req_context.head.method} {req_context.head.url}"
 
-  # calls to java may sometimes trigger panic
-  panic
-    .try unit ()->
-      process_request LM req_context
-    .catch m->
-      say "handling request, got fault: {m}"
+  process_request LM req_context
 
 
 # helper to process the request
