@@ -35,13 +35,12 @@ module send_ok (cmd String, datastr String) response =>
 
 # send an HTTP response provided a Java.dev.flang.Content_S_Identifier
 #
-module send_content (s Java.dev.flang.Session, cmd String, content_identifier Java.dev.flang.Content_S_Identifier) response =>
+module send_content (s Session, cmd String, i identifier) response =>
   # NYI: logging, mime types
-  bytes := content_identifier.getBytes s
-  match bytes
-    bytes2 fuzion.java.Array =>
-      attributes := "Content-Length: {bytes2.length}\n"
-      response 200 attributes bytes2
+  match i.get_bytes s
+    b array u8 =>
+      attributes := "Content-Length: {b.length}\n"
+      response 200 attributes (b.map x->x.cast_to_i8)
     e error =>
-      say e
+      webserver.this.log s "*** error sending content: {e}"
       response 500 "" (list i8).empty
