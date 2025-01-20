@@ -116,8 +116,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
     else if raw_path = "/goto"
       match form_data["page"]
         page String =>
-          c := content.get_contents s page
-          match c
+          match content.get_contents s page
             forbidden => webserver.this.log s "*** forbidding access to absolute or non-normalized path {page}."
             missing => webserver.this.log s "error: requested file {page} does not exist"
             i identifier =>
@@ -156,15 +155,12 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       # NYI:
       response 500 "" (list i8).empty
     else
-      _ /* next_session */ := jflang.Session_static.get (sessid_original.get "") (sessid.get "") java_client
-      jflang.webserver_static.PerformDirectLogin java_session (fuzion_to_java_map form_data)
       path := decode_path raw_path
-      content_identifier := jflang.Content_static.getContents java_session path
-      if content_identifier.equals jflang.Content_static.FORBIDDEN
-        webserver.this.log s "*** forbidding access to absolute or non-normalized path {path}."
-        response 403 "" (list i8).empty
-      else if content_identifier.equals jflang.Content_static.MISSING
-        webserver.this.log s "*** error: requested file {path} does not exist"
-        response 404 "" (list i8).empty
-      else
-        send_content java_session cmd content_identifier
+      match content.get_contents s path
+        forbidden =>
+          webserver.this.log s "*** forbidding access to absolute or non-normalized path {path}."
+          response 403 "" (list i8).empty
+        missing =>
+          webserver.this.log s "*** error: requested file {path} does not exist"
+          response 404 "" (list i8).empty
+        i identifier => send_content s cmd i
