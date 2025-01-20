@@ -155,6 +155,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       # NYI:
       response 500 "" (list i8).empty
     else
+      perform_direct_login s form_data
       path := decode_path raw_path
       match content.get_contents s path
         forbidden =>
@@ -164,3 +165,14 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
           webserver.this.log s "*** error: requested file {path} does not exist"
           response 404 "" (list i8).empty
         i identifier => send_content s cmd i
+
+
+# perform a login alongside an ordinary request
+#
+perform_direct_login (s Session, form_data lock_free.Map String String) =>
+  l := form_data["login"]
+  p := form_data["password"]
+
+  if l?? && (p??)
+    webserver.this.log s "Direct login: for {l.get}"
+    s.login l.get p.get
