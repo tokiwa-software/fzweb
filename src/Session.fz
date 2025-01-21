@@ -324,7 +324,7 @@ module Session (sessions lock_free.Map String Session,
   # added the html extenson to the page string
   #
   module add_html(page String) String =>
-    if !jflang.Content_static.isKnownPreformattedFile page
+    if !content.is_known_preformatted_file page
       page + ".html"
     else
       page
@@ -448,21 +448,24 @@ module Session (sessions lock_free.Map String Session,
   # returns the content of the file
   #
   module get_template(filename String, repl list String) String =>
-    p := (jflang.Content_static.template filename).__fileToSend
-    if p.is_null
-      "--template {filename} not found--"
-    else
-      i := mut 0
-      lines := read_all_lines p
-      for
-        res := "", res + rs + "\n"
-        rs in lines
-      while i.get < repl.count
-      do
-        _ := rs.replace repl[i.get] repl[i.get + 1]
-        i <- i.get+1
-      else
-        res
+    not_found := "--template {filename} not found--"
+    match content.template filename
+      template_id identifier =>
+        match template_id.file_to_send
+          p Java.java.nio.file.Path =>
+            i := mut 0
+            lines := read_all_lines p
+            for
+              res := "", res + rs + "\n"
+              rs in lines
+            while i.get < repl.count
+            do
+              _ := rs.replace repl[i.get] repl[i.get + 1]
+              i <- i.get+1
+            else
+              res
+          nil => not_found
+      * => not_found
 
 
   # get file content as list of strings
