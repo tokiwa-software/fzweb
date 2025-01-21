@@ -22,17 +22,6 @@ has_registered_recently (client list u8) bool =>
   # NYI
   false
 
-# helper feature to convert java map to fuzion map
-#
-module fuzion_to_java_map(fz_map lock_free.Map String String) Java.java.util.TreeMap =>
-  # Create an instance of Java's Map
-  jv_map := Java.java.util.TreeMap.new
-  # Iterate over items in the Fuzion map and put them into the Java Map
-  for p in fz_map.items do
-    key := Java.java.lang.__jString.new p.0
-    value0 := Java.java.lang.__jString.new p.1
-    _ := jv_map.put key value0
-  jv_map
 
 # create a user account given the data submitted via the form content
 #
@@ -57,22 +46,15 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
   else
     sessid_original := form_data["originalsessionid"]
     sessid := form_data["sessionid"]
-    java_client Java.java.net.InetAddress := (jnet.InetAddress_static.getByAddress (client.map y->y.cast_to_i8)).val
-    java_session := jflang.Session_static.get (sessid_original.get "") (sessid.get "") java_client
     s := Session.get sessions sessid_original sessid client
 
     if raw_path.ends_with "/"
       new_path := raw_path + "index.html"
       route_request new_path cmd client form_data query
     else if raw_path = "/login"
-      login := form_data["login"].get ""
-      pw := form_data["password"].get ""
-      if !login.is_empty && !pw.is_empty
-        java_session.login login pw
-      send_ok_or_reload cmd s s.status_string
+      send_nyi
     else if raw_path = "/logout"
-      _ := java_session.logout
-      send_ok_or_reload cmd s s.status_string
+      send_nyi
     else if cmd = "POST" && raw_path = "/register"
       send_ok cmd (do_register client form_data)
     else if cmd = "POST" && raw_path = "/delete_account"
@@ -110,7 +92,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
         robots_txt array u8 =>
           send_ok cmd (String.from_bytes robots_txt)
         error =>
-          jflang.Logger_static.log "robots.txt could not be read."
+          logger.log "robots.txt could not be read."
           response 500 "" (list i8).empty
 
     else if raw_path = "/goto"
@@ -128,32 +110,21 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
         nil =>
       send_ok_or_reload cmd s
     else if raw_path = "/run"
-      code := form_data["code"].get ""
-      results_to := form_data["resultsTo"].get ""
-      jflang.Runner_static.run java_session code results_to true
-      send_ok_or_reload cmd s
+      send_nyi
     else if raw_path = "/runeff"
-      code := form_data["code"].get ""
-      results_to := form_data["resultsTo"].get ""
-      jflang.Runner_static.run java_session code results_to true
-      send_ok_or_reload cmd s
+      send_nyi
     else if raw_path = "/playground"
-      if java_session.getLoginStatus.equals jflang.LoginStatus_static.__k__in
-        jflang.Playground_static.start java_session
-        send_ok_or_reload cmd s
-      else
-        response 403 "" (list i8).empty
+      send_nyi
     else if raw_path = "/events"
       # send one byte to trigger javascript event
       b array i8 := [0]
       response 200 "Cache-Control: no-cache\nConnection: keep-alive\nContent-Type: text/event-stream\n" b s
     else if raw_path = "/contents"
-      java_session.sendContent
-      java_session.sendLoginStatus
+      s.send_content
+      s.send_login_status
       send_ok_or_reload cmd s
     else if raw_path = "/api/benchmark/logs"
-      # NYI:
-      response 500 "" (list i8).empty
+      send_nyi
     else
       path := decode_path raw_path
       match content.get_contents s path

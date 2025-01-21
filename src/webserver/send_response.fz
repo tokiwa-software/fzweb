@@ -33,7 +33,7 @@ module send_ok (cmd String, datastr String) response =>
   response 200 header data
 
 
-# send an HTTP response provided a Java.dev.flang.Content_S_Identifier
+# send an HTTP response provided a content identifier
 #
 module send_content (s Session, cmd String, i identifier) response =>
   # NYI: logging, mime types
@@ -44,3 +44,10 @@ module send_content (s Session, cmd String, i identifier) response =>
     e error =>
       webserver.this.log s "*** error sending content: {e}"
       response 500 "" (list i8).empty
+
+
+# send an HTTP response indicating that the content requested has not
+# been sent due to a missing implementation in this webserver
+#
+module send_nyi response =>
+  response 500 "" (list i8).empty
