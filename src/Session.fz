@@ -521,22 +521,25 @@ module Session (sessions lock_free.Map String Session,
 
 
   module add_session_info_to_html_bytes (b array u8) array u8 =>
-    s := String.from_bytes b
+    s := mut (String.from_bytes b)
     activity
     # NYI
     # - ByteArray from flang_dev
-    # - rest of the variables
-    (s.replace "##SESSION_ID##" session_id).utf8.as_array
+    s <- s.get.replace "##SESSION_ID##" session_id
+    match current_page[util.hashable_unit]
+      cp String => s <- s.get.replace "##URL##" "/{cp}"
+      nil =>
+    s <- s.get.replace "##CONTENT##" (String.join get_content "\n")
+    s.get.utf8.as_array
 
 
   # send current page content to the client
   #
   module send_content =>
-    c := get_content
     msg := """
       id: 0
       event: content
-      {append_data (String.join c "\n")}
+      {append_data (String.join get_content "\n")}
     """
     send_data msg
     send_push_history
