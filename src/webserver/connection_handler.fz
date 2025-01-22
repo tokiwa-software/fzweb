@@ -30,8 +30,8 @@ request_context (LM type : mutate, connection net.connection) is
     res := s
       .split "\n"
       .map (x -> (x.find " ").bind (tuple String String) (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
-      .filter (x -> x.exists)
-      .map (x -> x.get)
+      .filter (.exists)
+      .map (.get)
       .as_array
     (container.ps_map String String).new (res.map x->x.values.0) (res.map x->x.values.1)
 
@@ -114,7 +114,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
     POST => get_response "POST"
     UNKNOWN => response 500 "" (list i8).empty
 
-  _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array x->x.as_u8)
+  _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array (.as_u8))
   match resp.session
     nil =>
     s Session =>

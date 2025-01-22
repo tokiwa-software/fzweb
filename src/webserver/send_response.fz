@@ -19,7 +19,7 @@ module send_ok_or_reload (cmd String, s Session) response =>
 module send_ok_or_reload (cmd String, s Session, datastr String) response =>
   returncode := if !s.is_connection_ok then 500 else 200
   must_message := "must reconnect"
-  data := if returncode = 500 then must_message.utf8.map (x->x.cast_to_i8) else datastr.utf8.map (x->x.cast_to_i8)
+  data := if returncode = 500 then must_message.utf8.map (.cast_to_i8) else datastr.utf8.map (.cast_to_i8)
   data2 := data.as_array
   header := "Content-Length: {data2.length}\nContent-Type: text/html\n"
   response returncode header data2
@@ -28,7 +28,7 @@ module send_ok_or_reload (cmd String, s Session, datastr String) response =>
 # send an HTTP 200 response along with the given data
 #
 module send_ok (cmd String, datastr String) response =>
-  data := (datastr.utf8.map (x->x.cast_to_i8)).as_array
+  data := (datastr.utf8.map (.cast_to_i8)).as_array
   header := "Content-Length: {data.length}\nContent-Type: text/html\n"
   response 200 header data
 
@@ -40,7 +40,7 @@ module send_content (s Session, cmd String, i identifier) response =>
   match i.get_bytes s
     b array u8 =>
       attributes := "Content-Length: {b.length}\n"
-      response 200 attributes (b.map x->x.cast_to_i8)
+      response 200 attributes (b.map (.cast_to_i8))
     e error =>
       webserver.this.log s "*** error sending content: {e}"
       response 500 "" (list i8).empty
