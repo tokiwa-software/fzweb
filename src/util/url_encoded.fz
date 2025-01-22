@@ -42,7 +42,7 @@ module url_encoded is
     for p in pairs do
       nv := p.split "="
       name := (from_urlencoded nv.first.get).trim
-      _ := form_data.add name (if nv.count < 2 then "" else from_urlencoded (nv.drop 1).first.get)
+      _ := form_data.put name (if nv.count < 2 then "" else from_urlencoded (nv.drop 1).first.get)
     form_data
 
 

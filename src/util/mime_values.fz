@@ -15,7 +15,7 @@ module mime_values is
   module add(line String) =>
     pairs := line.split ":"
     if pairs.count=2
-      map.add(pairs[0].trim,pairs[1].trim)
+      map.put pairs[0].trim pairs[1].trim
 
 
   # Get a value from the map and pass it to parse_value feature

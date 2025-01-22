@@ -46,20 +46,20 @@ module mime_value(mime_type String, parameters lock_free.Map String String) is
               quote i32 =>
                 value0 := rest_trimmed.substring 0 quote
                 next := (rest_trimmed.substring (quote + 1)).trim
-                params.add key value0
+                params.put key value0
                 parse_pairs next params
               nil =>
-                params.add key rest_trimmed
+                params.put key rest_trimmed
                 parse_pairs "" params
           else
             match rest.find " "
               nil =>
-                params.add key rest
+                params.put key rest
                 parse_pairs "" params
               space i32 =>
                 value0 := rest.substring 0 space
                 next := (rest.substring (space + 1)).trim
-                params.add key value0
+                params.put key value0
                 parse_pairs next params
 
 

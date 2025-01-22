@@ -20,7 +20,7 @@ module config_file (values lock_free.Map String String, path String) is
   # update or create a new key in the config file
   #
   module set0 (key, val String) =>
-    values.add key val
+    values.put key val
 
 
   # remove a key from the config file
@@ -66,7 +66,7 @@ module config_file (values lock_free.Map String String, path String) is
                  colon i32 =>
                    key := (line.substring 0 colon).trim
                    val := (line.substring (colon + 1)).trim
-                   m.add key val
+                   m.put key val
                  nil => unit
 
     config_file m p

@@ -59,11 +59,11 @@ module Session (sessions lock_free.Map String Session,
     old_s Session =>
       match old_s.user[util.hashable_unit]
         nil => unit
-        old_user user => Session.this.user.add util.hashable_unit old_user
+        old_user user => Session.this.user.put util.hashable_unit old_user
 
       match old_s.login[util.hashable_unit]
         nil => unit
-        old_login util.login_status => login.add util.hashable_unit old_login
+        old_login util.login_status => login.put util.hashable_unit old_login
 
 
   # session id
@@ -73,7 +73,7 @@ module Session (sessions lock_free.Map String Session,
 
   # put session in global session list
   #
-  sessions.add session_id Session.this
+  sessions.put session_id Session.this
 
 
   # and log session creation
@@ -86,8 +86,8 @@ module Session (sessions lock_free.Map String Session,
   #
   activity =>
     activity_count := count_activities[util.hashable_unit].get 0
-    count_activities.add util.hashable_unit (activity_count + 1)
-    last_activity.add util.hashable_unit time.now.get
+    count_activities.put util.hashable_unit (activity_count + 1)
+    last_activity.put util.hashable_unit time.now.get
 
 
   # authenticate the session with a user account
@@ -98,10 +98,10 @@ module Session (sessions lock_free.Map String Session,
 
     match user.get name password
       error =>
-        login.add util.hashable_unit util.auth_fail
+        login.put util.hashable_unit util.auth_fail
       u user =>
-        Session.this.user.add util.hashable_unit u
-        login.add util.hashable_unit util.authenticated
+        Session.this.user.put util.hashable_unit u
+        login.put util.hashable_unit util.authenticated
 
     send_content
 
@@ -113,7 +113,7 @@ module Session (sessions lock_free.Map String Session,
     activity
 
     _ := user.remove util.hashable_unit
-    login.add util.hashable_unit util.unauthenticated
+    login.put util.hashable_unit util.unauthenticated
 
     send_content
 
@@ -170,7 +170,7 @@ module Session (sessions lock_free.Map String Session,
     cur := current_page[util.hashable_unit]
     match cur
       nil => _ := last_pushed_history.remove util.hashable_unit
-      c String => last_pushed_history.add util.hashable_unit c
+      c String => last_pushed_history.put util.hashable_unit c
 
     if cur?? && last!! || cur != last
       send_event "pushHistory" "/{cur.get}"
@@ -210,12 +210,12 @@ module Session (sessions lock_free.Map String Session,
     match connection[util.hashable_unit]
       nil =>
         log "Set original connection"
-        connection.add util.hashable_unit c
+        connection.put util.hashable_unit c
         send_login_status
       net.connection =>
         log "Set new connection"
         close_connection unit
-        connection.add util.hashable_unit c
+        connection.put util.hashable_unit c
         send_content
         send_login_status
 
@@ -291,9 +291,9 @@ module Session (sessions lock_free.Map String Session,
     for pair in map.items do
       if (pair.1.starts_with "\"") && (pair.1.ends_with "\"")
         v := pair.1.substring 1 pair.1.byte_length
-        res.add pair.0 v
+        res.put pair.0 v
       else
-        res.add pair.0 pair.1
+        res.put pair.0 pair.1
     res
 
 
@@ -549,7 +549,7 @@ module Session (sessions lock_free.Map String Session,
   #
   module set_current (page String) =>
     p := strip_html page
-    current_page.add util.hashable_unit p
+    current_page.put util.hashable_unit p
 
 
   # make sure no one is stealing a session by brute-force
