@@ -271,16 +271,15 @@ module Session (sessions lock_free.Map String Session,
   module type.get (sessions lock_free.Map String Session,
                    old_id, id option String,
                    c list u8) Session =>
-    lm.instate_self Session ()->
-      res := lm.env.new (option Session) nil
-      orig := lm.env.new (option Session) nil
+    res := mut (option Session) nil
+    orig := mut (option Session) nil
 
-      if old_id??
-        orig <- get sessions old_id.get c
-      else if id??
-        res <- get sessions id.get c
+    if old_id??
+      orig <- get sessions old_id.get c
+    else if id??
+      res <- get sessions id.get c
 
-      res.get.get (Session sessions c orig.get)
+    res.get.get (Session sessions c orig.get)
 
 
   # create attribute_map based on the entry provided
