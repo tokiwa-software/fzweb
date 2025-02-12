@@ -172,7 +172,7 @@ module Session (sessions lock_free.Map String Session,
       nil => _ := last_pushed_history.remove util.hashable_unit
       c String => last_pushed_history.put util.hashable_unit c
 
-    if cur?? && last!! || cur != last
+    if cur?? && last!! || cur.as_equatable != last.as_equatable
       send_event "pushHistory" "/{cur.get}"
 
 
@@ -259,7 +259,7 @@ module Session (sessions lock_free.Map String Session,
     match sessions[id]
       nil => nil
       s Session =>
-        if s.client = c
+        if s.client.as_equatable = c.as_equatable
           s
         else
           nil
