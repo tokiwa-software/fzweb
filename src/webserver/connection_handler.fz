@@ -114,7 +114,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
     POST => get_response "POST"
     UNKNOWN => response 500 "" (list i8).empty
 
-  _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array (.as_u8))
+  _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array (.cast_to_u8))
   match resp.session
     nil =>
     s Session =>
