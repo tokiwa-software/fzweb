@@ -11,7 +11,7 @@
 module response (module returncode i32,
                  module attributes String,
                  module data Sequence i8,
-                 module session option Session).
+                 module session option Session) is
 
 
 # short-hand for creating a response with an empty session field

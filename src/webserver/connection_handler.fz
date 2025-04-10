@@ -11,7 +11,7 @@ POST is
 UNKNOWN is
 
 request_method : choice GET POST UNKNOWN is
-  redef as_string =>
+  public redef as_string =>
     match request_method.this
       GET => "GET"
       POST => "POST"

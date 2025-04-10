@@ -283,7 +283,7 @@ module forbidden is
 # with a single string argument
 #
 jpath_of (path String) Java.java.nio.file.Path =>
-  Java.java.nio.file.Path_static.__k__of path (list Java.java.lang.__jString).empty
+  Java.java.nio.file.Path_static.of path (list Java.java.lang.__jString).empty
 
 
 # local mutate effect used in this file

@@ -28,6 +28,6 @@ run =>
     # the request accept loop
     while net.server.is_active
       _ := net.server.accept.bind unit conn->
-        lm : mutate.
+        lm : mutate is
         _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
           (webserver sessions).handle_connection lm conn
