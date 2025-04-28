@@ -36,11 +36,11 @@ module content is
         access := base_dir0.resolve "access.txt"
 
         if Java.java.nio.file.Files_static.exists access (list Java.java.nio.file.LinkOption).empty
-          option base_simple_path
+          base_simple_path
         else
           base_simple_path_loop_helper i-1
       else
-        option Java.java.nio.file.Path nil
+        nil
 
     base_simple_path_loop_helper sp.getNameCount
 
