@@ -409,18 +409,19 @@ module Session (sessions lock_free.Map String Session,
   # read lines from the path and return them in a list of string
   # NYI: pretty printing
   #
-  module read_all_lines (file Java.java.nio.file.Path,
-                         return_nil_on_error, pretty_print bool)
-                        option (list String) =>
+  read_all_lines (file String,
+                  return_nil_on_error, pretty_print bool)
+                  option (list String)
+  =>
     res := lm.instate_self (outcome (list String)) ()->
-      io.file.use (list String) lm file.toString io.file.mode.read ()->
+      io.file.use (list String) lm file io.file.mode.read ()->
         data := (io.buffered lm).read_fully
         lines := String.from_bytes data
         lines.split "\n"
 
     match res
       e error =>
-        log "error reading from path {file.toString}: {e}"
+        log "error reading from path {file}: {e}"
         if return_nil_on_error
           nil
         else
@@ -431,7 +432,7 @@ module Session (sessions lock_free.Map String Session,
   # same as read_all_lines (3 args) but without the option
   # for pretty printing
   #
-  read_all_lines (file Java.java.nio.file.Path,
+  read_all_lines (file String,
                   return_nil_on_error bool)
                  option (list String) =>
     read_all_lines file return_nil_on_error false
@@ -440,7 +441,7 @@ module Session (sessions lock_free.Map String Session,
   # same as read_all_lines (2 args) but without the option of
   # returning nil on error
   #
-  read_all_lines (file Java.java.nio.file.Path) list String =>
+  read_all_lines (file String) list String =>
     (read_all_lines file false).get
 
 
@@ -451,7 +452,7 @@ module Session (sessions lock_free.Map String Session,
     match content.template filename
       template_id identifier =>
         match template_id.file_to_send
-          p Java.java.nio.file.Path =>
+          p String =>
             i := mut 0
             lines := read_all_lines p
             for
@@ -476,7 +477,7 @@ module Session (sessions lock_free.Map String Session,
       # permitted := content.access_permitted user[util.hashable_unit] current_page[util.hashable_unit].get
       data_path := content.get_data_path user[util.hashable_unit] current_page[util.hashable_unit].get
       file_name := data_path.getFileName.toString
-      match read_all_lines data_path true (file_name.ends_with ".fz")
+      match read_all_lines data_path.toString true (file_name.ends_with ".fz")
         lines list String =>
           # if permitted
           #   res.add (navigation true)

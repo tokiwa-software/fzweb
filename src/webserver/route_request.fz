@@ -10,8 +10,7 @@
 # and extract the actual path out of it
 #
 decode_path (raw_path String) String =>
-  uri := Java.java.net.URI_static.new "none" "none" raw_path ""
-  match uri
+  match Java.java.net.URI_static.new "none" "none" raw_path ""
     u Java.java.net.URI => u.getPath
     error => ""
 

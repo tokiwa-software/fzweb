@@ -204,7 +204,9 @@ module content is
             dir := base_dir path_from_url.get
             access_file := dir.resolve "access.txt"
             access := config_file.open access_file.toString
-            content_path := dir.resolve_Ljava_7_nio_7_file_7_Path_s_ (file_path path_from_url.get)
+            content_path := dir
+              .resolve_Ljava_7_nio_7_file_7_Path_s_ (file_path path_from_url.get)
+              .toString
 
             if path_from_url.get.ends_with ".png" || path_from_url.get.ends_with ".svg" || path_from_url.get.ends_with ".jpg" || path_from_url.get.ends_with ".jpeg" || path_from_url.get.ends_with ".pdf"
               if access_permitted s.get_user path_from_url.get
@@ -214,7 +216,7 @@ module content is
               match access.get "template"
                 nil => s.log "no template defined in {access_file}"
                 t String =>
-                  res <- identifier (dir.resolve t) path_from_url.get content_path
+                  res <- identifier (dir.resolve t).toString path_from_url.get content_path
           * => res <- template path_from_url.get
 
     res.get
@@ -225,7 +227,7 @@ module content is
   module type.template (path_from_url String) choice identifier missing forbidden =>
     p := templates_dir.resolve path_from_url
     if (Java.java.nio.file.Files_static.exists p (list Java.java.nio.file.LinkOption).empty) && !(Java.java.nio.file.Files_static.isDirectory p (list Java.java.nio.file.LinkOption).empty)
-      identifier.new p nil
+      identifier.new p.toString nil
     else
       missing
 
@@ -239,23 +241,23 @@ module content is
 
 # identifies a page alongside a template to send to the user
 #
-module identifier (module file_to_send option Java.java.nio.file.Path,
+module identifier (module file_to_send option String,
                    module simple_path option String,
-                   content_path option Java.java.nio.file.Path) is
+                   content_path option String) is
 
   is_html_template := content_path.exists
 
 
-  module type.new (file_to_send option Java.java.nio.file.Path,
+  module type.new (file_to_send option String,
                    simple_path option String) identifier =>
     identifier file_to_send simple_path nil
 
 
   module get_bytes (s Session) outcome (array u8) =>
     match file_to_send
-      fts Java.java.nio.file.Path =>
-        data := lm.instate_self (outcome (array u8)) ()->
-          io.file.use (array u8) lm fts.toString io.file.mode.read ()->
+      fts String =>
+        data := lm.instate_self ()->
+          io.file.use _ lm fts io.file.mode.read ()->
             (io.buffered lm).read_fully
 
         match data
@@ -283,7 +285,7 @@ module forbidden is
 # with a single string argument
 #
 jpath_of (path String) Java.java.nio.file.Path =>
-  Java.java.nio.file.Path_static.of path (list Java.java.lang.__jString).empty
+  Java.java.nio.file.Path_static.of path []
 
 
 # local mutate effect used in this file
