@@ -254,8 +254,8 @@ module identifier (module file_to_send option Java.java.nio.file.Path,
   module get_bytes (s Session) outcome (array u8) =>
     match file_to_send
       fts Java.java.nio.file.Path =>
-        data := lm.instate_self (outcome (array u8)) ()->
-          io.file.use (array u8) lm fts.toString io.file.mode.read ()->
+        data := lm.instate_self ()->
+          io.file.use _ lm fts.toString io.file.mode.read ()->
             (io.buffered lm).read_fully
 
         match data
@@ -283,7 +283,7 @@ module forbidden is
 # with a single string argument
 #
 jpath_of (path String) Java.java.nio.file.Path =>
-  Java.java.nio.file.Path_static.of path (list Java.java.lang.__jString).empty
+  Java.java.nio.file.Path_static.of path []
 
 
 # local mutate effect used in this file
