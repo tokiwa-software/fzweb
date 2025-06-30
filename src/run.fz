@@ -10,24 +10,24 @@
 #
 run =>
 
-  # start a JVM with CLASS_PATH=classes
-  fuzion.jvm.use _ "classes" ()->
+  port u16 := 8080
+  # start the server
+  _ := net.server.start net.family.ipv4 net.protocol.tcp port ()->
+    say "started listening on port: $port"
 
-    port u16 := 8080
-    # start the server
-    _ := net.server.start net.family.ipv4 net.protocol.tcp port ()->
-      say "started listening on port: $port"
-
-      # global list of sessions
-      sessions := (lock_free.Map String Session).empty
+    # global list of sessions
+    sessions := (lock_free.Map String Session).empty
 
 
-      # start a thread pool
-      concur.thread_pool 4 ()->
+    # start a thread pool
+    concur.thread_pool 4 ()->
 
-        # the request accept loop
-        do
-          _ := net.server.env.accept.bind unit conn->
-            lm : mutate is
-            _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
+      # the request accept loop
+      do
+        _ := net.server.env.accept.bind unit conn->
+          lm : mutate is
+          _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
+            # NYI: PERFORMANCE: shared JVM for all threads?
+            # start a JVM with CLASS_PATH=classes
+            fuzion.jvm.use _ "classes" ()->
               (webserver sessions).handle_connection lm conn
