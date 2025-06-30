@@ -33,12 +33,11 @@ module config_file (values lock_free.Map String String, path String) is
   # its path
   #
   module save =>
-    res := lm.instate_self (outcome unit) ()->
-      io.file.use unit lm path io.file.mode.write ()->
-        data := values.items
-                      .map (e -> "{e.0}: {e.1}")
-                      .as_string "\n"
-        ((io.buffered lm).writer.env.write data.utf8).error
+    res := io.file.use unit path io.file.mode.write ()->
+      data := values.items
+                    .map (e -> "{e.0}: {e.1}")
+                    .as_string "\n"
+      (io.file.writer.write data.utf8).error
 
     match res
       unit => unit
@@ -56,22 +55,16 @@ module config_file (values lock_free.Map String String, path String) is
 
     # ignore any errors here.
     # config file can still be populated and created.
-    _ := lm.instate_self ()->
-      _ := io.file.use unit lm p io.file.mode.read ()->
-        data := (io.buffered lm).read_fully
-        lines := String.from_bytes data
-        lines.split "\n"
-             .for_each line->
-               match line.find ":"
-                 colon i32 =>
-                   key := (line.substring 0 colon).trim
-                   val := (line.substring (colon + 1)).trim
-                   m.put key val
-                 nil => unit
+    _ := io.file.use unit p io.file.mode.read ()->
+      data := (io.buffered io.file.file_mutate).read_fully
+      lines := String.from_bytes data
+      lines.split "\n"
+           .for_each line->
+             match line.find ":"
+               colon i32 =>
+                 key := (line.substring 0 colon).trim
+                 val := (line.substring (colon + 1)).trim
+                 m.put key val
+               nil => unit
 
     config_file m p
-
-
-# local mutate effect used in this file
-#
-lm : mutate is

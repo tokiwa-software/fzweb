@@ -85,17 +85,16 @@ module content is
   #
   type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.Map String String) =>
     if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
-      x := lm.instate_self (outcome (lock_free.Map String String)) ()->
-        io.file.use (lock_free.Map String String) lm jndex.toString io.file.mode.read ()->
-          data := (io.buffered lm).read_fully
-          lines := (String.from_bytes data).split "\n"
-          for
-            l in lines
-            m := Session.get_tag l "<browse"
-          until m.exists
-            outcome m.get
-          else
-            outcome (lock_free.Map String String) (error "not found")
+      x := io.file.use (lock_free.Map String String) jndex.toString io.file.mode.read ()->
+        data := (io.buffered io.file.file_mutate).read_fully
+        lines := (String.from_bytes data).split "\n"
+        for
+          l in lines
+          m := Session.get_tag l "<browse"
+        until m.exists
+          outcome m.get
+        else
+          outcome (lock_free.Map String String) (error "not found")
       match x
         y lock_free.Map String String => y
         error => nil
@@ -254,9 +253,8 @@ module identifier (module file_to_send option Java.java.nio.file.Path,
   module get_bytes (s Session) outcome (array u8) =>
     match file_to_send
       fts Java.java.nio.file.Path =>
-        data := lm.instate_self ()->
-          io.file.use _ lm fts.toString io.file.mode.read ()->
-            (io.buffered lm).read_fully
+        data := io.file.use fts.toString io.file.mode.read ()->
+          (io.buffered io.file.file_mutate).read_fully
 
         match data
           ba array u8 =>
@@ -284,8 +282,3 @@ module forbidden is
 #
 jpath_of (path String) Java.java.nio.file.Path =>
   Java.java.nio.file.Path_static.of path []
-
-
-# local mutate effect used in this file
-#
-lm : mutate is
