@@ -82,10 +82,8 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
 
     else if raw_path = "/robots.txt"
       res := content.templates_dir.resolve "robots.txt"
-      lm : mutate is
-      x := lm.instate_self (outcome (array u8)) ()->
-        io.file.use (array u8) lm res.toString io.file.mode.read ()->
-          (io.buffered lm).read_fully
+      x := io.file.use (array u8) res.toString io.file.mode.read ()->
+          (io.buffered io.file.file_mutate).read_fully
 
       match x
         robots_txt array u8 =>

@@ -11,7 +11,7 @@
 run =>
 
   # start a JVM with CLASS_PATH=classes
-  fuzion.java.jvm _ "classes" ()->
+  fuzion.jvm.use _ "classes" ()->
 
     port u16 := 8080
     # start the server

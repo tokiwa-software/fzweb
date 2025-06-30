@@ -412,11 +412,10 @@ module Session (sessions lock_free.Map String Session,
   module read_all_lines (file Java.java.nio.file.Path,
                          return_nil_on_error, pretty_print bool)
                         option (list String) =>
-    res := lm.instate_self (outcome (list String)) ()->
-      io.file.use (list String) lm file.toString io.file.mode.read ()->
-        data := (io.buffered lm).read_fully
-        lines := String.from_bytes data
-        lines.split "\n"
+    res := io.file.use (list String) file.toString io.file.mode.read ()->
+      data := (io.buffered io.file.file_mutate).read_fully
+      lines := String.from_bytes data
+      lines.split "\n"
 
     match res
       e error =>
