@@ -6,53 +6,14 @@
 #
 # -----------------------------------------------------------------------
 
-GET is
-POST is
-UNKNOWN is
-
-request_method : choice GET POST UNKNOWN is
-  public redef as_string =>
-    match request_method.this
-      GET => "GET"
-      POST => "POST"
-      UNKNOWN => "UNKNOWN"
-
-
 # contains convenient access of request
 # like header fields, a send feature etc.
 #
 request_context (LM type : mutate, connection net.connection) is
-  read_header String =>
-    header_lines := (io.buffered LM).read_line_while (s -> !s.is_empty)
-    String.from_codepoints (header_lines.as_codepoints.drop_while (x -> x = "\n"))
+  request := (http.read_request LM).get
 
-  http_header_map(s String) container.Map String String =>
-    res := s
-      .split "\n"
-      .map (x -> (x.find " ").bind (tuple String String) (idx -> (x.substring 0 idx, x.substring idx+1 x.byte_length)))
-      .filter (.exists)
-      .map (.get)
-      .as_array
-    (container.ps_map String String).new (res.map x->x.values.0) (res.map x->x.values.1)
-
-  head(method request_method, url String, http_headers container.Map String String) is
-    path => (url.split "?").first.get
-    query_string => ((url.split "?").drop 1).first ""
-
-  _head := once LM head ()->
-    s := read_header
-    method request_method := if s.starts_with "GET" then GET else if s.starts_with "POST" then POST else UNKNOWN
-    url := String.from_codepoints (s
-      .as_codepoints
-      .drop_while (x -> x != " ")
-      .drop_while (x -> x = " ")
-      .take_while (x -> x != " "))
-    line2ff := (s.as_codepoints.drop_while (x ->  x != "\n")).drop 1
-    line2ff0 := String.from_codepoints line2ff
-    map := http_header_map line2ff0
-    head method url map
-
-  head => _head.get
+  path => (request.target.split "?").first.get
+  query_string => ((request.target.split "?").drop 1).first ""
 
   client =>
     match net.channel.env.get_peer_address
@@ -83,7 +44,7 @@ request_context (LM type : mutate, connection net.connection) is
 #
 module handle_connection (LM type : mutate, conn net.connection) unit =>
   req_context := request_context LM conn
-  say "{req_context.head.method} {req_context.head.url}"
+  say "{req_context.request.method} {req_context.request.target}"
 
   process_request LM req_context
 
@@ -94,25 +55,25 @@ process_request(LM type : mutate, req_context request_context LM) =>
   # compute response
   get_response(cmd String) =>
     post_len =>
-      match (req_context.head.http_headers["Content-Length:"].or_else "0").parse_i32
+      match (req_context.request.header["Content-Length"].or_else "0").parse_i32
         error => 0
         i i32 => i
     post_data := String.from_bytes ((io.buffered LM).read_bytes post_len).as_list
-    val := (Java.dev.flang.webserver_S_Value_static.new (req_context.head.http_headers["Content-Type:"].or_else ""))
+    val := (Java.dev.flang.webserver_S_Value_static.new (req_context.request.header["Content-Type"].or_else ""))
     content_type := val.getType
     content_type_boundary := val.getBoundary
-    form_data := get_form_data post_data cmd req_context.head.query_string content_type content_type_boundary
+    form_data := get_form_data post_data cmd req_context.query_string content_type content_type_boundary
 
     match form_data
       x (lock_free.Map String String) =>
-        route_request req_context.head.path cmd req_context.client x req_context.head.query_string
+        route_request req_context.path cmd req_context.client x req_context.query_string
       error =>
         response 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).empty
 
-  resp := match req_context.head.method
-    GET => get_response "GET"
-    POST => get_response "POST"
-    UNKNOWN => response 500 "" (list i8).empty
+  resp := match req_context.request.method
+    http.get => get_response "GET"
+    http.post_r => get_response "POST"
+    * => response 500 "" (list i8).empty
 
   _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array (.cast_to_u8))
   match resp.session

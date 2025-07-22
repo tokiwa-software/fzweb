@@ -21,11 +21,11 @@ FUZION_TREE = $(shell readlink -f $(FUZION_SRC)/..)
 .PHONY: run_fz
 run_fz: export FUZION_JAVA_ADDITIONAL_CLASSPATH = $(FLANG_DEV)/classes
 run_fz:
-	$(FUZION_BIN)/fz -unsafeIntrinsics=on -modules=lock_free,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver -sourceDirs=src run
+	$(FUZION_BIN)/fz -unsafeIntrinsics=on -modules=http,lock_free,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver -sourceDirs=src run
 
 webserver: export FUZION_JAVA_ADDITIONAL_CLASSPATH = $(FLANG_DEV)/classes
 webserver:
-	$(FUZION_BIN)/fz -c -unsafeIntrinsics=on -modules=lock_free,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver -sourceDirs=src -o=webserver run
+	$(FUZION_BIN)/fz -c -unsafeIntrinsics=on -modules=http,lock_free,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver -sourceDirs=src -o=webserver run
 
 .PHONY: run_fz_c
 run_fz_c: export FUZION_JAVA_ADDITIONAL_CLASSPATH = $(FLANG_DEV)/classes
