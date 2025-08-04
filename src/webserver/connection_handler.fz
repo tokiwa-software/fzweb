@@ -20,24 +20,21 @@ request_context (LM type : mutate, connection net.connection) is
       x Sequence u8 => x.as_list
       error => [u8 0, 0, 0, 0].as_list
 
-  send(return_code i32, attributes String, data array u8) is
-    header := """
-      HTTP/1.1 $return_code OK
-      Connection: close
-      Server: Fuzion WebServer v0.0.2
-      {attributes}
-    """
-    header_ok := (io.buffered LM).writer.env.write header.utf8.as_array
+  send(return_code i32, attributes lock_free.Map String String, data array u8) is
+    attributes.put "Server" "Fuzion WebServer v0.0.2"
+    if !attributes["Connection"].exists
+      attributes.put "Connection" "close"
 
-    match header_ok.error
-      e error => say "#### {e}"
-      unit =>
-        data_ok := (io.buffered LM).writer.env.write data
-        if data_ok.error!!
-          say "#### {data_ok.error.err}"
-        flush_ok := (io.buffered LM).writer.env.flush
-        if flush_ok!!
-          say "#### {flush_ok.err}"
+    lm2 ! ()->
+      br := array_read_handler lm2 data
+      response := http.response_msg request 1 1 return_code "OK" (http.canonical_header_map.map_of attributes.items) br
+
+      match ((io.buffered LM).writer.env.write response.bytes.as_array).error
+        e error => say "#### {e}"
+        unit =>
+          flush_ok := (io.buffered LM).writer.env.flush
+          if flush_ok!!
+            say "#### {flush_ok.err}"
 
 
 # entry point to the handling the request
@@ -58,7 +55,6 @@ process_request(LM type : mutate, req_context request_context LM) =>
       match (req_context.request.header["Content-Length"].or_else "0").parse_i32
         error => 0
         i i32 => i
-    lm2 : mutate is
     post_data_raw := lm2 ! ()->
       (io.buffered lm2).reader req_context.request.body 1024 ! ()->
         (io.buffered lm2).read_bytes post_len
@@ -69,18 +65,38 @@ process_request(LM type : mutate, req_context request_context LM) =>
     form_data := get_form_data post_data cmd req_context.query_string content_type content_type_boundary
 
     match form_data
-      x (lock_free.Map String String) =>
+      x lock_free.Map String String =>
         route_request req_context.path cmd req_context.client x req_context.query_string
       error =>
-        response 415 "Accept: application/x-www-form-urlencode, multipart/form-data\n" (list i8).empty
+        response 415 ((lock_free.Map String String).from_entries [("Accept", "application/x-www-form-urlencode, multipart/form-data")]) (list i8).empty
 
   resp := match req_context.request.method
     http.get => get_response "GET"
     http.post_r => get_response "POST"
-    * => response 500 "" (list i8).empty
+    * => response 500 (lock_free.Map String String).empty (list i8).empty
 
   _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array (.cast_to_u8))
   match resp.session
     nil =>
     s Session =>
       s.set_connection req_context.connection
+
+
+# file local mutate
+#
+lm2 : mutate is
+
+
+# custom read handler for reading from an array (helper feature)
+#
+array_read_handler(LM type : mutate, arr array u8) : io.Read_Handler is
+  pos := LM.env.new 0
+
+  public redef read(count i32) choice (array u8) io.end_of_file error =>
+    p := pos.get
+    if p > arr.count
+      io.end_of_file
+    else
+      pos <- p + count
+      end := p+count > arr.count ? arr.count : p+count
+      arr.slice p end .as_array

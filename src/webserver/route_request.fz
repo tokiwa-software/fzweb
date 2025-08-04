@@ -38,10 +38,10 @@ do_register (client list u8, form_data lock_free.Map String String) String =>
 # routes a given request to the code that handles it,
 # and returns the response
 #
-module route_request (raw_path, cmd String, client list u8, form_data (lock_free.Map String String), query String) response =>
+module route_request (raw_path, cmd String, client list u8, form_data lock_free.Map String String, query String) response =>
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
     _ := say "*** unknown request: {cmd}"
-    response 501 "" (list i8).empty
+    response 501 (lock_free.Map String String).empty (list i8).empty
   else
     sessid_original := form_data["originalsessionid"]
     sessid := form_data["sessionid"]
@@ -64,21 +64,21 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       match user.complete_account_deletion (s_q["token"].get "")
         unit =>
           webserver.this.log s "got confirm_account_deletion send 302 success"
-          response 302 "Location: /account_deletion_successful" (list i8).empty
+          response 302 ((lock_free.Map String String).from_entries [("Location", "/account_deletion_successful")]) (list i8).empty
         e error =>
           webserver.this.log s "got confirm_account_deletion send 302 failure"
           logger.log e.as_string
-          response 302 "Location: /account_deletion_failed" (list i8).empty
+          response 302 ((lock_free.Map String String).from_entries [("Location", "/account_deletion_failed")]) (list i8).empty
     else if raw_path = "/confirm_registration"
       s_q := util.split_query query
       webserver.this.log s "got confirm_registration"
       match user.complete_registration (s_q["username"].get "") (s_q["token"].get "")
         unit =>
           webserver.this.log s "got confirm_registration send 302 success"
-          response 302 "Location: /registration_successful" (list i8).empty
+          response 302 ((lock_free.Map String String).from_entries [("Location", "/registration_successful")]) (list i8).empty
         e error =>
           webserver.this.log s "got confirm_registration send 302 failure: "+e
-          response 302 "Location: /registration_failed" (list i8).empty
+          response 302 ((lock_free.Map String String).from_entries [("Location", "/registration_failed")]) (list i8).empty
 
     else if raw_path = "/robots.txt"
       res := content.templates_dir.resolve "robots.txt"
@@ -90,7 +90,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
           send_ok cmd (String.from_bytes robots_txt)
         error =>
           logger.log "robots.txt could not be read."
-          response 500 "" (list i8).empty
+          response 500 (lock_free.Map String String).empty (list i8).empty
 
     else if raw_path = "/goto"
       match form_data["page"]
@@ -115,7 +115,7 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
     else if raw_path = "/events"
       # send one byte to trigger javascript event
       b array i8 := [0]
-      response 200 "Cache-Control: no-cache\nConnection: keep-alive\nContent-Type: text/event-stream\n" b s
+      response 200 ((lock_free.Map String String).from_entries [("Cache-Control", "no-cache"), ("Connection", "keep-alive"), ("Content-Type", "text/event-stream")]) b s
     else if raw_path = "/contents"
       s.send_content
       s.send_login_status
@@ -128,10 +128,10 @@ module route_request (raw_path, cmd String, client list u8, form_data (lock_free
       match content.get_contents s path
         forbidden =>
           webserver.this.log s "*** forbidding access to absolute or non-normalized path {path}."
-          response 403 "" (list i8).empty
+          response 403 (lock_free.Map String String).empty (list i8).empty
         missing =>
           webserver.this.log s "*** error: requested file {path} does not exist"
-          response 404 "" (list i8).empty
+          response 404 (lock_free.Map String String).empty (list i8).empty
         i identifier => send_content s cmd i
 
 
