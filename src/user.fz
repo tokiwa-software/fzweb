@@ -286,7 +286,7 @@ module user (module base_dir String) is
   # generate a uuid
   #
   type.generate_uuid String =>
-    Java.java.util.UUID_static.randomUUID.toString
+    uuid.create_random.as_string
 
 
   module type.trigger_account_deletion (client list u8, form_data lock_free.Map String String) String =>
