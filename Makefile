@@ -22,7 +22,7 @@ MODULES = http,lock_free,uuid,java.base,java.desktop,java.datatransfer,java.xml,
 .PHONY: run_fz
 run_fz: export FUZION_JAVA_ADDITIONAL_CLASSPATH = $(FLANG_DEV)/classes
 run_fz:
-	$(FUZION_BIN)/fz -unsafeIntrinsics=on -modules=$(MODULES) -sourceDirs=src run
+	$(FUZION_BIN)/fz -verbose=2 -unsafeIntrinsics=on -modules=$(MODULES) -sourceDirs=src run
 
 webserver: export FUZION_JAVA_ADDITIONAL_CLASSPATH = $(FLANG_DEV)/classes
 webserver:
