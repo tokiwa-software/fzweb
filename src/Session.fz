@@ -309,7 +309,8 @@ module Session (sessions lock_free.Map String Session,
       nil => nil
 
 
-  # return the html content in the page
+  # takes a page filename and removes the HTML suffix, or returns
+  # index if the filename is empty
   #
   module strip_html(page String) String =>
     if page.ends_with ".html" || page.ends_with ".htm"
@@ -320,7 +321,7 @@ module Session (sessions lock_free.Map String Session,
       page
 
 
-  # added the html extenson to the page string
+  # added the html extension to the page filename
   #
   module add_html(page String) String =>
     if !content.is_known_preformatted_file page
@@ -329,7 +330,7 @@ module Session (sessions lock_free.Map String Session,
       page
 
 
-  # check if the html string have a tag "</html>"
+  # given an HTML document, check if a closing tag "</html>" is present
   #
   module has_embedded_html(html String) bool =>
     !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
