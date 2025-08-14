@@ -12,7 +12,10 @@ module url_encoded is
   #
   module from_urlencoded(data String) String =>
 
-    s(c, i) String =>
+    s (c codepoint, i i32) String
+    post
+      !result.is_empty
+    =>
         if c = "+"
           " "
         else if c = "%" && (i < data.codepoint_length - 2)
@@ -25,7 +28,7 @@ module url_encoded is
           else
             panic "Encoding error: not a hex digit"
         else
-          ""
+          c
     for res := "", res+(s c i)
         c in data.as_codepoints
         i := 0, i + 1
