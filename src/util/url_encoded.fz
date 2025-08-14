@@ -12,7 +12,10 @@ module url_encoded is
   #
   module from_urlencoded(data String) String =>
 
-    s(c, i) String =>
+    s (c codepoint, i i32) String
+    post
+      !result.is_empty
+    =>
         if c = "+"
           " "
         else if c = "%" && (i < data.codepoint_length - 2)
