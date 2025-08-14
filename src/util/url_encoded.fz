@@ -25,7 +25,7 @@ module url_encoded is
           else
             panic "Encoding error: not a hex digit"
         else
-          ""
+          c.as_string
     for res := "", res+(s c i)
         c in data.as_codepoints
         i := 0, i + 1
