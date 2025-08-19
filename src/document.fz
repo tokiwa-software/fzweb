@@ -1,0 +1,149 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature Session
+#
+# -----------------------------------------------------------------------
+
+# document -- features used to work with documents served by the webserver
+#
+module document is
+
+  # takes a page filename and removes the HTML suffix, or returns
+  # index if the filename is empty
+  #
+  module strip_html(page String) String =>
+    if page.ends_with ".html" || page.ends_with ".htm"
+      page.substring 0 (page.find ".").get
+    else if page = ""
+      "index"
+    else
+      page
+
+
+  # added the html extension to the page filename
+  #
+  module add_html(page String) String =>
+    if !content.is_known_preformatted_file page
+      page + ".html"
+    else
+      page
+
+
+  # given an HTML document, check if a closing tag "</html>" is present
+  #
+  module has_embedded_html(html String) bool =>
+    !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
+
+
+  # check if the html structure correct than replace the iframe tag
+  #
+  module embed_html_in_iframe(html String) String =>
+    match html.find "<!DOCTYPE html>"
+      c i32 =>
+        match html.find "</html>"
+          c2 i32 =>
+            embedded_html := html.substring c c2+7
+            html.replace  embedded_html """
+              <div class="responsive-container aspect-16-by-9">
+                <iframe class="responsive-iframe" sandbox="allow-same-origin allow-scripts" id='iframe-embedded-content' data-src-doc-content="{(embedded_html.replace "&quot;" "REPLACEDHTMLQUOTE").replace "" "REPLACEDDOUBLEQUOTE"}">
+                </iframe>
+              </div>
+              """
+          nil => html
+      nil => html
+
+
+  # return the "attractivelink" template
+  #
+  module attractive_link(to, title String) String =>
+    get_template "attractivelink.html" ["##LINK##","/{to}","##TITLE##",title].as_list
+
+
+  # return the "page" template
+  #
+  module page_link(to, title String) String =>
+    get_template "page.html" ["##LINK##","/{to}","#TITLE##",title].as_list
+
+
+  # dispatch the html content
+  #
+  module doc_links(doc_file_name String) String =>
+    parts := doc_file_name.split "/"
+    if parts.count < 2
+      ""
+    else
+      for res := "", res +  """
+                              <a class="shylink shylinkfix" href="/docs/{doc_path}">
+                                  {name}
+                              </a> •
+                            """
+          part in parts
+          name0 := Java.java.net.URLDecoder_static.decode part "UTF-8"
+          name1 := name0.get.split "("
+          name := name1[0]
+          end := (doc_file_name.find part).get + parts.count
+          doc_path := doc_file_name.substring 0
+      else
+        res
+
+
+  # read lines from the path and return them in a list of string
+  # NYI: pretty printing
+  #
+  module read_all_lines (file Java.java.nio.file.Path,
+                         return_nil_on_error, pretty_print bool)
+                        option (list String) =>
+    res := io.file.use (list String) file.toString io.file.mode.read ()->
+      data := (io.buffered io.file.file_mutate).read_fully
+      lines := String.from_bytes data
+      lines.split "\n"
+
+    match res
+      e error =>
+        logger.log "error reading from path {file.toString}: {e}"
+        if return_nil_on_error
+          nil
+        else
+          ["--error reading file--"].as_list
+      re list String => re
+
+
+  # same as read_all_lines (3 args) but without the option
+  # for pretty printing
+  #
+  read_all_lines (file Java.java.nio.file.Path,
+                  return_nil_on_error bool)
+                 option (list String) =>
+    read_all_lines file return_nil_on_error false
+
+
+  # same as read_all_lines (2 args) but without the option of
+  # returning nil on error
+  #
+  read_all_lines (file Java.java.nio.file.Path) list String =>
+    (read_all_lines file false).get
+
+
+  # returns the content of the file
+  #
+  module get_template(filename String, repl list String) String =>
+    not_found := "--template {filename} not found--"
+    match content.template filename
+      template_id identifier =>
+        match template_id.file_to_send
+          p Java.java.nio.file.Path =>
+            i := mut 0
+            lines := read_all_lines p
+            for
+              res := "", res + rs + "\n"
+              rs in lines
+            while i.get < repl.count
+            do
+              _ := rs.replace repl[i.get] repl[i.get + 1]
+              i <- i.get+1
+            else
+              res
+          nil => not_found
+      * => not_found
