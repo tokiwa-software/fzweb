@@ -8,33 +8,6 @@
 
 module url_encoded is
 
-  # Decode a URL-encoded string
-  #
-  module from_urlencoded(data String) String =>
-
-    s (c codepoint, i i32) String
-    post
-      !result.is_empty
-    =>
-        if c = "+"
-          " "
-        else if c = "%" && (i < data.codepoint_length - 2)
-          # Convert a hexadecimal character to an integer
-          h := encodings.base16.decode_str ((data.substring i+1 i+3).upper_case)
-
-          if h.ok
-            val := h.val[0].as_u32
-            codepoint val
-          else
-            panic "Encoding error: not a hex digit"
-        else
-          c
-    for res := "", res+(s c i)
-        c in data.as_codepoints
-        i := 0, i + 1
-    else
-      res
-
 
   # Parse URL-encoded form data into a map
   #
@@ -44,8 +17,8 @@ module url_encoded is
     form_data := (lock_free.Map String String).empty
     for p in pairs do
       nv := p.split "="
-      name := (from_urlencoded nv.first.get).trim
-      _ := form_data.put name (if nv.count < 2 then "" else from_urlencoded (nv.drop 1).first.get)
+      name := (encodings.percent.decode_as_str nv.first.get).val.trim
+      _ := form_data.put name (if nv.count < 2 then "" else encodings.percent.decode_as_str (nv.drop 1).first.get .val)
     form_data
 
 
