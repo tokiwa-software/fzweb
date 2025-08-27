@@ -17,7 +17,7 @@ module Session (sessions lock_free.Map String Session,
   # session belongs to which user, if at all?
   # NYI: this is a hack for effect-free thread-safe mutation
   #
-  user lock_free.Map util.hashable_unit user
+  module user lock_free.Map util.hashable_unit user
     := (lock_free.Map util.hashable_unit user).empty
 
 
@@ -47,8 +47,8 @@ module Session (sessions lock_free.Map String Session,
 
   # session history information
   #
-  current_page := (lock_free.Map util.hashable_unit String).from_entries [(util.hashable_unit, "index")]
-  last_pushed_history :=  (lock_free.Map util.hashable_unit String).empty
+  current_page := (lock_free.Map util.hashable_unit document2).from_entries [(util.hashable_unit, document2 "index" Session.this)]
+  last_pushed_history :=  (lock_free.Map util.hashable_unit document2).empty
 
 
   # initialize user and login state
@@ -68,7 +68,7 @@ module Session (sessions lock_free.Map String Session,
 
   # session id
   #
-  session_id String := Java.dev.flang.RandomId_static.get Session.safe_number_of_bits
+  module session_id String := Java.dev.flang.RandomId_static.get Session.safe_number_of_bits
 
 
   # put session in global session list
@@ -170,10 +170,10 @@ module Session (sessions lock_free.Map String Session,
     cur := current_page[util.hashable_unit]
     match cur
       nil => _ := last_pushed_history.remove util.hashable_unit
-      c String => last_pushed_history.put util.hashable_unit c
+      c document2 => last_pushed_history.put util.hashable_unit c
 
     if cur?? && last!! || cur.as_equatable != last.as_equatable
-      send_event "pushHistory" "/{cur.get}"
+      send_event "pushHistory" "/{cur.get.page}"
 
 
   # send data on the session's connection
@@ -328,58 +328,6 @@ module Session (sessions lock_free.Map String Session,
       msg
 
 
-  # get file content as list of strings
-  #
-  get_content list String =>
-    lm.instate_self (list String) ()->
-      res := (mutate.array String).new lm
-
-      # permitted := content.access_permitted user[util.hashable_unit] current_page[util.hashable_unit].get
-      data_path := content.get_data_path user[util.hashable_unit] current_page[util.hashable_unit].get
-      file_name := data_path.getFileName.toString
-      match document.read_all_lines data_path true (file_name.ends_with ".fz")
-        lines list String =>
-          # if permitted
-          #   res.add (navigation true)
-
-          res.add "<div class='fd-page-content'>"
-
-          if file_name.ends_with ".html"
-            html := add_session_info_to_html (String.join lines "\n")
-
-            if document.has_embedded_html html
-              res.add (document.embed_html_in_iframe html)
-            else
-              res.add html
-          else if content.is_known_preformatted_file file_name
-            title := (content.file_path current_page[util.hashable_unit].get).toString
-            res.add "<h1>{Java.dev.flang.URLEncoded_static.htmlEncode title}</h1>\n"
-            # opacity is reset in main.js:initAnsiUp()
-            res.add "<pre class='code' style='opacity: 0'>\n"
-            lines.for_each line->(res.add (Java.dev.flang.URLEncoded_static.htmlEncode line))
-            res.add "</pre>\n"
-          else
-            fname := Java.dev.flang.URLEncoded_static.htmlEncode data_path.getFileName.toString
-            res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
-
-          res.add "</div>"
-
-          # NYI: last changed!
-
-          # if permitted
-          #   res.add (navigation false)
-        nil => res.add "<p>404: page not found</p>"
-
-      res.as_list
-
-
-  # add session-specific information to the html
-  # NYI tags!
-  #
-  add_session_info_to_html (s String) String =>
-    s.replace "##SESSION_ID##" session_id
-
-
   module add_session_info_to_html_bytes (b array u8) array u8 =>
     s := mut (String.from_bytes b)
     activity
@@ -387,20 +335,26 @@ module Session (sessions lock_free.Map String Session,
     # - ByteArray from flang_dev
     s <- s.get.replace "##SESSION_ID##" session_id
     match current_page[util.hashable_unit]
-      cp String => s <- s.get.replace "##URL##" "/{cp}"
+      cp document2 =>
+        s <- s.get.replace "##URL##" "/{cp.page}"
+        s <- s.get.replace "##CONTENT##" (String.join cp.get_content "\n")
       nil =>
-    s <- s.get.replace "##CONTENT##" (String.join get_content "\n")
     s.get.utf8.as_array
 
 
   # send current page content to the client
   #
   module send_content =>
+    data := match current_page[util.hashable_unit]
+      current_document document2 => append_data (String.join current_document.get_content "\n")
+      nil => append_data "\n"
+
     msg := """
       id: 0
       event: content
-      {append_data (String.join get_content "\n")}
+      {data}
     """
+
     send_data msg
     send_push_history
 
@@ -409,7 +363,8 @@ module Session (sessions lock_free.Map String Session,
   #
   module set_current (page String) =>
     p := document.strip_html page
-    current_page.put util.hashable_unit p
+    d := document2 p Session.this
+    current_page.put util.hashable_unit d
 
 
   # make sure no one is stealing a session by brute-force

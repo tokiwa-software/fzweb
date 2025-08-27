@@ -1,0 +1,75 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature document2
+#
+# -----------------------------------------------------------------------
+
+# document2 -- features used to work with documents served by the webserver
+#
+module document2 (module page String,
+                  session Session) : property.equatable is
+
+
+  # get file content as list of strings
+  #
+  module get_content list String =>
+    lm ! ()->
+      res := (mutate.array String).new lm
+
+      # permitted := content.access_permitted user[util.hashable_unit] current_page[util.hashable_unit].get
+      data_path := content.get_data_path session.user[util.hashable_unit] page
+      file_name := data_path.getFileName.toString
+      match document.read_all_lines data_path true (file_name.ends_with ".fz")
+        lines list String =>
+          # if permitted
+          #   res.add (navigation true)
+
+          res.add "<div class='fd-page-content'>"
+
+          if file_name.ends_with ".html"
+            html := add_session_info_to_html (String.join lines "\n")
+
+            if document.has_embedded_html html
+              res.add (document.embed_html_in_iframe html)
+            else
+              res.add html
+          else if content.is_known_preformatted_file file_name
+            title := (content.file_path page).toString
+            res.add "<h1>{Java.dev.flang.URLEncoded_static.htmlEncode title}</h1>\n"
+            # opacity is reset in main.js:initAnsiUp()
+            res.add "<pre class='code' style='opacity: 0'>\n"
+            lines.for_each line->(res.add (Java.dev.flang.URLEncoded_static.htmlEncode line))
+            res.add "</pre>\n"
+          else
+            fname := Java.dev.flang.URLEncoded_static.htmlEncode data_path.getFileName.toString
+            res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
+
+          res.add "</div>"
+
+          # NYI: last changed!
+
+          # if permitted
+          #   res.add (navigation false)
+        nil => res.add "<p>404: page not found</p>"
+
+      res.as_list
+
+
+  # add session-specific information to the html
+  # NYI tags!
+  #
+  add_session_info_to_html (s String) String =>
+    s.replace "##SESSION_ID##" session.session_id
+
+
+  # equality of documents
+  #
+  public redef type.equality (a, b document2.this) bool =>
+    a.page = b.page && a.session.session_id = b.session.session_id
+
+
+# local mutate effect used in this file
+#
+lm : mutate is
