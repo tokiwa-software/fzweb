@@ -31,30 +31,6 @@ module document is
       page
 
 
-  # given an HTML document, check if a closing tag "</html>" is present
-  #
-  module has_embedded_html(html String) bool =>
-    !(html.find "<!DOCTYPE html>").is_nil && !(html.find "</html>").is_nil
-
-
-  # check if the html structure correct than replace the iframe tag
-  #
-  module embed_html_in_iframe(html String) String =>
-    match html.find "<!DOCTYPE html>"
-      c i32 =>
-        match html.find "</html>"
-          c2 i32 =>
-            embedded_html := html.substring c c2+7
-            html.replace  embedded_html """
-              <div class="responsive-container aspect-16-by-9">
-                <iframe class="responsive-iframe" sandbox="allow-same-origin allow-scripts" id='iframe-embedded-content' data-src-doc-content="{(embedded_html.replace "&quot;" "REPLACEDHTMLQUOTE").replace "" "REPLACEDDOUBLEQUOTE"}">
-                </iframe>
-              </div>
-              """
-          nil => html
-      nil => html
-
-
   # return the "attractivelink" template
   #
   module attractive_link(to, title String) String =>
