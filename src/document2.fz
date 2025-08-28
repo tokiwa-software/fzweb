@@ -6,7 +6,8 @@
 #
 # -----------------------------------------------------------------------
 
-# document2 -- features used to work with documents served by the webserver
+# document2 -- features used to handle documents that are rendered for a
+# specific session
 #
 module document2 (module page String,
                   session Session) : property.equatable is
@@ -78,7 +79,7 @@ module document2 (module page String,
         match html.find "</html>"
           c2 i32 =>
             embedded_html := html.substring c c2+7
-            html.replace  embedded_html """
+            html.replace embedded_html """
               <div class="responsive-container aspect-16-by-9">
                 <iframe class="responsive-iframe" sandbox="allow-same-origin allow-scripts" id='iframe-embedded-content' data-src-doc-content="{(embedded_html.replace "&quot;" "REPLACEDHTMLQUOTE").replace "" "REPLACEDDOUBLEQUOTE"}">
                 </iframe>
