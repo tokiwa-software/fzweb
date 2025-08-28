@@ -66,3 +66,30 @@ module document is
   #
   module read_all_lines (file Java.java.nio.file.Path) list String =>
     (read_all_lines file false).get
+
+
+  # given a `link` and a path `page_file`, attempt to extract the title of
+  # the page at `page_file`.
+  #
+  # this is done by searching for the first `<h1>` tag and extracting the
+  # title between the opening tag and the closing tag.
+  #
+  # if this fails, return the file name as given by `link`, without an `html`
+  # suffix, as the title.
+  #
+  # NYI: `<h1>` tags with attributes are not recognized
+  #
+  module get_title (link String, page_file Java.java.nio.file.Path) String =>
+    title_start := "<h1>"
+    title_end := "</h1>"
+    # NYI: pattern_h1_start_tag := Java.java.util.regex.Pattern_static.compile "<h1.*?>"
+
+    for
+      line in document.read_all_lines page_file
+      # NYI: x := (pattern_h1_start_tag.matcher line).replaceFirst "<h1>"
+      start := (line.find title_start).get -1
+      end := start >= 0 ? (line.find title_end (start + title_start.byte_length)).get -1 : -1
+    until start >= 0 && end >= 0
+      line.substring (start + title_start.byte_length) end
+    else
+      strip_html (content.file_path link).toString
