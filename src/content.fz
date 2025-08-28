@@ -136,8 +136,7 @@ module content is
       file_name.ends_with ".fuzion" ||
       file_name.ends_with ".sh" ||
       file_name.ends_with ".txt" ||
-      file_name.ends_with ".ebnf" ||
-      file_name.ends_with ".wiki"
+      file_name.ends_with ".ebnf"
 
 
   # Get the data path to the contents of the given simple URL path after it had
