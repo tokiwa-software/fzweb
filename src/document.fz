@@ -77,19 +77,17 @@ module document is
   # if this fails, return the file name as given by `link`, without an `html`
   # suffix, as the title.
   #
-  # NYI: `<h1>` tags with attributes are not recognized
-  #
   module get_title (link String, page_file Java.java.nio.file.Path) String =>
     title_start := "<h1>"
     title_end := "</h1>"
-    # NYI: pattern_h1_start_tag := Java.java.util.regex.Pattern_static.compile "<h1.*?>"
+    pattern_h1_start_tag := Java.java.util.regex.Pattern_static.compile "<h1.*?>"
 
     for
       line in document.read_all_lines page_file
-      # NYI: x := (pattern_h1_start_tag.matcher line).replaceFirst "<h1>"
-      start := (line.find title_start).get -1
-      end := start >= 0 ? (line.find title_end (start + title_start.byte_length)).get -1 : -1
+      x := (pattern_h1_start_tag.matcher (fuzion.jvm.env.cast Java.java.lang.CharSequence line.as_java_object).get).replaceFirst "<h1>"
+      start := (x.find title_start).get -1
+      end := start >= 0 ? (x.find title_end (start + title_start.byte_length)).get -1 : -1
     until start >= 0 && end >= 0
-      line.substring (start + title_start.byte_length) end
+      x.substring (start + title_start.byte_length) end
     else
       strip_html (content.file_path link).toString
