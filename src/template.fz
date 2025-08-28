@@ -1,0 +1,64 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature template
+#
+# -----------------------------------------------------------------------
+
+# template -- features for working with templates
+#
+module template is
+
+
+  # looks for a file named `filename` in the `templates/` folder
+  # and applies the replacments given in the list `repl`
+  #
+  apply (filename String, repl list (tuple String String)) String =>
+    not_found := "--template {filename} not found--"
+    match content.template filename
+      template_id identifier =>
+        match template_id.file_to_send
+          p Java.java.nio.file.Path =>
+            lines := document.read_all_lines p
+            for
+              res := (String.join lines "\n"), res.replace r.values.0 r.values.1
+              r in repl
+            else
+              res
+          nil => not_found
+      * => not_found
+
+
+  # apply the given parameters to the `attractivelink.html` template
+  #
+  module attractive_link (to, title String) String =>
+    apply "attractivelink.html" [("##LINK##" ,"/{to}"), ("##TITLE##", title)].as_list
+
+
+  # apply the given parameters to the `page.html` template
+  #
+  module page_link (to, title String) String =>
+    apply "page.html" [("##LINK##", "/{to}"), ("##TITLE##", title)].as_list
+
+
+  # dispatch the html content
+  #
+  module doc_links (doc_file_name String) String =>
+    parts := doc_file_name.split "/"
+    if parts.count < 2
+      ""
+    else
+      for res := "", res +  """
+                              <a class="shylink shylinkfix" href="/docs/{doc_path}">
+                                  {name}
+                              </a> •
+                            """
+          part in parts
+          name0 := Java.java.net.URLDecoder_static.decode part "UTF-8"
+          name1 := name0.get.split "("
+          name := name1[0]
+          end := (doc_file_name.find part).get + parts.count
+          doc_path := doc_file_name.substring 0
+      else
+        res

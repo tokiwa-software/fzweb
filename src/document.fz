@@ -31,40 +31,6 @@ module document is
       page
 
 
-  # return the "attractivelink" template
-  #
-  module attractive_link(to, title String) String =>
-    get_template "attractivelink.html" ["##LINK##","/{to}","##TITLE##",title].as_list
-
-
-  # return the "page" template
-  #
-  module page_link(to, title String) String =>
-    get_template "page.html" ["##LINK##","/{to}","#TITLE##",title].as_list
-
-
-  # dispatch the html content
-  #
-  module doc_links(doc_file_name String) String =>
-    parts := doc_file_name.split "/"
-    if parts.count < 2
-      ""
-    else
-      for res := "", res +  """
-                              <a class="shylink shylinkfix" href="/docs/{doc_path}">
-                                  {name}
-                              </a> •
-                            """
-          part in parts
-          name0 := Java.java.net.URLDecoder_static.decode part "UTF-8"
-          name1 := name0.get.split "("
-          name := name1[0]
-          end := (doc_file_name.find part).get + parts.count
-          doc_path := doc_file_name.substring 0
-      else
-        res
-
-
   # read lines from the path and return them in a list of string
   # NYI: pretty printing
   #
@@ -98,28 +64,5 @@ module document is
   # same as read_all_lines (2 args) but without the option of
   # returning nil on error
   #
-  read_all_lines (file Java.java.nio.file.Path) list String =>
+  module read_all_lines (file Java.java.nio.file.Path) list String =>
     (read_all_lines file false).get
-
-
-  # returns the content of the file
-  #
-  module get_template(filename String, repl list String) String =>
-    not_found := "--template {filename} not found--"
-    match content.template filename
-      template_id identifier =>
-        match template_id.file_to_send
-          p Java.java.nio.file.Path =>
-            i := mut 0
-            lines := read_all_lines p
-            for
-              res := "", res + rs + "\n"
-              rs in lines
-            while i.get < repl.count
-            do
-              _ := rs.replace repl[i.get] repl[i.get + 1]
-              i <- i.get+1
-            else
-              res
-          nil => not_found
-      * => not_found
