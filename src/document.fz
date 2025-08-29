@@ -78,16 +78,22 @@ module document is
   # suffix, as the title.
   #
   module get_title (link String, page_file Java.java.nio.file.Path) String =>
-    title_start := "<h1>"
+    title_start_open := "<h1"
+    title_start_close := ">"
     title_end := "</h1>"
-    pattern_h1_start_tag := Java.java.util.regex.Pattern_static.compile "<h1.*?>"
 
     for
       line in document.read_all_lines page_file
-      x := (pattern_h1_start_tag.matcher (fuzion.jvm.env.cast Java.java.lang.CharSequence line.as_java_object).get).replaceFirst "<h1>"
-      start := (x.find title_start).get -1
-      end := start >= 0 ? (x.find title_end (start + title_start.byte_length)).get -1 : -1
-    until start >= 0 && end >= 0
-      x.substring (start + title_start.byte_length) end
+      start_open := (line.find title_start_open).get -1
+      start_close :=
+        if start_open >= 0
+          (line.find title_start_close (start_open + title_start_open.byte_length)).get -1
+        else -1
+      end :=
+        if start_close >= 0
+          (line.find title_end (start_close + title_start_close.byte_length)).get -1
+        else -1
+    until start_close >= 0 && end >= 0
+      line.substring (start_close + title_start_close.byte_length) end
     else
       strip_html (content.file_path link).toString
