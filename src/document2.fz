@@ -12,6 +12,21 @@
 module document2 (module page String,
                   session Session) : property.equatable is
 
+  # path to this document as an abstract path
+  #
+  data_path := content.get_data_path session.user[util.hashable_unit] page
+
+
+  # the actual file name of the current document
+  #
+  file_name := data_path.getFileName.toString
+
+
+  # is the user of the given session allowed to
+  # access the requested page?
+  #
+  permitted := content.access_permitted session.user[util.hashable_unit] page
+
 
   # get file content as list of strings
   #
@@ -19,13 +34,10 @@ module document2 (module page String,
     lm ! ()->
       res := (mutate.array String).new lm
 
-      # permitted := content.access_permitted user[util.hashable_unit] current_page[util.hashable_unit].get
-      data_path := content.get_data_path session.user[util.hashable_unit] page
-      file_name := data_path.getFileName.toString
       match document.read_all_lines data_path true (file_name.ends_with ".fz")
         lines list String =>
-          # if permitted
-          #   res.add (navigation true)
+          if permitted
+            res.add (navigation true)
 
           res.add "<div class='fd-page-content'>"
 
@@ -51,8 +63,8 @@ module document2 (module page String,
 
           # NYI: last changed!
 
-          # if permitted
-          #   res.add (navigation false)
+          if permitted
+            res.add (navigation false)
         nil => res.add "<p>404: page not found</p>"
 
       res.as_list
@@ -89,10 +101,96 @@ module document2 (module page String,
       nil => html
 
 
+  # feature to generate the navigation menu for this document
+  #
+  # the argument `top` indicates whether it is the top or bottom menu
+  # that is being generated.
+  #
+  navigation (top bool) String =>
+    page_link (to String) =>
+      title := document.get_title to (content.get_data_path session.user[util.hashable_unit] to)
+      template.page_link to title
+
+    fn := (content.file_path page).toString
+    pp := content.base_simple_path page
+    is_toc := fn = "index"
+    pup Java.java.nio.file.Path :=
+      if is_toc
+        match pp
+          nil => (fuzion.jvm.env.null Java.java.nio.file.Path).get
+          p Java.java.nio.file.Path => p
+      else
+        match pp
+          nil => Java.java.nio.file.Path_static.of "index" []
+          p Java.java.nio.file.Path => p.resolve "index"
+
+    # generate a title bar in the form of
+    #
+    #   main • dir1 • dir2 • file
+    #
+    # with links to each of those pages
+    #
+    generate_title_bar String =>
+      # we start with a link to the current page
+      temp :=
+        # we link to the docs if necessary
+        if page.starts_with "docs/"
+          (template.doc_links fn) + (page_link page)
+        else
+          page_link page
+
+      # to recurse upward in the directory tree, this helper feature is used
+      #
+      # the current state of the title bar is stored as `current`, and `ppup`
+      # is the current level in the directory hierarchy
+      #
+      recursive_helper (current String, ppup Java.java.nio.file.Path) String =>
+        if !ppup.is_null
+          next_title := (page_link (template.link ppup.getParent "index")) + " • " + current
+          recursive_helper next_title ppup.getParent
+        else
+          current
+
+      # now we recurse upwards in the directory tree to show parent pages
+      recursive_helper temp pup
+
+    attractive_next := "<div>NYI</div>"
+    prev := "NYI"
+    next := "NYI"
+
+    # generate the link to navigate upwards in the hierarchy
+    #
+    up_link String =>
+      # generate the link to navigate upwards with respect to a given
+      # path
+      #
+      up_link (p Java.java.nio.file.Path) String =>
+        if !p.is_null
+          template.nav_link p.getParent "index" up_arrow_link "aria-label='up a level'"
+        else
+          template.nav_link p nil up_arrow_link "aria-label='up a level'"
+
+      up_link pup
+
+    """
+      <div class='d-flex justify-content-between'>
+        {top ? "<div class='navtitle'>{generate_title_bar}</div>" : attractive_next}
+        <div class='d-flex justify-content-between w-75 {top ? "nav_top" : "nav_bot"}'>
+          <div class='nav_left'>{prev}</div>
+          <div class='nav_up'>{up_link}</div>
+          <div class='nav_right'>{next}</div>
+        </div>
+      </div>
+    """
+
+
   # equality of documents
   #
   public redef type.equality (a, b document2.this) bool =>
     a.page = b.page && a.session.session_id = b.session.session_id
+
+
+up_arrow_link => "<i class='far fa-angle-up' aria-hidden='true'></i>"
 
 
 # local mutate effect used in this file

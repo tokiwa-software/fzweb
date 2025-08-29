@@ -14,7 +14,7 @@ module template is
   # looks for a file named `filename` in the `templates/` folder
   # and applies the replacments given in the list `repl`
   #
-  apply (filename String, repl list (tuple String String)) String =>
+  apply (filename String, repl Sequence (tuple String String)) String =>
     not_found := "--template {filename} not found--"
     match content.template filename
       template_id identifier =>
@@ -30,6 +30,18 @@ module template is
       * => not_found
 
 
+  # given a path and a destination, link to the destination in the path,
+  # if there is one.
+  #
+  # if there is no path, just link to the destination as is
+  #
+  module link (p Java.java.nio.file.Path, dest String) String =>
+    if p.is_null
+      dest
+    else
+      (p.resolve dest).toString
+
+
   # apply the given parameters to the `attractivelink.html` template
   #
   module attractive_link (to, title String) String =>
@@ -39,7 +51,27 @@ module template is
   # apply the given parameters to the `page.html` template
   #
   module page_link (to, title String) String =>
-    apply "page.html" [("##LINK##", "/{to}"), ("##TITLE##", title)].as_list
+    apply "page.html" [("##LINK##", "/{to}"), ("##TITLE##", title)]
+
+
+  # create a navigation link to the given path and destination
+  #
+  module nav_link (p Java.java.nio.file.Path,
+                   dest option String,
+                   sym, aria_label String) String =>
+    match dest
+      nil =>
+        apply "navigation_dead.html" [
+            ("##LINK##", "/".as_string),
+            ("##TITLE##", sym),
+            ("##ARIA##", aria_label)
+          ]
+      d String =>
+        apply "navigation.html" [
+            ("##LINK##", link p d),
+            ("##TITLE##", sym),
+            ("##ARIA##", aria_label)
+          ]
 
 
   # dispatch the html content
