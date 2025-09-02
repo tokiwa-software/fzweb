@@ -116,9 +116,7 @@ module document2 (module page String,
     is_toc := fn = "index"
     pup Java.java.nio.file.Path :=
       if is_toc
-        match pp
-          nil => (fuzion.jvm.env.null Java.java.nio.file.Path).get
-          p Java.java.nio.file.Path => p
+        pp.or_else (fuzion.jvm.env.null Java.java.nio.file.Path).get
       else
         match pp
           nil => Java.java.nio.file.Path_static.of "index" []
