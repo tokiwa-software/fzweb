@@ -14,7 +14,7 @@ module template is
   # looks for a file named `filename` in the `templates/` folder
   # and applies the replacments given in the list `repl`
   #
-  apply (filename String, repl Sequence (tuple String String)) String =>
+  apply (filename String, repl Sequence (String, String)) String =>
     not_found := "--template {filename} not found--"
     match content.template filename
       template_id identifier =>
