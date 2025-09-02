@@ -103,6 +103,15 @@ module document2 (module page String,
 
   # feature to generate the navigation menu for this document
   #
+  # the menu consists of these things:
+  #
+  # - a title bar with clickable links at the top of the page (also
+  #   called the `navtitle` in HTML)
+  # - three arrows at the top and the bottom of the page to navigate
+  #   the pages
+  # - a so called "attractive link", which is a large button at the
+  #   bottom of the page for getting to the next page (if available)
+  #
   # the argument `top` indicates whether it is the top or bottom menu
   # that is being generated.
   #
@@ -122,7 +131,7 @@ module document2 (module page String,
           nil => Java.java.nio.file.Path_static.of "index" []
           p Java.java.nio.file.Path => p.resolve "index"
 
-    # generate a title bar in the form of
+    # generate a title bar (also called `navtitle`) in the form of
     #
     #   main • dir1 • dir2 • file
     #
