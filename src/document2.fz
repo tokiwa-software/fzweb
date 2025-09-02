@@ -158,26 +158,21 @@ module document2 (module page String,
     prev := "NYI"
     next := "NYI"
 
-    # generate the link to navigate upwards in the hierarchy
+    # generate the link to navigate upwards with respect to a given
+    # path
     #
-    up_link String =>
-      # generate the link to navigate upwards with respect to a given
-      # path
-      #
-      up_link (p Java.java.nio.file.Path) String =>
-        if !p.is_null
-          template.nav_link p.getParent "index" up_arrow_link "aria-label='up a level'"
-        else
-          template.nav_link p nil up_arrow_link "aria-label='up a level'"
-
-      up_link pup
+    up_link (p Java.java.nio.file.Path) String =>
+      if !p.is_null
+        template.nav_link p.getParent "index" up_arrow_link "aria-label='up a level'"
+      else
+        template.nav_link p nil up_arrow_link "aria-label='up a level'"
 
     """
       <div class='d-flex justify-content-between'>
         {top ? "<div class='navtitle'>{generate_title_bar}</div>" : attractive_next}
         <div class='d-flex justify-content-between w-75 {top ? "nav_top" : "nav_bot"}'>
           <div class='nav_left'>{prev}</div>
-          <div class='nav_up'>{up_link}</div>
+          <div class='nav_up'>{up_link pup}</div>
           <div class='nav_right'>{next}</div>
         </div>
       </div>
