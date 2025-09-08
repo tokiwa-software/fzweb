@@ -28,9 +28,9 @@ module document2 (module page String,
   permitted := content.access_permitted session.user[util.hashable_unit] page
 
 
-  # get file content as list of strings
+  # get file content as array of strings
   #
-  module get_content list String =>
+  module get_content array String =>
     lm ! ()->
       res := (mutate.array String).new lm
 
@@ -67,7 +67,7 @@ module document2 (module page String,
             res.add (navigation false)
         nil => res.add "<p>404: page not found</p>"
 
-      res.as_list
+      res.as_array
 
 
   # add session-specific information to the html
