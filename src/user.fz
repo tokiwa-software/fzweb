@@ -127,17 +127,17 @@ module user (module base_dir String) is
 
   # get a list of the directory entries
   #
-  type.list_dir (path String) list String =>
-    res_list := io.dir.use (list String) path ()->
+  type.list_dir (path String) array String =>
+    res := io.dir.use _ path ()->
       for
-        next := io.dir.open.read, io.dir.open.read
-        entries := list next.get nil, entries.concat_list [ next.get ].as_list
+        entries := (container.expanding_array String).empty, entries.add next.get
+        next := io.dir.open.read
       until !next.ok
         entries
 
-    match res_list
-      error => nil
-      l list String => l
+    match res
+      error => []
+      ea container.expanding_array => ea.as_array
 
 
   # given a path of a user directory, check if the given predicate applies
