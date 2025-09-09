@@ -29,5 +29,5 @@ run =>
           _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
             # NYI: PERFORMANCE: shared JVM for all threads?
             # start a JVM with CLASS_PATH=classes
-            fuzion.jvm.use _ "classes" ()->
+            fuzion.jvm.use _ "-Djava.class.path=classes" ()->
               (webserver sessions).handle_connection lm conn
