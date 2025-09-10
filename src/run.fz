@@ -27,7 +27,11 @@ run =>
         _ := net.server.env.accept.bind unit conn->
           lm : mutate is
           _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
-            # NYI: PERFORMANCE: shared JVM for all threads?
-            # start a JVM with CLASS_PATH=classes
-            fuzion.jvm.use _ ["-Djava.class.path=classes"] ()->
-              (webserver sessions).handle_connection lm conn
+            fuzion.runtime.contract_fault
+              .try ()->
+                # NYI: PERFORMANCE: shared JVM for all threads?
+                # start a JVM with CLASS_PATH=classes
+                fuzion.jvm.use _ ["-Djava.class.path=classes"] ()->
+                  (webserver sessions).handle_connection lm conn
+              .catch  e->
+                say "contract_fault: $e"
