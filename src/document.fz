@@ -37,10 +37,8 @@ module document is
   module read_all_lines (file Java.java.nio.file.Path,
                          return_nil_on_error, pretty_print bool)
                         option (list String) =>
-    res := io.file.use (list String) file.toString io.file.mode.read ()->
-      data := (io.buffered io.file.file_mutate).read_fully
-      lines := String.from_bytes data
-      lines.split "\n"
+    res := util
+      .read_file_as_string file.toString
 
     match res
       e error =>
@@ -49,7 +47,7 @@ module document is
           nil
         else
           ["--error reading file--"].as_list
-      re list String => re
+      str String => str.split "\n"
 
 
   # same as read_all_lines (3 args) but without the option
