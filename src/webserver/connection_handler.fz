@@ -29,7 +29,10 @@ request_context (LM type : mutate, connection net.connection) is
       br := array_read_handler lm2 data
       response := http.response_msg request 1 1 return_code "OK" (http.canonical_header_map.map_of attributes.items) br
 
-      match ((io.buffered LM).writer.env.write response.bytes.as_array).error
+      match ((io.buffered LM)
+          .writer.env
+          .write (response.bytes 1E9)
+          .error)
         e error => say "#### {e}"
         unit =>
           flush_ok := (io.buffered LM).writer.env.flush
