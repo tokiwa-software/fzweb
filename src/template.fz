@@ -77,7 +77,9 @@ module template is
   # dispatch the html content
   #
   module doc_links (doc_file_name String) String =>
-    parts := doc_file_name.split "/"
+    parts := doc_file_name
+      .split "/"
+      .as_array
     if parts.count < 2
       ""
     else
@@ -87,9 +89,12 @@ module template is
                               </a> •
                             """
           part in parts
-          name0 := Java.java.net.URLDecoder_static.decode part "UTF-8"
-          name1 := name0.get.split "("
-          name := name1[0]
+          name := Java.java.net.URLDecoder_static
+            .decode part "UTF-8"
+            .get
+            .split "("
+            .first
+            .get
           end := (doc_file_name.find part).get + parts.count
           doc_path := doc_file_name.substring 0
       else

@@ -14,7 +14,9 @@ module parse_multipart_form_data(data, boundaryy String) lock_free.Map String St
   end_boundary := boundary + "--"
   # Initialize form data map
   form_data := (lock_free.Map String String).empty
-  lines := data.split "\r\n"
+  lines := data
+    .split "\r\n"
+    .as_array
   i := mut 0
   while i.get < lines.count do
     line := lines[i].trim
