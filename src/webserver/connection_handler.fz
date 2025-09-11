@@ -31,7 +31,7 @@ request_context (LM type : mutate, connection net.connection) is
 
       match ((io.buffered LM)
           .writer.env
-          .write (response.bytes 1E9)
+          .write (response.bytes data.count)
           .error)
         e error => say "#### {e}"
         unit =>
