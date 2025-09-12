@@ -35,7 +35,7 @@ module content is
         base_dir0 := content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ base_simple_path
         access := base_dir0.resolve "access.txt"
 
-        if Java.java.nio.file.Files_static.exists access (list Java.java.nio.file.LinkOption).empty
+        if io.file.exists access.toString
           base_simple_path
         else
           base_simple_path_loop_helper i-1
@@ -84,7 +84,7 @@ module content is
   # file that contains a <browse> tag to browse a directory.
   #
   type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.Map String String) =>
-    if Java.java.nio.file.Files_static.exists jndex (list Java.java.nio.file.LinkOption).empty
+    if io.file.exists jndex.toString
       util
         .read_file_as_string jndex.toString
         .bind str->
@@ -148,7 +148,7 @@ module content is
       html_file <- html_file.get + ".html"
 
     r := pages.resolve_Ljava_7_nio_7_file_7_Path_s_ (file_path html_file.get)
-    if !(Java.java.nio.file.Files_static.exists r (list Java.java.nio.file.LinkOption).empty)
+    if !(io.file.exists r.toString)
       index_file pages
       # NYI browsing
     else
@@ -220,7 +220,12 @@ module content is
   #
   module type.template (path_from_url String) choice identifier missing forbidden =>
     p := templates_dir.resolve path_from_url
-    if (Java.java.nio.file.Files_static.exists p (list Java.java.nio.file.LinkOption).empty) && !(Java.java.nio.file.Files_static.isDirectory p (list Java.java.nio.file.LinkOption).empty)
+    is_valid_file :=
+      io.file.stat
+        .stats p.toString
+        .bind (.is_regular)
+        .get false
+    if is_valid_file
       identifier.new p nil
     else
       missing
