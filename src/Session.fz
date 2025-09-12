@@ -187,8 +187,11 @@ module Session (sessions lock_free.Map String Session,
 
         r := lm.instate_self (outcome unit) ()->
           c.with (outcome unit) lm ()->
-            ((io.buffered lm).writer.env.write msg.utf8).error
-              >>= _->(io.buffered lm).writer.env.flush
+            io.buffered lm
+              .writer.env
+              .write msg.utf8
+              .error
+              .and_then _->(io.buffered lm).writer.env.flush
 
         match r
           unit => unit
