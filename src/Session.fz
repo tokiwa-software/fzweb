@@ -317,18 +317,18 @@ module Session (sessions lock_free.Map String Session,
     send_event event html_encoded_data
 
 
-  # NYI: comment, revisit (originally intended for StringBuilder),
-  # rename to prepend_data?
+  # NYI: comment, revisit (originally intended for StringBuilder)
   #
-  module append_data(data String) String =>
-    for
-      msg := "", msg + "data: {l}\n"
-      l in data.split "\n"
-    else
-      msg
+  prepend_data(data array String) String =>
+    res :=
+      data
+        .flat_map (.split "\n")
+        .map (d -> "data: $d")
+    String.join res "\n"
 
 
   module add_session_info_to_html_bytes (b array u8) array u8 =>
+    # NYI: UNDER DEVELOPMENT: dont use mut
     s := mut (String.from_bytes b)
     activity
     # NYI
@@ -346,14 +346,13 @@ module Session (sessions lock_free.Map String Session,
   #
   module send_content =>
     data := match current_page[util.hashable_unit]
-      # NYI: PERFORMANCE: doing join then split in append_data
-      current_document document2 => append_data (String.join current_document.get_content "\n")
-      nil => append_data "\n"
+      current_document document2 => prepend_data current_document.get_content
+      nil => "data: "
 
     msg := """
       id: 0
       event: content
-      {data}
+      {data}\n
     """
 
     send_data msg
