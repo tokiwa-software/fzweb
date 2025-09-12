@@ -328,7 +328,7 @@ module Session (sessions lock_free.Map String Session,
 
 
   module add_session_info_to_html_bytes (b array u8) array u8 =>
-    # NYI: UNDER DEVELOPMENT: dont use mut
+    # NYI: UNDER DEVELOPMENT: don't use mut
     s := mut (String.from_bytes b)
     activity
     # NYI
