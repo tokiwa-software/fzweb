@@ -90,7 +90,7 @@ module content is
         .bind str->
           for
             l in str.split "\n"
-            m := Session.get_tag l "<browse"
+            m := document.get_tag l "<browse"
           until m.exists
             outcome m.get
           else

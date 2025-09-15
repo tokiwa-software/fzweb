@@ -95,3 +95,30 @@ module document is
       line.substring (start_close + title_start_close.byte_length) end
     else
       strip_html (content.file_path link).toString
+
+
+  # create attribute_map based on the entry provided
+  #
+  module attribute_map (entry String) lock_free.Map String String =>
+    map := util.url_encoded.parse_urlencoded_map entry
+    res := (lock_free.Map String String).empty
+    for pair in map.items do
+      if (pair.1.starts_with "\"") && (pair.1.ends_with "\"")
+        v := pair.1.substring 1 pair.1.byte_length
+        res.put pair.0 v
+      else
+        res.put pair.0 pair.1
+    res
+
+
+  # extraction of the tag content from the string s
+  #
+  module get_tag (s, tag String) option (lock_free.Map String String) =>
+    match s.find tag
+      c i32 =>
+        match s.find "/>" c+tag.byte_length
+          ce i32 =>
+            entry := s.substring c+tag.byte_length ce
+            attribute_map entry
+          nil => nil
+      nil => nil
