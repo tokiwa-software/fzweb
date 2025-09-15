@@ -285,33 +285,6 @@ module Session (sessions lock_free.Map String Session,
     res.get.get (Session sessions c orig.get)
 
 
-  # create attribute_map based on the entry provided
-  #
-  module type.attribute_map(entry String) lock_free.Map String String =>
-    map := util.url_encoded.parse_urlencoded_map entry
-    res := (lock_free.Map String String).empty
-    for pair in map.items do
-      if (pair.1.starts_with "\"") && (pair.1.ends_with "\"")
-        v := pair.1.substring 1 pair.1.byte_length
-        res.put pair.0 v
-      else
-        res.put pair.0 pair.1
-    res
-
-
-  # extraction of the tag content from the string s
-  #
-  module type.get_tag(s, tag String) option (lock_free.Map String String) =>
-    match s.find tag
-      c i32 =>
-        match s.find "/>" c+tag.byte_length
-          ce i32 =>
-            entry := s.substring c+tag.byte_length ce
-            attribute_map entry
-          nil => nil
-      nil => nil
-
-
   # send data (three args)
   # NYI: rename to send_event?
   #
