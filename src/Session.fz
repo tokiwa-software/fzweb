@@ -17,8 +17,8 @@ module Session (sessions lock_free.Map String Session,
   # session belongs to which user, if at all?
   # NYI: this is a hack for effect-free thread-safe mutation
   #
-  module user lock_free.Map util.hashable_unit user
-    := (lock_free.Map util.hashable_unit user).empty
+  module user :=
+    concur.atomic (option user) nil
 
 
   # NYI: hack
@@ -29,26 +29,26 @@ module Session (sessions lock_free.Map String Session,
   # login state of the session
   # NYI: this is a hack for effect-free thread-safe mutation
   #
-  login lock_free.Map util.hashable_unit util.login_status
-    := (lock_free.Map util.hashable_unit util.login_status).from_entries [(util.hashable_unit, unauthenticated_status)]
+  login
+    := concur.atomic util.login_status unauthenticated_status
 
 
   # activity information
   # NYI: not thread-safe!
   #
-  last_activity := (lock_free.Map util.hashable_unit time.date_time).empty
-  count_activities := (lock_free.Map util.hashable_unit u64).from_entries [(util.hashable_unit, u64 0)]
+  last_activity := concur.atomic (option time.date_time) nil
+  count_activities := concur.atomic (u64 0)
 
 
   # connection tied to this session for sending events to the client
   #
-  connection := (lock_free.Map util.hashable_unit net.connection).empty
+  connection := concur.atomic (option net.connection) nil
 
 
   # session history information
   #
-  current_page := (lock_free.Map util.hashable_unit document2).from_entries [(util.hashable_unit, document2 "index" Session.this)]
-  last_pushed_history :=  (lock_free.Map util.hashable_unit document2).empty
+  current_page := concur.atomic (document2 "index" Session.this)
+  last_pushed_history := concur.atomic (option document2) nil
 
 
   # initialize user and login state
@@ -57,13 +57,8 @@ module Session (sessions lock_free.Map String Session,
   match old_session
     nil => unit
     old_s Session =>
-      match old_s.user[util.hashable_unit]
-        nil => unit
-        old_user user => Session.this.user.put util.hashable_unit old_user
-
-      match old_s.login[util.hashable_unit]
-        nil => unit
-        old_login util.login_status => login.put util.hashable_unit old_login
+      Session.this.user.write old_s.user.read
+      login.write old_s.login.read
 
 
   # session id
@@ -78,16 +73,15 @@ module Session (sessions lock_free.Map String Session,
 
   # and log session creation
   #
-  log "new session {sessions.size} {session_id} for {client} user {user[util.hashable_unit].bind x->x.login}"
+  log "new session {sessions.size} {session_id} for {client} user {user.read.bind x->x.login}"
 
 
   # log session activity
   # NYI: thread-safety!
   #
   activity =>
-    activity_count := count_activities[util.hashable_unit].get 0
-    count_activities.put util.hashable_unit (activity_count + 1)
-    last_activity.put util.hashable_unit time.now.get
+    count_activities.write (count_activities.read + 1)
+    last_activity.write time.now.get
 
 
   # authenticate the session with a user account
@@ -98,10 +92,10 @@ module Session (sessions lock_free.Map String Session,
 
     match user.get name password
       error =>
-        login.put util.hashable_unit util.auth_fail
+        login.write util.auth_fail
       u user =>
-        Session.this.user.put util.hashable_unit u
-        login.put util.hashable_unit util.authenticated
+        Session.this.user.write u
+        login.write util.authenticated
 
     send_content
 
@@ -112,8 +106,8 @@ module Session (sessions lock_free.Map String Session,
   module logout =>
     activity
 
-    _ := user.remove util.hashable_unit
-    login.put util.hashable_unit util.unauthenticated
+    user.write nil
+    login.write util.unauthenticated
 
     send_content
 
@@ -121,21 +115,21 @@ module Session (sessions lock_free.Map String Session,
   # login state easy access
   #
   module get_login_status util.login_status =>
-    login[util.hashable_unit].get unauthenticated_status
+    login.read
 
 
   # access to session user
   #
   module get_user option user =>
-    Session.this.user[util.hashable_unit]
+    Session.this.user.read
 
 
   # send login status to client
   # NYI: thread-safety!
   #
   module send_login_status unit =>
-    match login[util.hashable_unit].get
-      util.authenticated => send_event "isLoggedIn" user[util.hashable_unit].get.name
+    match login.read
+      util.authenticated => send_event "isLoggedIn" user.read.get.name
       * => send_event "isNotLoggedIn"
 
 
@@ -143,10 +137,10 @@ module Session (sessions lock_free.Map String Session,
   # NYI: thread-safety!
   #
   module status_string =>
-    match login[util.hashable_unit].get
+    match login.read
       util.unauthenticated => "not logged in"
       util.auth_fail => "failed"
-      util.authenticated => "ok: {user[util.hashable_unit].get.name}"
+      util.authenticated => "ok: {user.read.get.name}"
 
 
   # send an event on the session's connection
@@ -166,21 +160,19 @@ module Session (sessions lock_free.Map String Session,
   # NYI: thread-safety!
   #
   send_push_history =>
-    last := last_pushed_history[util.hashable_unit]
-    cur := current_page[util.hashable_unit]
-    match cur
-      nil => _ := last_pushed_history.remove util.hashable_unit
-      c document2 => last_pushed_history.put util.hashable_unit c
+    last := last_pushed_history.read
+    c := current_page.read
+    last_pushed_history.write c
 
-    if cur?? && last!! || cur.as_equatable != last.as_equatable
-      send_event "pushHistory" "/{cur.get.page}"
+    if last!! || (option c).as_equatable != last.as_equatable
+      send_event "pushHistory" "/{c.page}"
 
 
   # send data on the session's connection
   # NYI: thread-safety!
   #
   module send_data (msg String) =>
-    match connection[util.hashable_unit]
+    match connection.read
       nil => log "failed to send {(msg.split "\n").head.get}, connection is nil"
       c net.connection =>
         reset_connection_timer
@@ -210,15 +202,15 @@ module Session (sessions lock_free.Map String Session,
   module set_connection (c net.connection) =>
     reset_connection_timer
 
-    match connection[util.hashable_unit]
+    match connection.read
       nil =>
         log "Set original connection"
-        connection.put util.hashable_unit c
+        connection.write c
         send_login_status
       net.connection =>
         log "Set new connection"
         close_connection unit
-        connection.put util.hashable_unit c
+        connection.write c
         send_content
         send_login_status
 
@@ -231,27 +223,27 @@ module Session (sessions lock_free.Map String Session,
       e error => log "exception when sending content: {e}"
       unit =>
 
-    match connection[util.hashable_unit]
+    match connection.read
       nil => unit
       c net.connection =>
         log "closing connection of session: {session_id}"
         match c.close
           unit =>
           e error => log "error closing connection: {e}"
-        _ := connection.remove util.hashable_unit
+        _ := connection.write nil
 
 
   # does this session have a connection associated?
   #
   module is_connection_ok =>
-    connection[util.hashable_unit].ok
+    connection.read.ok
 
 
   # log a message for this session, either to the general log if
   # the session is not authenticated, or to the users' individual log
   #
   module log (msg String) =>
-    match Session.this.user[util.hashable_unit]
+    match Session.this.user.read
       nil => logger.log msg
       u user => u.log msg
 
@@ -304,31 +296,28 @@ module Session (sessions lock_free.Map String Session,
 
 
   module add_session_info_to_html_bytes (b array u8) array u8 =>
-    # NYI: UNDER DEVELOPMENT: don't use mut
-    s := mut (String.from_bytes b)
     activity
     # NYI
     # - ByteArray from flang_dev
-    s <- s.get.replace "##SESSION_ID##" session_id
-    match current_page[util.hashable_unit]
-      cp document2 =>
-        s <- s.get.replace "##URL##" "/{cp.page}"
-        s <- s.get.replace "##CONTENT##" (String.join cp.get_content "\n")
-      nil =>
-    s.get.utf8.as_array
+
+    cp := current_page.read
+
+    String
+      .from_bytes b
+      .replace "##SESSION_ID##" session_id
+      .replace "##URL##" "/{cp.page}"
+      .replace "##CONTENT##" (String.join cp.get_content "\n")
+      .utf8
+      .as_array
 
 
   # send current page content to the client
   #
   module send_content =>
-    data := match current_page[util.hashable_unit]
-      current_document document2 => prepend_data current_document.get_content
-      nil => "data: "
-
     msg := """
       id: 0
       event: content
-      {data}\n
+      {prepend_data current_page.read.get_content}\n
     """
 
     send_data msg
@@ -340,7 +329,7 @@ module Session (sessions lock_free.Map String Session,
   module set_current (page String) =>
     p := document.strip_html page
     d := document2 p Session.this
-    current_page.put util.hashable_unit d
+    current_page.write d
 
 
   # make sure no one is stealing a session by brute-force
