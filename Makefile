@@ -15,8 +15,6 @@ FLANG_DEV3 = $(if $(shell test -e $(FLANG_DEV0) && echo OK),$(FLANG_DEV0), \
 FLANG_DEV  = $(shell readlink -f $(FLANG_DEV3))
 
 FUZION_BIN = $(shell readlink -f $(FUZION_SRC)/../build/bin)
-FUZION_BUILD = $(shell readlink -f $(FUZION_SRC)/../build)
-FUZION_TREE = $(shell readlink -f $(FUZION_SRC)/..)
 MODULES = http,lock_free,uuid,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver
 
 .PHONY: run_fz
