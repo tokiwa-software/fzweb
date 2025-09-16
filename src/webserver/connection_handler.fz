@@ -59,7 +59,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
         error => 0
         i i32 => i
     post_data_raw := lm2 ! ()->
-      (io.buffered lm2).reader req_context.request.body 1024 ! ()->
+      (io.buffered lm2).reader req_context.request.body ! ()->
         (io.buffered lm2).read_bytes post_len
     post_data := String.from_bytes post_data_raw.as_list
     val := (Java.dev.flang.webserver_S_Value_static.new (req_context.request.header["Content-Type"].or_else ""))
