@@ -4,13 +4,18 @@ pipeline {
   environment {
     FUZION_BIN = '/fuzion/bin'
     FUZION_BUILD = '/fuzion'
-    FLANG_DEV = "${env.WORKSPACE}/flang_dev"
   }
 
   stages {
     stage('Checkout') {
       steps {
         checkout scm
+
+        dir('fuzion') {
+          checkout scmGit(
+            branches: [[name: 'main']],
+            userRemoteConfigs: [[url: 'https://github.com/tokiwa-software/fuzion.git']])
+        }
 
         dir('flang_dev') {
           checkout scmGit(
