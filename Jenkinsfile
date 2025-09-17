@@ -1,11 +1,6 @@
 pipeline {
   agent { docker 'tokiwa-software/fuzion:main' }
 
-  environment {
-    FUZION_BIN = '/fuzion/bin'
-    FUZION_BUILD = '/fuzion'
-  }
-
   stages {
     stage('Checkout') {
       steps {
@@ -25,10 +20,17 @@ pipeline {
         }
       }
     }
+    stage('Build fuzion') {
+      steps {
+        dir('fuzion') {
+          sh 'make'
+        }
+      }
+    }
     stage('Build webserver.fum') {
       steps {
         dir('flang_dev') {
-          sh 'make /fuzion/modules/webserver.fum'
+          sh "make DITAA='java -jar /usr/share/ditaa/ditaa.jar' ${env.WORKSPACE}/fuzion/build/modules/webserver.fum"
         }
       }
     }
