@@ -97,7 +97,7 @@ array_read_handler(LM type : mutate, arr array u8) : io.Read_Handler is
 
   public redef read(count i32) choice (array u8) io.end_of_file error =>
     p := pos.get
-    if p > arr.count
+    if p >= arr.count
       io.end_of_file
     else
       pos <- p + count
