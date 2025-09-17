@@ -89,8 +89,8 @@ module template is
                               </a> •
                             """
           part in parts
-          name := Java.java.net.URLDecoder_static
-            .decode part "UTF-8"
+          name := encodings.percent
+            .decode_as_str part
             .get
             .split "("
             .first
