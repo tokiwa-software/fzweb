@@ -82,7 +82,7 @@ module route_request (raw_path, cmd String, client list u8, form_data lock_free.
 
     else if raw_path = "/robots.txt"
       res := content.templates_dir.resolve "robots.txt"
-      x := util.read_file_as_string res.toString
+      x := util.read_file_as_string res.as_string
 
       match x
         robots_txt String =>

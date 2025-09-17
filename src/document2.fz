@@ -45,7 +45,7 @@ module document2 (module page String,
 
   # the actual file name of the current document
   #
-  file_name := data_path.getFileName.toString
+  file_name := data_path.file_name
 
 
   # is the user of the given session allowed to
@@ -75,14 +75,14 @@ module document2 (module page String,
             else
               res.add html
           else if content.is_known_preformatted_file file_name
-            title := (content.file_path page).toString
+            title := (content.file_path page).as_string
             res.add "<h1>{html_encode title.as_string}</h1>\n"
             # opacity is reset in main.js:initAnsiUp()
             res.add "<pre class='code' style='opacity: 0'>\n"
             lines.for_each line->(res.add (html_encode line.as_string))
             res.add "</pre>\n"
           else
-            fname := html_encode data_path.getFileName.toString.as_string
+            fname := html_encode data_path.file_name
             res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
 
           res.add "</div>"
@@ -146,16 +146,16 @@ module document2 (module page String,
       title := document.get_title to (content.get_data_path session.user.read to)
       template.page_link to title
 
-    fn := (content.file_path page).toString
+    fn := (content.file_path page).as_string
     pp := content.base_simple_path page
     is_toc := fn = "index"
-    pup Java.java.nio.file.Path :=
+    pup option path :=
       if is_toc
-        pp.or_else (fuzion.jvm.env.null Java.java.nio.file.Path).get
+        pp
       else
         match pp
-          nil => Java.java.nio.file.Path_static.of "index" []
-          p Java.java.nio.file.Path => p.resolve "index"
+          nil => path.of "index"
+          p path => p.resolve "index"
 
     # generate a title bar (also called `navtitle`) in the form of
     #
@@ -177,10 +177,10 @@ module document2 (module page String,
       # the current state of the title bar is stored as `current`, and `ppup`
       # is the current level in the directory hierarchy
       #
-      recursive_helper (current String, ppup Java.java.nio.file.Path) String =>
-        if !ppup.is_null
-          next_title := (page_link (template.link ppup.getParent "index")) + " • " + current
-          recursive_helper next_title ppup.getParent
+      recursive_helper (current String, ppup option path) String =>
+        if ppup.ok
+          next_title := (page_link (template.link ppup.get.parent "index")) + " • " + current
+          recursive_helper next_title ppup.get.parent
         else
           current
 
@@ -194,11 +194,11 @@ module document2 (module page String,
     # generate the link to navigate upwards with respect to a given
     # path
     #
-    up_link (p Java.java.nio.file.Path) String =>
-      if !p.is_null
-        template.nav_link p.getParent "index" up_arrow_link "aria-label='up a level'"
+    up_link (p option path) String =>
+      if p.ok
+        template.nav_link p.get.parent "index" up_arrow_link "aria-label='up a level'"
       else
-        template.nav_link p nil up_arrow_link "aria-label='up a level'"
+        template.nav_link nil          nil     up_arrow_link "aria-label='up a level'"
 
     """
       <div class='d-flex justify-content-between'>

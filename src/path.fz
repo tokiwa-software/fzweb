@@ -1,0 +1,60 @@
+private:module path(str String) : property.equatable
+  pre debug: str.trim = str
+is
+
+  public resolve(o path|String) path =>
+    match o
+      p path => p.is_absolute ? p : (path.of [str, p.str])
+      s String => path.of [str, s]
+
+  public subpath(x, y i32) path =>
+    sp := names
+      .slice x y
+    path.of sp
+
+  names =>
+    str
+      .trim b->b="/".val.as_u8
+      .split "/"
+
+  public name_count i32 =>
+    names
+      .count
+
+  public file_name String =>
+    str
+      .split "/"
+      .last
+      .get
+
+  public is_absolute bool =>
+    str.starts_with "/"
+
+  public parent option path =>
+    path.of (names.reverse.drop 1).reverse
+
+  public relativize(o path) path
+    pre o.is_absolute
+        o.as_string.starts_with path.this.as_string
+  =>
+    path.of (o.names.drop names.count) true
+
+  public starts_with(p path) bool =>
+    str.starts_with p.str
+
+  public normalize path =>
+    path str
+
+  public redef as_string String =>
+    str
+
+  public redef type.equality(a, b path.this) bool =>
+    a.str = b.str
+
+  public type.of(x String | Sequence String) path =>
+    path.of x false
+
+  public type.of(x String | Sequence String, relative bool) path =>
+    match x
+      str String => path str.trim
+      seq Sequence => path.of "{relative ? "" : "/"}{(String.join seq "/")}"
