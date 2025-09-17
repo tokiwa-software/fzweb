@@ -63,7 +63,7 @@ module Session (sessions lock_free.Map String Session,
 
   # session id
   #
-  module session_id String := Java.dev.flang.RandomId_static.get Session.safe_number_of_bits
+  module session_id String := uuid.create_random.as_string
 
 
   # put session in global session list
@@ -330,11 +330,6 @@ module Session (sessions lock_free.Map String Session,
     p := document.strip_html page
     d := document2 p Session.this
     current_page.write d
-
-
-  # make sure no one is stealing a session by brute-force
-  #
-  type.safe_number_of_bits => 128
 
 
 # local mutate effect used in this file
