@@ -1,6 +1,4 @@
 FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS builder
-WORKDIR /fzweb
-COPY . .
 RUN apt-get update && apt-get -y --no-install-recommends install \
   openjdk-21-jdk-headless \
   git \
@@ -20,6 +18,8 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
   unzip
 RUN ln -s /usr/bin/clang-18 /usr/bin/clang
 ENV FUZION_REPRODUCIBLE_BUILD="true" PRECONDITIONS="true" POSTCONDITIONS="true"
+WORKDIR /fzweb
+COPY . .
 WORKDIR /fzweb/fuzion
 RUN make
 WORKDIR /fzweb/flang_dev
