@@ -20,7 +20,7 @@ request_context (LM type : mutate, connection net.connection) is
       x Sequence u8 => x.as_list
       error => [u8 0, 0, 0, 0].as_list
 
-  send(return_code i32, attributes lock_free.Map String String, data array u8) is
+  send(return_code i32, attributes lock_free.Map String String, data array u8) =>
     attributes.put "Server" "Fuzion WebServer v0.0.2"
     if !attributes["Connection"].exists
       attributes.put "Connection" "close"
@@ -71,14 +71,14 @@ process_request(LM type : mutate, req_context request_context LM) =>
       x lock_free.Map String String =>
         route_request req_context.path cmd req_context.client x req_context.query_string
       error =>
-        response 415 ((lock_free.Map String String).from_entries [("Accept", "application/x-www-form-urlencode, multipart/form-data")]) (list i8).empty
+        response.new 415 ((lock_free.Map String String).from_entries [("Accept", "application/x-www-form-urlencode, multipart/form-data")])
 
   resp := match req_context.request.method
     http.get => get_response "GET"
     http.post_r => get_response "POST"
-    * => response 500 (lock_free.Map String String).empty (list i8).empty
+    * => response.new 500
 
-  _ := req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array (.cast_to_u8))
+  req_context.send resp.returncode resp.attributes (resp.data.as_array.map_to_array (.cast_to_u8))
   match resp.session
     nil =>
     s Session =>

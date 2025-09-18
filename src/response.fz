@@ -10,13 +10,27 @@
 #
 module response (module returncode i32,
                  module attributes lock_free.Map String String,
-                 module data Sequence i8,
+                 module data Sequence i8, # NYI: BUG: why i8 not u8?
                  module session option Session) is
 
 
-# short-hand for creating a response with an empty session field
-#
-module response (returncode i32,
-                 attributes lock_free.Map String String,
-                 data Sequence i8) response =>
-  response returncode attributes data nil
+  # short-hand for creating a response with an empty session field
+  #
+  module type.new(returncode i32,
+                  attributes lock_free.Map String String,
+                  data Sequence i8) response =>
+    response returncode attributes data nil
+
+
+  # short-hand for creating a response with an empty session field and no data
+  #
+  module type.new(returncode i32,
+                  attributes lock_free.Map String String) response =>
+    response returncode attributes [] nil
+
+
+  # short-hand for creating a response with an empty session field,
+  # no data and no attributes
+  #
+  module type.new(returncode i32) response =>
+    response returncode (lock_free.Map String String).empty [] nil

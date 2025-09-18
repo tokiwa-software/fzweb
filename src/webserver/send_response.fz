@@ -22,7 +22,7 @@ module send_ok_or_reload (cmd String, s Session, datastr String) response =>
   data := if returncode = 500 then must_message.utf8.map (.cast_to_i8) else datastr.utf8.map (.cast_to_i8)
   data2 := data.as_array
   header := (lock_free.Map String String).from_entries [("Content-Length", data2.length.as_string), ("Content-Type", "text/html")]
-  response returncode header data2
+  response.new returncode header data2
 
 
 # send an HTTP 200 response along with the given data
@@ -30,7 +30,7 @@ module send_ok_or_reload (cmd String, s Session, datastr String) response =>
 module send_ok (cmd String, datastr String) response =>
   data := (datastr.utf8.map (.cast_to_i8)).as_array
   header := (lock_free.Map String String).from_entries [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
-  response 200 header data
+  response.new 200 header data
 
 
 # send an HTTP response provided a content identifier
@@ -40,14 +40,14 @@ module send_content (s Session, cmd String, i identifier) response =>
   match i.get_bytes s
     b array u8 =>
       attributes := (lock_free.Map String String).from_entries [("Content-Length", b.length.as_string)]
-      response 200 attributes (b.map (.cast_to_i8))
+      response.new 200 attributes (b.map (.cast_to_i8))
     e error =>
       webserver.this.log s "*** error sending content: {e}"
-      response 500 (lock_free.Map String String).empty (list i8).empty
+      response.new 500
 
 
 # send an HTTP response indicating that the content requested has not
 # been sent due to a missing implementation in this webserver
 #
 module send_nyi response =>
-  response 500 (lock_free.Map String String).empty (list i8).empty
+  response.new 500
