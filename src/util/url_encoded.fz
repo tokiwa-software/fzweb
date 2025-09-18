@@ -25,53 +25,42 @@ module url_encoded is
   # Strip non-alphanumeric characters from a string
   #
   module strip_non_alpha_numeric(s String) String =>
-
-    for res := "", (if (("0" <= c) && (c <= "9")) || ("a" <= c && c <= "z") || ("A" <= c && c <= "Z") || c = "_"
-                      res + c
-                    else
-                      res + "_")
-        c in s.as_codepoints
-        i := 0, i + 1
-    else
-      res
+    String
+      .from_codepoints <| s
+        .as_codepoints
+        .map c->
+          if c.is_ascii_alpha_num then c else "_"
 
 
-  # HTML-encode a string
+  # html encode str
   #
-  module html_encode(s String) String =>
-
-    for res := "", (if c = "32"
-                      res + "&nbsp;"
-                    else if c = "38"
-                      res + "&amp;"
-                    else if c = "60"
-                      res + "&lt;"
-                    else if c = "62"
-                      res + "&gt;"
-                    else if c = "34"
-                      res + "&quot;"
-                    else if c = "39"
-                      res + "&#x27;"
-                    else if c = "47"
-                      res + "&#x2F;"
-                    else
-                      res + c)
-        c in s.as_codepoints
-        i := 0, i + 1
-    else
-      res
-
-
-  # Encode HTML data with newlines preserved
+  # mapping:
   #
-  module encode_html_data(s String) String =>
+  # " " => "&nbsp;"
+  # "&" => "&amp;"
+  # "<" => "&lt;"
+  # ">" => "&gt;"
+  # "\" => "&quot;"
+  # "'" => "&#x27;"
+  # "/" => "&#x2F;"
+  #
+  module html_encode(str String) String =>
 
-    for res := "data: ", (if c = "10"
-                            res + "\ndata: "
-                          else
-                            res + html_encode(c))
-        c in s.as_codepoints
-        i := 0, i + 1
-    else
-      res := res + "\n"
-      res
+    ref : String is
+
+      utf8_cached :=
+        str
+          .utf8
+          .flat_map b->
+            if      b=(" " ).val.as_u8 then "&nbsp;".utf8
+            else if b=("&" ).val.as_u8 then "&amp;" .utf8
+            else if b=("<" ).val.as_u8 then "&lt;"  .utf8
+            else if b=(">" ).val.as_u8 then "&gt;"  .utf8
+            else if b=("\"").val.as_u8 then "&quot;".utf8
+            else if b=("'" ).val.as_u8 then "&#x27;".utf8
+            else if b=("/" ).val.as_u8 then "&#x2F;".utf8
+            else [b]
+          .as_array
+
+      public redef utf8 Sequence u8 => utf8_cached
+
