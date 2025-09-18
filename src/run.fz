@@ -35,6 +35,7 @@ run =>
                 # NYI: PERFORMANCE: shared JVM for all threads?
                 # start a JVM with CLASS_PATH=classes
                 fuzion.jvm.use _ ["-Djava.class.path=classes"] ()->
+                  email_service.foo
                   (webserver sessions).handle_connection lm conn
               .catch  e->
                 logger.log "contract_fault: $e"
