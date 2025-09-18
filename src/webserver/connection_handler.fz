@@ -20,6 +20,12 @@ request_context (LM type : mutate, connection net.connection) is
       x Sequence u8 => x.as_list
       error => [u8 0, 0, 0, 0].as_list
 
+  # send an HTTP response on the current socket
+  #
+  # return_code specifies the HTTP status code of the response
+  # attributes defines the headers of the response
+  # data contains the body of the response as an array of bytes
+  #
   send(return_code i32, attributes lock_free.Map String String, data array u8) =>
     attributes.put "Server" "Fuzion WebServer v0.0.2"
     if !attributes["Connection"].exists
@@ -100,8 +106,15 @@ lm2 : mutate is
 # custom read handler for reading from an array (helper feature)
 #
 array_read_handler(LM type : mutate, arr array u8) : io.Read_Handler is
+
+
+  # position indicator for the read feature
+  #
   pos := LM.env.new 0
 
+  # read `count` bytes from the array and "discard" them (by setting a position
+  # indicator)
+  #
   public redef read(count i32) choice (array u8) io.end_of_file error =>
     p := pos.get
     if p >= arr.count
