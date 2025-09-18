@@ -27,7 +27,7 @@ module url_encoded is
   module strip_non_alpha_numeric(s String) String =>
     String
       .from_codepoints <| s
-        .as_codepoints
+        .codepoints
         .map c->
           if c.is_ascii_alpha_num then c else "_"
 
