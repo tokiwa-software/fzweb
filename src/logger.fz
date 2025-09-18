@@ -18,8 +18,8 @@ module logger is
     else x+1
 
   # Logger function that outputs to the console
-  module log(s2 String) =>
-    say "{logger.thread_id}: {s2}"
+  module log(c String|error) =>
+    say "{logger.thread_id}: {c ? s String => s | e error => e.as_string}"
 
   # Logger function that writes to a file
   module log(log_path String, msg String) =>
