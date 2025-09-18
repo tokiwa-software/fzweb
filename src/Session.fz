@@ -252,11 +252,14 @@ module Session (sessions lock_free.Map String Session,
   #
   module type.get (sessions lock_free.Map String Session, id String, c list u8) option Session =>
     match sessions[id]
-      nil => nil
+      nil =>
+        logger.log "No session found in map for id: {id}"
+        nil
       s Session =>
         if s.client.as_equatable = c.as_equatable
           s
         else
+          logger.log "Mismatch of clients for session with id: {id}"
           nil
 
 

@@ -26,7 +26,7 @@ module user (module base_dir String) is
           p := password.utf8.map (.cast_to_i8)
           h := hash.utf8.map (.cast_to_i8)
           res := (Java.at.favre.lib.crypto.bcrypt.BCrypt_static.verifyer.verify__u00005b_B_u00005b_B p h).verified
-          say (res ? "successful login" : "*** failed login attempt")
+          log (res ? "successful login" : "*** failed login attempt")
           res
     else
       false
@@ -226,7 +226,7 @@ module user (module base_dir String) is
       match create_user_txt first_name last_name full_name affiliation username0.get email0.get password0.get terms newsletter "NYI: time"
         error => "<div class='text-center'>Registration failed. Already registered?</div>"
         token String =>
-          say "send registration token email to: {email0}"
+          logger.log "send registration token email to: {email0}"
 
           match send_user_registration_email full_name email0.get token username0.get
             error => "<div class='text-center'>Registration failed. Already registered?</div>"
@@ -300,10 +300,11 @@ module user (module base_dir String) is
           match get username_or_email
             error => standard_text
             u user =>
-              match { x := u.trigger_deletion; say "User requested deletion: {u.email}."; x }
+              logger.log "User requested deletion: {u.email}."
+              match u.trigger_deletion
                 e error =>
-                  say "user.delete_account not successful."
-                  say e
+                  logger.log "user.delete_account not successful."
+                  logger.log e
                   "<div class='text-center'>There was an error sending the E-Mail.</div>"
                 unit => standard_text
 
@@ -324,7 +325,9 @@ module user (module base_dir String) is
       error => error "no user found with token: {token}"
       u user =>
         if !(util.exists deleted_users_dir)
-          _ := io.dir.make deleted_users_dir
+          io.dir
+            .make deleted_users_dir
+            .or_else (() -> u.log "failed making dir: {deleted_users_dir}")
 
         io.file.move u.base_dir "{deleted_users_dir}/{time.now}"
 

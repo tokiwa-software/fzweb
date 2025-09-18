@@ -148,7 +148,7 @@ module route_request (raw_path0, cmd String, client list u8, form_data lock_free
   # NYI: PERFORMANCE: order ifs by most used / accessed
 
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
-    say "*** unknown request: {cmd}"
+    logger.log "*** unknown request: {cmd}"
     response.new 501
   else if raw_path = "/login"
     send_nyi
