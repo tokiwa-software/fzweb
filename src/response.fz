@@ -10,7 +10,7 @@
 #
 module response (module returncode i32,
                  module attributes lock_free.Map String String,
-                 module data Sequence i8, # NYI: BUG: why i8 not u8?
+                 module data Sequence u8,
                  module session option Session) is
 
 
@@ -18,7 +18,7 @@ module response (module returncode i32,
   #
   module type.new(returncode i32,
                   attributes lock_free.Map String String,
-                  data Sequence i8) response =>
+                  data Sequence u8) response =>
     response returncode attributes data nil
 
 

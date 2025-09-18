@@ -19,7 +19,7 @@ module send_ok_or_reload (cmd String, s Session) response =>
 module send_ok_or_reload (cmd String, s Session, datastr String) response =>
   returncode := if !s.is_connection_ok then 500 else 200
   must_message := "must reconnect"
-  data := if returncode = 500 then must_message.utf8.map (.cast_to_i8) else datastr.utf8.map (.cast_to_i8)
+  data := if returncode = 500 then must_message.utf8 else datastr.utf8
   data2 := data.as_array
   header := (lock_free.Map String String).from_entries [("Content-Length", data2.length.as_string), ("Content-Type", "text/html")]
   response.new returncode header data2
@@ -28,19 +28,19 @@ module send_ok_or_reload (cmd String, s Session, datastr String) response =>
 # send an HTTP 200 response along with the given data
 #
 module send_ok (cmd String, datastr String) response =>
-  data := (datastr.utf8.map (.cast_to_i8)).as_array
+  data := datastr.utf8.as_array
   header := (lock_free.Map String String).from_entries [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
   response.new 200 header data
 
 
-# send an HTTP response provided a content identifier
+# get response for given a content identifier
 #
-module send_content (s Session, cmd String, i identifier) response =>
+module get_response (s Session, cmd String, i identifier) response =>
   # NYI: logging, mime types
   match i.get_bytes s
     b array u8 =>
       attributes := (lock_free.Map String String).from_entries [("Content-Length", b.length.as_string)]
-      response.new 200 attributes (b.map (.cast_to_i8))
+      response.new 200 attributes b
     e error =>
       webserver.this.log s "*** error sending content: {e}"
       response.new 500
