@@ -1,5 +1,5 @@
 pipeline {
-  agent { docker 'tokiwa-software/fuzion:main' }
+  agent any
 
   stages {
     stage('Checkout') {
@@ -20,23 +20,12 @@ pipeline {
         }
       }
     }
-    stage('Build fuzion') {
+    stage('Build and deploy Docker image') {
       steps {
-        dir('fuzion') {
-          sh 'make'
+        // deployment missing
+        script {
+          docker.build("tokiwa-software/fzweb:${env.BRANCH_NAME}")
         }
-      }
-    }
-    stage('Build webserver.fum') {
-      steps {
-        dir('flang_dev') {
-          sh "make DITAA='java -jar /usr/share/ditaa/ditaa.jar' ${env.WORKSPACE}/fuzion/build/modules/webserver.fum"
-        }
-      }
-    }
-    stage('Build webserver C binary') {
-      steps {
-        sh 'make webserver'
       }
     }
   }
