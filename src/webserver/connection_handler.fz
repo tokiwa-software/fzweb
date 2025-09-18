@@ -27,7 +27,7 @@ request_context (LM type : mutate, connection net.connection) is
 
     lm2 ! ()->
       br := array_read_handler lm2 data
-      response := http.response_msg request 1 1 return_code "OK" (http.canonical_header_map.map_of attributes.items) br
+      response := http.response_msg.new request 1 1 return_code "OK" attributes.items.as_array br
 
       match ((io.buffered LM)
           .writer.env
