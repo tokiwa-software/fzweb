@@ -14,7 +14,7 @@ is
 
   names =>
     str
-      .trim b->b="/".val.as_u8
+      .trim (id u8->bool b->b="/".val.as_u8)
       .split "/"
 
   public name_count i32 =>

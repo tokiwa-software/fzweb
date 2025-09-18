@@ -35,103 +35,157 @@ do_register (client list u8, form_data lock_free.Map String String) String =>
       e error => "<div class='text-center'>*** Registration failed: {e}</div>"
 
 
+# construct a response for account registration
+#
+confirm_registration(s Session, query String) =>
+  s_q := util.split_query query
+  webserver.this.log s "got confirm_registration"
+  match user.complete_registration (s_q["username"].get "") (s_q["token"].get "")
+    unit =>
+      webserver.this.log s "got confirm_registration send 302 success"
+      response.new 302 ((lock_free.Map String String).from_entries [("Location", "/registration_successful")])
+    e error =>
+      webserver.this.log s "got confirm_registration send 302 failure: "+e
+      response.new 302 ((lock_free.Map String String).from_entries [("Location", "/registration_failed")])
+
+
+# construct a response for account deletion
+#
+confirm_account_deletion(s Session, query String) =>
+  s_q := util.split_query query
+  webserver.this.log s "got confirm_account_deletion"
+  match user.complete_account_deletion (s_q["token"].get "")
+    unit =>
+      webserver.this.log s "got confirm_account_deletion send 302 success"
+      response.new 302 ((lock_free.Map String String).from_entries [("Location", "/account_deletion_successful")])
+    e error =>
+      webserver.this.log s "got confirm_account_deletion send 302 failure"
+      logger.log e.as_string
+      response.new 302 ((lock_free.Map String String).from_entries [("Location", "/account_deletion_failed")])
+
+
+# handle goto events
+#
+# sends data via the /event connection
+#
+goto(s Session, form_data lock_free.Map String String) =>
+  match form_data["page"]
+    page String =>
+      match content.get_contents s page
+        forbidden => webserver.this.log s "*** forbidding access to absolute or non-normalized path {page}."
+        missing => webserver.this.log s "error: requested file {page} does not exist"
+        i identifier =>
+          match i.simple_path
+            sp String =>
+              s.set_current sp
+              s.send_content
+            nil =>
+              webserver.this.log s "error: identifier, no simple_path: {i}"
+    nil =>
+      webserver.this.log s "error: page not found in form_data: {form_data}"
+
+
+# open the event sourcing connection
+#
+# this connection is then used to send back events to the user
+# e.g. when running code example, login status etc.
+#
+events(s Session) =>
+  response 200 ((lock_free.Map String String).from_entries [("Cache-Control", "no-cache"), ("Connection", "keep-alive"), ("Content-Type", "text/event-stream")]) [0] s
+
+
+# send content and login status via session
+#
+send_content_and_login_status(s Session) =>
+  s.send_content
+  s.send_login_status
+
+
+# get current session
+#
+session(form_data lock_free.Map String String, client list u8) Session =>
+  sessid_original := form_data["originalsessionid"]
+  sessid := form_data["sessionid"]
+  Session.get sessions sessid_original sessid client
+
+
+# send robots.txt
+#
+robots_txt(cmd String) =>
+  r := content
+    .templates_dir
+    .resolve "robots.txt"
+    .as_string
+  match util.read_file_as_string r
+    robots_txt String =>
+      send_ok cmd robots_txt
+    error =>
+      logger.log "robots.txt could not be read."
+      response.new 500
+
+
+# send page/file that was accessed
+#
+get_file_response(s Session, cmd String, form_data lock_free.Map String String, raw_path String) =>
+  perform_direct_login s form_data
+  path := decode_path raw_path
+  match content.get_contents s path
+    forbidden =>
+      webserver.this.log s "*** forbidding access to absolute or non-normalized path {path}."
+      response.new 403
+    missing =>
+      webserver.this.log s "*** error: requested file {path} does not exist"
+      response.new 404
+    i identifier => get_response s cmd i
+
+
 # routes a given request to the code that handles it,
 # and returns the response
 #
-module route_request (raw_path, cmd String, client list u8, form_data lock_free.Map String String, query String) response =>
+module route_request (raw_path0, cmd String, client list u8, form_data lock_free.Map String String, query String) response =>
+
+  s =>
+    session form_data client
+
+  raw_path := if raw_path0.ends_with "/" then raw_path0 + "index.html" else raw_path0
+
+  # NYI: PERFORMANCE: order ifs by most used / accessed
+
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
-    _ := say "*** unknown request: {cmd}"
-    response 501 (lock_free.Map String String).empty (list i8).empty
+    logger.log "*** unknown request: {cmd}"
+    response.new 501
+  else if raw_path = "/login"
+    send_nyi
+  else if raw_path = "/logout"
+    send_nyi
+  else if cmd = "POST" && raw_path = "/register"
+    send_ok cmd (do_register client form_data)
+  else if cmd = "POST" && raw_path = "/delete_account"
+    send_ok cmd (user.trigger_account_deletion client form_data)
+  else if raw_path = "/confirm_account_deletion"
+    confirm_account_deletion s query
+  else if raw_path = "/confirm_registration"
+    confirm_registration s query
+  else if raw_path = "/robots.txt"
+    robots_txt cmd
+  else if raw_path = "/goto"
+    goto s form_data
+    send_ok_or_reload cmd s
+  else if raw_path = "/run"
+    send_nyi
+  else if raw_path = "/runeff"
+    send_nyi
+  else if raw_path = "/playground"
+    send_nyi
+  else if raw_path = "/events"
+    events s
+  else if raw_path = "/contents"
+    send_content_and_login_status s
+    send_ok_or_reload cmd s
+  else if raw_path = "/api/benchmark/logs"
+    send_nyi
   else
-    sessid_original := form_data["originalsessionid"]
-    sessid := form_data["sessionid"]
-    s := Session.get sessions sessid_original sessid client
-
-    if raw_path.ends_with "/"
-      new_path := raw_path + "index.html"
-      route_request new_path cmd client form_data query
-    else if raw_path = "/login"
-      send_nyi
-    else if raw_path = "/logout"
-      send_nyi
-    else if cmd = "POST" && raw_path = "/register"
-      send_ok cmd (do_register client form_data)
-    else if cmd = "POST" && raw_path = "/delete_account"
-      send_ok cmd (user.trigger_account_deletion client form_data)
-    else if raw_path = "/confirm_account_deletion"
-      s_q := util.split_query query
-      webserver.this.log s "got confirm_account_deletion"
-      match user.complete_account_deletion (s_q["token"].get "")
-        unit =>
-          webserver.this.log s "got confirm_account_deletion send 302 success"
-          response 302 ((lock_free.Map String String).from_entries [("Location", "/account_deletion_successful")]) (list i8).empty
-        e error =>
-          webserver.this.log s "got confirm_account_deletion send 302 failure"
-          logger.log e.as_string
-          response 302 ((lock_free.Map String String).from_entries [("Location", "/account_deletion_failed")]) (list i8).empty
-    else if raw_path = "/confirm_registration"
-      s_q := util.split_query query
-      webserver.this.log s "got confirm_registration"
-      match user.complete_registration (s_q["username"].get "") (s_q["token"].get "")
-        unit =>
-          webserver.this.log s "got confirm_registration send 302 success"
-          response 302 ((lock_free.Map String String).from_entries [("Location", "/registration_successful")]) (list i8).empty
-        e error =>
-          webserver.this.log s "got confirm_registration send 302 failure: "+e
-          response 302 ((lock_free.Map String String).from_entries [("Location", "/registration_failed")]) (list i8).empty
-
-    else if raw_path = "/robots.txt"
-      res := content.templates_dir.resolve "robots.txt"
-      x := util.read_file_as_string res.as_string
-
-      match x
-        robots_txt String =>
-          send_ok cmd robots_txt
-        error =>
-          logger.log "robots.txt could not be read."
-          response 500 (lock_free.Map String String).empty (list i8).empty
-
-    else if raw_path = "/goto"
-      match form_data["page"]
-        page String =>
-          match content.get_contents s page
-            forbidden => webserver.this.log s "*** forbidding access to absolute or non-normalized path {page}."
-            missing => webserver.this.log s "error: requested file {page} does not exist"
-            i identifier =>
-              match i.simple_path
-                sp String =>
-                  s.set_current sp
-                  s.send_content
-                nil =>
-        nil =>
-      send_ok_or_reload cmd s
-    else if raw_path = "/run"
-      send_nyi
-    else if raw_path = "/runeff"
-      send_nyi
-    else if raw_path = "/playground"
-      send_nyi
-    else if raw_path = "/events"
-      # send one byte to trigger javascript event
-      b array i8 := [0]
-      response 200 ((lock_free.Map String String).from_entries [("Cache-Control", "no-cache"), ("Connection", "keep-alive"), ("Content-Type", "text/event-stream")]) b s
-    else if raw_path = "/contents"
-      s.send_content
-      s.send_login_status
-      send_ok_or_reload cmd s
-    else if raw_path = "/api/benchmark/logs"
-      send_nyi
-    else
-      perform_direct_login s form_data
-      path := decode_path raw_path
-      match content.get_contents s path
-        forbidden =>
-          webserver.this.log s "*** forbidding access to absolute or non-normalized path {path}."
-          response 403 (lock_free.Map String String).empty (list i8).empty
-        missing =>
-          webserver.this.log s "*** error: requested file {path} does not exist"
-          response 404 (lock_free.Map String String).empty (list i8).empty
-        i identifier => send_content s cmd i
+    get_file_response s cmd form_data raw_path
 
 
 # perform a login alongside an ordinary request
@@ -140,6 +194,6 @@ perform_direct_login (s Session, form_data lock_free.Map String String) =>
   l := form_data["login"]
   p := form_data["password"]
 
-  if l?? && (p??)
+  if l?? && p??
     webserver.this.log s "Direct login: for {l.get}"
     s.login l.get p.get

@@ -41,7 +41,7 @@ module config_file (values lock_free.Map String String, path String) is
 
     match res
       unit => unit
-      e error => say "Writing to config file {path} failed: {e}."
+      e error => logger.log "Writing to config file {path} failed: {e}."
 
 
   # open the config file located at the given path p
