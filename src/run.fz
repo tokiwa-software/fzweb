@@ -13,7 +13,7 @@ run =>
   port u16 := 8080
   # start the server
   res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
-    say "started listening on port: $port"
+    logger.log "started listening on port: $port"
 
     # global list of sessions
     sessions := (lock_free.Map String Session).empty
@@ -37,9 +37,9 @@ run =>
                 fuzion.jvm.use _ ["-Djava.class.path=classes"] ()->
                   (webserver sessions).handle_connection lm conn
               .catch  e->
-                say "contract_fault: $e"
+                logger.log "contract_fault: $e"
 
         accept_res.or_else ()->
-          say "failed accepting connection {accept_res}"
+          logger.log "failed accepting connection {accept_res}"
 
-  say "some failure occurred: $res"
+  logger.log "some failure occurred: $res"

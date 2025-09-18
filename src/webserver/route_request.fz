@@ -40,7 +40,7 @@ do_register (client list u8, form_data lock_free.Map String String) String =>
 #
 module route_request (raw_path, cmd String, client list u8, form_data lock_free.Map String String, query String) response =>
   if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
-    _ := say "*** unknown request: {cmd}"
+    _ := logger.log "*** unknown request: {cmd}"
     response 501 (lock_free.Map String String).empty (list i8).empty
   else
     sessid_original := form_data["originalsessionid"]
