@@ -259,7 +259,7 @@ module Session (sessions lock_free.Map String Session,
         if s.client.as_equatable = c.as_equatable
           s
         else
-          logger.log "Missmatch of clients for session with id: {id}"
+          logger.log "Mismatch of clients for session with id: {id}"
           nil
 
 
