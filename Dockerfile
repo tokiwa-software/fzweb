@@ -30,12 +30,12 @@ RUN sed -i 's|-cp "|-cp "/fzweb/flang_dev/classes:|g' run
 
 
 FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS runner
-COPY --from=builder /fzweb /fzweb
 RUN apt-get update && apt-get -y --no-install-recommends install \
   locales \
   openjdk-21-jre-headless
 RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG=en_US.utf8 PATH="/fzweb/fuzion/build/bin:${PATH}" PRECONDITIONS="true" POSTCONDITIONS="true"
+COPY --from=builder /fzweb /fzweb
 WORKDIR /fzweb
 RUN ln -sf /fzweb/flang_dev/content
 RUN ln -sf /fzweb/flang_dev/templates
