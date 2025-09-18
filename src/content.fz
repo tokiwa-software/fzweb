@@ -42,7 +42,7 @@ module content is
       else
         nil
 
-    base_simple_path_loop_helper sp.name_count
+    base_simple_path_loop_helper sp.names.count
 
 
   # The file part of a simple_path.
@@ -50,8 +50,8 @@ module content is
   module type.file_path (simple_path String) path =>
     bp := base_simple_path simple_path
     sp := path.of simple_path
-    start i32 := bp!! ? 0 : bp.get.name_count
-    end i32 := sp.name_count
+    start i32 := bp!! ? 0 : bp.get.names.count
+    end i32 := sp.names.count
     start < end ? sp.subpath start end : path.of ""
 
 
@@ -183,8 +183,8 @@ module content is
   # From a URL path, find the corresponding content identifier, or FORBIDDEN /
   # MISSING in case this does not exist.
   #
-  module type.get_contents (s Session, path_from_url0 String) choice identifier missing forbidden =>
-    res := mut (choice identifier missing forbidden) forbidden
+  module type.get_contents (s Session, path_from_url0 String) access =>
+    res := mut access forbidden
     path_from_url := mut path_from_url0
 
     if path_from_url.get.starts_with "/"
@@ -211,14 +211,15 @@ module content is
                 nil => s.log "no template defined in {access_file}"
                 t String =>
                   res <- identifier (dir.resolve t) path_from_url.get content_path
-          * => res <- template path_from_url.get
+          i identifier => res <- i
+          forbidden =>
 
     res.get
 
 
   # helper to find a template's identifier
   #
-  module type.template (path_from_url String) choice identifier missing forbidden =>
+  module type.template (path_from_url String) access =>
     p := templates_dir.resolve path_from_url
     is_valid_file :=
       io.file.stat
@@ -278,3 +279,7 @@ module missing is
 #
 module forbidden is
 
+
+# type denoting access to a resource
+#
+module access : choice missing forbidden identifier is
