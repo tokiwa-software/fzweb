@@ -33,18 +33,18 @@ request_context (LM type : mutate, connection net.connection) is
           .writer.env
           .write (response.bytes data.count)
           .error)
-        e error => say "#### {e}"
+        e error => logger.log "#### {e}"
         unit =>
           flush_ok := (io.buffered LM).writer.env.flush
           if flush_ok!!
-            say "#### {flush_ok.err}"
+            logger.log "#### {flush_ok.err}"
 
 
 # entry point to the handling the request
 #
 module handle_connection (LM type : mutate, conn net.connection) unit =>
   req_context := request_context LM conn
-  say "{req_context.request.method} {req_context.request.target}"
+  logger.log "{req_context.request.method} {req_context.request.target}"
 
   process_request LM req_context
 
