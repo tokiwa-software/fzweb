@@ -40,3 +40,4 @@ WORKDIR /fzweb
 RUN ln -sf /fzweb/flang_dev/content
 RUN ln -sf /fzweb/flang_dev/templates
 ENTRYPOINT /fzweb/run
+EXPOSE 8080
