@@ -324,7 +324,9 @@ module user (module base_dir String) is
       error => error "no user found with token: {token}"
       u user =>
         if !(util.exists deleted_users_dir)
-          _ := io.dir.make deleted_users_dir
+          io.dir
+            .make deleted_users_dir
+            .or_else (() -> say "failed making dir: {deleted_users_dir}")
 
         io.file.move u.base_dir "{deleted_users_dir}/{time.now}"
 
