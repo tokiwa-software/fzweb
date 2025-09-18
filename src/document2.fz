@@ -7,31 +7,6 @@
 # -----------------------------------------------------------------------
 
 
-# html encode this String
-#
-# NYI: UNDER DEVELOPMENT: where to put this feature?
-#
-html_encode(str String) String =>
-
-  ref : String is
-
-    utf8_cached :=
-      str
-        .as_codepoints
-        .flat_map cp->
-          if      cp=" "  then "&nbsp;".utf8
-          else if cp="&"  then "&amp;" .utf8
-          else if cp="<"  then "&lt;"  .utf8
-          else if cp=">"  then "&gt;"  .utf8
-          else if cp="\"" then "&quot;".utf8
-          else if cp="'"  then "&#x27;".utf8
-          else if cp="/"  then "&#x2F;".utf8
-          else cp.utf8
-        .as_array
-
-    public redef utf8 Sequence u8 => utf8_cached
-
-
 # document2 -- features used to handle documents that are rendered for a
 # specific session
 #
@@ -76,13 +51,13 @@ module document2 (module page String,
               res.add html
           else if content.is_known_preformatted_file file_name
             title := (content.file_path page).toString
-            res.add "<h1>{html_encode title.as_string}</h1>\n"
+            res.add "<h1>{util.url_encoded.html_encode title.as_string}</h1>\n"
             # opacity is reset in main.js:initAnsiUp()
             res.add "<pre class='code' style='opacity: 0'>\n"
-            lines.for_each line->(res.add (html_encode line.as_string))
+            lines.for_each line->(res.add (util.url_encoded.html_encode line.as_string))
             res.add "</pre>\n"
           else
-            fname := html_encode data_path.getFileName.toString.as_string
+            fname := util.url_encoded.html_encode data_path.getFileName.toString.as_string
             res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
 
           res.add "</div>"
