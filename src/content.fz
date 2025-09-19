@@ -144,10 +144,10 @@ module content is
     pages := pages_dir simple_path
     html_file := mut simple_path
 
-    if !(html_file.get.ends_with ".html") && !(is_known_preformatted_file html_file.get)
-      html_file <- html_file.get + ".html"
+    if !(html_file.ends_with ".html") && !(is_known_preformatted_file html_file)
+      html_file <- html_file + ".html"
 
-    r := pages.resolve (file_path html_file.get)
+    r := pages.resolve (file_path html_file)
     if !(io.file.exists r.as_string)
       index_file pages
       # NYI browsing
