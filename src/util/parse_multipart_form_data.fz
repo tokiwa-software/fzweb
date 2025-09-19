@@ -18,29 +18,29 @@ module parse_multipart_form_data(data, boundaryy String) lock_free.Map String St
     .split "\r\n"
     .as_array
   i := mut 0
-  while i.get < lines.count do
+  while i < lines.count do
     line := lines[i].trim
     if line = boundary
       # Start of a new part
       v := mime_values
-      i <- i.get + 1
-      if i.get < lines.count
+      i <- i + 1
+      if i < lines.count
 
         # Read headers
-        while i.get < lines.count && (lines[i].find ":").exists do
+        while i < lines.count && (lines[i].find ":").exists do
           l := lines[i].trim
           if l != ""
             v.add l
-          i <- i.get+1
+          i <- i+1
         cd := v.get "Content-Disposition"
 
-        if i.get < lines.count
+        if i < lines.count
           valueStr :=
             for res := "", res + new_val
-            while i.get < lines.count && lines[i] != boundary && lines[i] != end_boundary
+            while i < lines.count && lines[i] != boundary && lines[i] != end_boundary
             do
               new_val := (res.is_empty ? "" : "") + lines[i]
-              i <- i.get + 1
+              i <- i + 1
           name := cd.get_parameter "name"
           if name != ""
             form_data.put name valueStr
@@ -49,5 +49,5 @@ module parse_multipart_form_data(data, boundaryy String) lock_free.Map String St
       # End of multipart data
       i <- lines.count
     else
-      i <- i.get + 1
+      i <- i + 1
   form_data
