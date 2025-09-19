@@ -187,30 +187,30 @@ module content is
     res := mut access forbidden
     path_from_url := mut path_from_url0
 
-    if path_from_url.get.starts_with "/"
-      path_from_url <- path_from_url.get.substring 1
-      p := path.of path_from_url.get
+    if path_from_url.starts_with "/"
+      path_from_url <- path_from_url.substring 1
+      p := path.of path_from_url
 
       if !p.is_absolute && p = p.normalize && (content_dir.resolve p).normalize.starts_with content_dir
-        if path_from_url.get.ends_with ".html"
-          path_from_url <- path_from_url.get.substring 0 (path_from_url.get.find_last ".html").get
+        if path_from_url.ends_with ".html"
+          path_from_url <- path_from_url.substring 0 (path_from_url.find_last ".html").get
 
-        match template path_from_url.get
+        match template path_from_url
           missing =>
-            dir := base_dir path_from_url.get
+            dir := base_dir path_from_url
             access_file := dir.resolve (path.of "access.txt")
             access := config_file.open access_file.as_string
-            content_path := dir.resolve (file_path path_from_url.get)
+            content_path := dir.resolve (file_path path_from_url)
 
-            if path_from_url.get.ends_with ".png" || path_from_url.get.ends_with ".svg" || path_from_url.get.ends_with ".jpg" || path_from_url.get.ends_with ".jpeg" || path_from_url.get.ends_with ".pdf"
-              if access_permitted s.get_user path_from_url.get
-                res <- identifier.new content_path path_from_url.get
+            if path_from_url.ends_with ".png" || path_from_url.ends_with ".svg" || path_from_url.ends_with ".jpg" || path_from_url.ends_with ".jpeg" || path_from_url.ends_with ".pdf"
+              if access_permitted s.get_user path_from_url
+                res <- identifier.new content_path path_from_url
             else
               res <- missing
               match access.get "template"
                 nil => s.log "no template defined in {access_file}"
                 t String =>
-                  res <- identifier (dir.resolve t) path_from_url.get content_path
+                  res <- identifier (dir.resolve t) path_from_url content_path
           i identifier => res <- i
           forbidden =>
 
