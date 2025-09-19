@@ -34,15 +34,15 @@ module document is
   # read lines from the path and return them in a list of string
   # NYI: pretty printing
   #
-  module read_all_lines (file Java.java.nio.file.Path,
+  module read_all_lines (file path,
                          return_nil_on_error, pretty_print bool)
                         option (list String) =>
     res := util
-      .read_file_as_string file.toString
+      .read_file_as_string file.as_string
 
     match res
       e error =>
-        logger.log "error reading from path {file.toString}: {e}"
+        logger.log "error reading from path {file.as_string}: {e}"
         if return_nil_on_error
           nil
         else
@@ -53,7 +53,7 @@ module document is
   # same as read_all_lines (3 args) but without the option
   # for pretty printing
   #
-  read_all_lines (file Java.java.nio.file.Path,
+  read_all_lines (file path,
                   return_nil_on_error bool)
                  option (list String) =>
     read_all_lines file return_nil_on_error false
@@ -62,7 +62,7 @@ module document is
   # same as read_all_lines (2 args) but without the option of
   # returning nil on error
   #
-  module read_all_lines (file Java.java.nio.file.Path) list String =>
+  module read_all_lines (file path) list String =>
     (read_all_lines file false).get
 
 
@@ -75,7 +75,7 @@ module document is
   # if this fails, return the file name as given by `link`, without an `html`
   # suffix, as the title.
   #
-  module get_title (link String, page_file Java.java.nio.file.Path) String =>
+  module get_title (link String, page_file path) String =>
     title_start_open := "<h1"
     title_start_close := ">"
     title_end := "</h1>"
@@ -94,7 +94,7 @@ module document is
     until start_close >= 0 && end >= 0
       line.substring (start_close + title_start_close.byte_length) end
     else
-      strip_html (content.file_path link).toString
+      strip_html (content.file_path link).as_string
 
 
   # create attribute_map based on the entry provided

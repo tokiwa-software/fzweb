@@ -277,7 +277,7 @@ module Session (sessions lock_free.Map String Session,
     else if id??
       res <- get sessions id.get c
 
-    res.get.get (Session sessions c orig.get)
+    res.get.get (Session sessions c orig)
 
 
   # send events along with data on the session's connection
