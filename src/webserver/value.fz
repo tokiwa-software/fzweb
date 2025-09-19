@@ -1,0 +1,74 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature value
+#
+# -----------------------------------------------------------------------
+
+module value(type_string String) is
+
+  module boundary =>
+    parameters["boundary"].or_else ""
+
+  /**
+    * Parse content type from type_string, e.g.,
+    *
+    * multipart/form-data; boundary=---------------------------35080131922831865651749330588
+    *
+    * multipart/mixed; boundary="gc0pJq0M:08jU534c0p"
+    *
+    * see https://tools.ietf.org/html/rfc2046#section-5.1.1
+    *
+    * @param type_string a String such as
+    *
+    */
+  module type_, parameters :=
+    {
+    # NYI: This is adhoc code, I did not check the exact grammar for
+    # Content-Type entries:
+    match type_string.find ";"
+      nil =>
+        (type_string.trim(), id (container.Map String String) (container.ordered_map String String .empty))
+      semi i32 =>
+        _type := (type_string.substring 0 semi).trim
+        type_string := (type_string.substring semi+1).trim
+        eq := type_string.find "=";
+      # while (eq > 0)
+      #   {
+      #     String key = type_string.substring(0, eq).trim();
+      #     type_string = type_string.substring(eq + 1).trim();
+      #     String value;
+      #     if (type_string.startsWith("\""))
+      #       {
+      #         type_string = type_string.substring(1);
+      #         int quote = type_string.indexOf("\"");
+      #         if (quote >= 0)
+      #           {
+      #             value = type_string.substring(0, quote);
+      #             type_string = type_string.substring(quote + 1).trim();
+      #           }
+      #         else
+      #           { // unterminated ", we just take the rest of the string
+      #             value = type_string;
+      #             type_string = "";
+      #           }
+      #       }
+      #     else
+      #       {
+      #         int space = type_string.indexOf(" ");
+      #         if (space < 0)
+      #           {
+      #             value = type_string;
+      #             type_string = "";
+      #           }
+      #         else
+      #           {
+      #             value = type_string.substring(0, space);
+      #             type_string = type_string.substring(space + 1).trim();
+      #           }
+      #       }
+      #     _parameters.put(key, value);
+      #     eq = type_string.indexOf('=');
+      #   }
+    }
