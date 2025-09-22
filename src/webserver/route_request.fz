@@ -155,9 +155,11 @@ module route_request (raw_path0, cmd String, client list u8, form_data lock_free
     logger.log "*** unknown request: {cmd}"
     response.new 501
   else if raw_path = "/login"
-    send_nyi
+    s.login form_data["login"].val form_data["password"].val
+    send_ok_or_reload cmd s
   else if raw_path = "/logout"
-    send_nyi
+    s.logout
+    send_ok_or_reload cmd s
   else if cmd = "POST" && raw_path = "/register"
     send_ok cmd (do_register client form_data)
   else if cmd = "POST" && raw_path = "/delete_account"
