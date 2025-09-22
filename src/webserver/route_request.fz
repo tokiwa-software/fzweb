@@ -6,15 +6,6 @@
 #
 # -----------------------------------------------------------------------
 
-# take the unprocessed path as determined by the webserver,
-# and extract the actual path out of it
-#
-decode_path (raw_path String) String =>
-  match Java.java.net.URI_static.new "none" "none" raw_path ""
-    u Java.java.net.URI => u.getPath
-    error => ""
-
-
 # check if the given client has registered within the last ten minutes
 #
 has_registered_recently (client list u8) bool =>
@@ -72,7 +63,7 @@ goto(s Session, form_data lock_free.Map String String) =>
   match form_data["page"]
     page String =>
       match content.get_contents s page
-        forbidden => webserver.this.log s "*** forbidding access to absolute or non-normalized path {page}."
+        forbidden => webserver.this.log s "*** forbidding access to absolute or non-normalized page {page}."
         missing => webserver.this.log s "error: requested file {page} does not exist"
         i identifier =>
           match i.simple_path
@@ -115,7 +106,7 @@ robots_txt(cmd String) =>
   r := content
     .templates_dir
     .resolve "robots.txt"
-    .toString
+    .as_string
   match util.read_file_as_string r
     robots_txt String =>
       send_ok cmd robots_txt
@@ -128,7 +119,10 @@ robots_txt(cmd String) =>
 #
 get_file_response(s Session, cmd String, form_data lock_free.Map String String, raw_path String) =>
   perform_direct_login s form_data
-  path := decode_path raw_path
+  path := encodings
+    .percent
+    .decode_as_str_tolerant raw_path
+    .val
   match content.get_contents s path
     forbidden =>
       webserver.this.log s "*** forbidding access to absolute or non-normalized path {path}."
@@ -155,9 +149,11 @@ module route_request (raw_path0, cmd String, client list u8, form_data lock_free
     logger.log "*** unknown request: {cmd}"
     response.new 501
   else if raw_path = "/login"
-    send_nyi
+    s.login form_data["login"].val form_data["password"].val
+    send_ok_or_reload cmd s
   else if raw_path = "/logout"
-    send_nyi
+    s.logout
+    send_ok_or_reload cmd s
   else if cmd = "POST" && raw_path = "/register"
     send_ok cmd (do_register client form_data)
   else if cmd = "POST" && raw_path = "/delete_account"
