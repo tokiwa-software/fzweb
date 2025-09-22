@@ -76,7 +76,7 @@ form_data(LM type : mutate, req_context request_context LM) =>
 get_response(LM type : mutate, req_context request_context LM) =>
   match form_data req_context
     x lock_free.Map String String =>
-      route_request req_context.path req_context.request.method.as_string req_context.client x req_context.query_string
+      route_request req_context.path req_context.request.method req_context.client x req_context.query_string
     e error =>
       logger.log e
       response.new 415 ((lock_free.Map String String).from_entries [("Accept", "application/x-www-form-urlencode, multipart/form-data")])

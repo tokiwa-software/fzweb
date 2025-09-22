@@ -253,7 +253,7 @@ module identifier (module file_to_send option path,
     identifier file_to_send simple_path nil
 
 
-  module get_bytes (s Session) outcome (array u8) =>
+  get_bytes (s Session) outcome (array u8) =>
     match file_to_send
       fts path =>
         match util.read_file fts.as_string
@@ -265,6 +265,19 @@ module identifier (module file_to_send option path,
               ba
           e error => e
       nil => error "no file to send"
+
+
+  # get response
+  #
+  module response (s Session) response =>
+    # NYI: logging, mime types
+    match get_bytes s
+      b array u8 =>
+        attributes := (lock_free.Map String String).from_entries [("Content-Length", b.length.as_string)]
+        response.new 200 attributes b
+      e error =>
+        s.log "*** error sending content: {e}"
+        response.new 500
 
 
 # indicates a page that is missing
