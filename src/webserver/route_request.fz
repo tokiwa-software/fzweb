@@ -102,14 +102,14 @@ session(form_data lock_free.Map String String, client list u8) Session =>
 
 # send robots.txt
 #
-robots_txt(cmd String) =>
+robots_txt =>
   r := content
     .templates_dir
     .resolve "robots.txt"
     .as_string
   match util.read_file_as_string r
-    robots_txt String =>
-      send_ok cmd robots_txt
+    str String =>
+      send_ok str
     error =>
       logger.log "robots.txt could not be read."
       response.new 500
@@ -117,7 +117,7 @@ robots_txt(cmd String) =>
 
 # send page/file that was accessed
 #
-get_file_response(s Session, cmd String, form_data lock_free.Map String String, raw_path String) =>
+get_file_response(s Session, form_data lock_free.Map String String, raw_path String) =>
   perform_direct_login s form_data
   path := encodings
     .percent
@@ -130,13 +130,13 @@ get_file_response(s Session, cmd String, form_data lock_free.Map String String, 
     missing =>
       webserver.this.log s "*** error: requested file {path} does not exist"
       response.new 404
-    i identifier => get_response s cmd i
+    i identifier => i.response s
 
 
 # routes a given request to the code that handles it,
 # and returns the response
 #
-module route_request (raw_path0, cmd String, client list u8, form_data lock_free.Map String String, query String) response =>
+module route_request (raw_path0 String, cmd http.request_method, client list u8, form_data lock_free.Map String String, query String) response =>
 
   s =>
     session form_data client
@@ -145,28 +145,28 @@ module route_request (raw_path0, cmd String, client list u8, form_data lock_free
 
   # NYI: PERFORMANCE: order ifs by most used / accessed
 
-  if cmd != "GET" && cmd != "HEAD" && cmd != "POST"
+  if cmd != http.get && cmd != http.head && cmd != http.post_r
     logger.log "*** unknown request: {cmd}"
     response.new 501
   else if raw_path = "/login"
     s.login form_data["login"].val form_data["password"].val
-    send_ok_or_reload cmd s
+    send_ok_or_reload s
   else if raw_path = "/logout"
     s.logout
-    send_ok_or_reload cmd s
-  else if cmd = "POST" && raw_path = "/register"
-    send_ok cmd (do_register client form_data)
-  else if cmd = "POST" && raw_path = "/delete_account"
-    send_ok cmd (user.trigger_account_deletion client form_data)
+    send_ok_or_reload s
+  else if cmd = http.post_r && raw_path = "/register"
+    send_ok (do_register client form_data)
+  else if cmd = http.post_r && raw_path = "/delete_account"
+    send_ok (user.trigger_account_deletion client form_data)
   else if raw_path = "/confirm_account_deletion"
     confirm_account_deletion s query
   else if raw_path = "/confirm_registration"
     confirm_registration s query
   else if raw_path = "/robots.txt"
-    robots_txt cmd
+    robots_txt
   else if raw_path = "/goto"
     goto s form_data
-    send_ok_or_reload cmd s
+    send_ok_or_reload s
   else if raw_path = "/run"
     send_nyi
   else if raw_path = "/runeff"
@@ -177,11 +177,11 @@ module route_request (raw_path0, cmd String, client list u8, form_data lock_free
     events s
   else if raw_path = "/contents"
     send_content_and_login_status s
-    send_ok_or_reload cmd s
+    send_ok_or_reload s
   else if raw_path = "/api/benchmark/logs"
     send_nyi
   else
-    get_file_response s cmd form_data raw_path
+    get_file_response s form_data raw_path
 
 
 # perform a login alongside an ordinary request

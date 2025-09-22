@@ -8,15 +8,15 @@
 
 # like its three-argument counterpart, but sends a blank response
 #
-module send_ok_or_reload (cmd String, s Session) response =>
-  send_ok_or_reload cmd s ""
+module send_ok_or_reload (s Session) response =>
+  send_ok_or_reload s ""
 
 
 # send an HTTP 200 response with the given data if there is a session,
 # and data can be send back over the session, otherwise, return a 500
 # response and ask the client to reload
 #
-module send_ok_or_reload (cmd String, s Session, datastr String) response =>
+module send_ok_or_reload (s Session, datastr String) response =>
   returncode := if !s.is_connection_ok then 500 else 200
   must_message := "must reconnect"
   data := if returncode = 500 then must_message.utf8 else datastr.utf8
@@ -27,23 +27,10 @@ module send_ok_or_reload (cmd String, s Session, datastr String) response =>
 
 # send an HTTP 200 response along with the given data
 #
-module send_ok (cmd String, datastr String) response =>
+module send_ok (datastr String) response =>
   data := datastr.utf8.as_array
   header := (lock_free.Map String String).from_entries [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
   response.new 200 header data
-
-
-# get response for given a content identifier
-#
-module get_response (s Session, cmd String, i identifier) response =>
-  # NYI: logging, mime types
-  match i.get_bytes s
-    b array u8 =>
-      attributes := (lock_free.Map String String).from_entries [("Content-Length", b.length.as_string)]
-      response.new 200 attributes b
-    e error =>
-      webserver.this.log s "*** error sending content: {e}"
-      response.new 500
 
 
 # send an HTTP response indicating that the content requested has not
