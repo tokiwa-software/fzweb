@@ -15,9 +15,9 @@ module content is
   # This base directory will contain the pages subdirectory
   # and the access.txt file.
   #
-  type.base_dir (simple_path String) Java.java.nio.file.Path =>
+  type.base_dir (simple_path String) path =>
     bp := base_simple_path simple_path
-    bp?? ? content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ bp.get : content_dir
+    bp?? ? content_dir.resolve bp.get : content_dir
 
 
   # Base directory corresponding to simple_path, or nil
@@ -26,33 +26,33 @@ module content is
   # This base directory will contain the pages subdirectory
   # and the access.txt file.
   #
-  module type.base_simple_path (simple_path String) option Java.java.nio.file.Path =>
-    sp := jpath_of simple_path
+  module type.base_simple_path (simple_path String) option path =>
+    sp := path.of simple_path
 
-    base_simple_path_loop_helper (i i32) option Java.java.nio.file.Path =>
+    base_simple_path_loop_helper (i i32) option path =>
       if i > 0
         base_simple_path := sp.subpath 0 i
-        base_dir0 := content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ base_simple_path
+        base_dir0 := content_dir.resolve base_simple_path
         access := base_dir0.resolve "access.txt"
 
-        if io.file.exists access.toString
+        if io.file.exists access.as_string
           base_simple_path
         else
           base_simple_path_loop_helper i-1
       else
         nil
 
-    base_simple_path_loop_helper sp.getNameCount
+    base_simple_path_loop_helper sp.names.count
 
 
   # The file part of a simple_path.
   #
-  module type.file_path (simple_path String) Java.java.nio.file.Path =>
+  module type.file_path (simple_path String) path =>
     bp := base_simple_path simple_path
-    sp := jpath_of simple_path
-    start i32 := bp!! ? 0 : bp.get.getNameCount
-    end i32 := sp.getNameCount
-    start < end ? sp.subpath start end : jpath_of ""
+    sp := path.of simple_path
+    start i32 := bp!! ? 0 : bp.get.names.count
+    end i32 := sp.names.count
+    start < end ? sp.subpath start end : path.of ""
 
 
   # look the given attribute in the access.txt file
@@ -60,7 +60,7 @@ module content is
   #
   type.access_attr (simple_path, attribute, default String) String =>
     access_file := (base_dir simple_path).resolve "access.txt"
-    c := config_file.open access_file.toString
+    c := config_file.open access_file.as_string
     a := c.get attribute
     a.get default
 
@@ -83,10 +83,10 @@ module content is
   # Check if the given path points to a directory that contains an index.html
   # file that contains a <browse> tag to browse a directory.
   #
-  type.is_browsable (jndex Java.java.nio.file.Path) option (lock_free.Map String String) =>
-    if io.file.exists jndex.toString
+  type.is_browsable (jndex path) option (lock_free.Map String String) =>
+    if io.file.exists jndex.as_string
       util
-        .read_file_as_string jndex.toString
+        .read_file_as_string jndex.as_string
         .bind str->
           for
             l in str.split "\n"
@@ -102,13 +102,13 @@ module content is
 
   # pages dir for a given path prefix
   #
-  type.pages_dir (simple_path String) Java.java.nio.file.Path =>
-    (base_dir simple_path).resolve_Ljava_7_nio_7_file_7_Path_s_ pages_dir_relative
+  type.pages_dir (simple_path String) path =>
+    (base_dir simple_path).resolve pages_dir_relative
 
 
   # index file for a given directory containing pages
   #
-  type.index_file (pages Java.java.nio.file.Path) Java.java.nio.file.Path =>
+  type.index_file (pages path) path =>
     pages.resolve "index.html"
 
 
@@ -116,12 +116,12 @@ module content is
   # the value of the attribute "dir" or, if attribute "userdata" is
   # "true", the user directory.
   #
-  type.get_dir_from_browse (u option user, data_path Java.java.nio.file.Path, map lock_free.Map String String) option String =>
+  type.get_dir_from_browse (u option user, data_path path, map lock_free.Map String String) option String =>
     if "true" = (map["userdata"].get "false")
       u.bind String u0->
-        ud := jpath_of u0.base_dir
-        ru := data_path.getParent.relativize ud
-        ru.toString
+        ud := path.of u0.base_dir
+        ru := data_path.parent.get.relativize ud
+        ru.as_string
     else
       map["dir"]
 
@@ -140,22 +140,22 @@ module content is
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
   #
-  type.get_data_path2 (u option user, simple_path String) Java.java.nio.file.Path =>
+  type.get_data_path2 (u option user, simple_path String) path =>
     pages := pages_dir simple_path
     html_file := mut simple_path
 
-    if !(html_file.get.ends_with ".html") && !(is_known_preformatted_file html_file.get)
-      html_file <- html_file.get + ".html"
+    if !(html_file.ends_with ".html") && !(is_known_preformatted_file html_file)
+      html_file <- html_file + ".html"
 
-    r := pages.resolve_Ljava_7_nio_7_file_7_Path_s_ (file_path html_file.get)
-    if !(io.file.exists r.toString)
+    r := pages.resolve (file_path html_file)
+    if !(io.file.exists r.as_string)
       index_file pages
       # NYI browsing
     else
       r
 
 
-  type.path_from_access (simple_path, attribute, default String) Java.java.nio.file.Path =>
+  type.path_from_access (simple_path, attribute, default String) path =>
     val := access_attr simple_path attribute default
     bd := base_dir simple_path
     bd.resolve val
@@ -164,7 +164,7 @@ module content is
   # Get the data path to the contents of the given simple URL path and check if
   # the given user (or nil if none) is allowed to access it.
   #
-  module type.get_data_path (u option user, simple_path String) Java.java.nio.file.Path =>
+  module type.get_data_path (u option user, simple_path String) path =>
     if access_permitted u simple_path
       get_data_path2 u simple_path
     else
@@ -176,53 +176,54 @@ module content is
 
   # Determine the index.html file located in simple_path's base dir.
   #
-  type.index_path (simple_path String) Java.java.nio.file.Path =>
+  type.index_path (simple_path String) path =>
     index_file (pages_dir simple_path)
 
 
   # From a URL path, find the corresponding content identifier, or FORBIDDEN /
   # MISSING in case this does not exist.
   #
-  module type.get_contents (s Session, path_from_url0 String) choice identifier missing forbidden =>
-    res := mut (choice identifier missing forbidden) forbidden
+  module type.get_contents (s Session, path_from_url0 String) access =>
+    res := mut access forbidden
     path_from_url := mut path_from_url0
 
-    if path_from_url.get.starts_with "/"
-      path_from_url <- path_from_url.get.substring 1
-      p := jpath_of path_from_url.get
+    if path_from_url.starts_with "/"
+      path_from_url <- path_from_url.substring 1
+      p := path.of path_from_url
 
-      if !p.isAbsolute && (p.equals p.normalize) && (content_dir.resolve_Ljava_7_nio_7_file_7_Path_s_ p).normalize.startsWith_Ljava_7_nio_7_file_7_Path_s_ content_dir
-        if path_from_url.get.ends_with ".html"
-          path_from_url <- path_from_url.get.substring 0 (path_from_url.get.find_last ".html").get
+      if !p.is_absolute && p = p.normalize && (content_dir.resolve p).normalize.starts_with content_dir
+        if path_from_url.ends_with ".html"
+          path_from_url <- path_from_url.substring 0 (path_from_url.find_last ".html").get
 
-        match template path_from_url.get
+        match template path_from_url
           missing =>
-            dir := base_dir path_from_url.get
-            access_file := dir.resolve "access.txt"
-            access := config_file.open access_file.toString
-            content_path := dir.resolve_Ljava_7_nio_7_file_7_Path_s_ (file_path path_from_url.get)
+            dir := base_dir path_from_url
+            access_file := dir.resolve (path.of "access.txt")
+            access := config_file.open access_file.as_string
+            content_path := dir.resolve (file_path path_from_url)
 
-            if path_from_url.get.ends_with ".png" || path_from_url.get.ends_with ".svg" || path_from_url.get.ends_with ".jpg" || path_from_url.get.ends_with ".jpeg" || path_from_url.get.ends_with ".pdf"
-              if access_permitted s.get_user path_from_url.get
-                res <- identifier.new content_path path_from_url.get
+            if path_from_url.ends_with ".png" || path_from_url.ends_with ".svg" || path_from_url.ends_with ".jpg" || path_from_url.ends_with ".jpeg" || path_from_url.ends_with ".pdf"
+              if access_permitted s.get_user path_from_url
+                res <- identifier.new content_path path_from_url
             else
               res <- missing
               match access.get "template"
                 nil => s.log "no template defined in {access_file}"
                 t String =>
-                  res <- identifier (dir.resolve t) path_from_url.get content_path
-          * => res <- template path_from_url.get
+                  res <- identifier (dir.resolve t) path_from_url content_path
+          i identifier => res <- i
+          forbidden =>
 
     res.get
 
 
   # helper to find a template's identifier
   #
-  module type.template (path_from_url String) choice identifier missing forbidden =>
+  module type.template (path_from_url String) access =>
     p := templates_dir.resolve path_from_url
     is_valid_file :=
       io.file.stat
-        .stats p.toString
+        .stats p.as_string
         .bind (.is_regular)
         .get false
     if is_valid_file
@@ -233,29 +234,29 @@ module content is
 
   # constants
   #
-  type.content_dir Java.java.nio.file.Path => (jpath_of "./content").normalize
-  type.pages_dir_relative Java.java.nio.file.Path => jpath_of "pages"
-  module type.templates_dir Java.java.nio.file.Path => (jpath_of "./templates").normalize
+  type.content_dir path => (path.of "./content").normalize
+  type.pages_dir_relative path => path.of "pages"
+  module type.templates_dir path => (path.of "./templates").normalize
 
 
 # identifies a page alongside a template to send to the user
 #
-module identifier (module file_to_send option Java.java.nio.file.Path,
+module identifier (module file_to_send option path,
                    module simple_path option String,
-                   content_path option Java.java.nio.file.Path) is
+                   content_path option path) is
 
   is_html_template := content_path.exists
 
 
-  module type.new (file_to_send option Java.java.nio.file.Path,
+  module type.new (file_to_send option path,
                    simple_path option String) identifier =>
     identifier file_to_send simple_path nil
 
 
   module get_bytes (s Session) outcome (array u8) =>
     match file_to_send
-      fts Java.java.nio.file.Path =>
-        data := io.file.use fts.toString io.file.mode.read ()->
+      fts path =>
+        data := io.file.use fts.as_string io.file.mode.read ()->
           (io.buffered io.file.file_mutate).read_fully
 
         match data
@@ -279,8 +280,6 @@ module missing is
 module forbidden is
 
 
-# short-hand to invoke java.nio.file.Path.of
-# with a single string argument
+# type denoting access to a resource
 #
-jpath_of (path String) Java.java.nio.file.Path =>
-  Java.java.nio.file.Path_static.of path []
+module access : choice missing forbidden identifier is

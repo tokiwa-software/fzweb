@@ -1,0 +1,61 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature path
+#
+# -----------------------------------------------------------------------
+
+private:module path(public names array String, public is_absolute bool) : property.equatable
+pre debug: !names.contains "."
+    # debug: !names.contains ".." # NYI!
+is
+
+  public resolve(o path|String) path =>
+    match o
+      p path => p.is_absolute ? p : (path.of names++p.names is_absolute)
+      s String => resolve (path.of s)
+
+  public subpath(x, y i32) path =>
+    sp := names
+      .slice x y
+    path.of sp false
+
+  public file_name String
+    pre debug: !names.is_empty
+  =>
+    names.last.get
+
+  public parent option path
+  =>
+    if names.is_empty
+      nil
+    else
+      path.of (names.reverse.drop 1).reverse is_absolute
+
+  public relativize(o path) path
+    pre o.is_absolute
+        o.as_string.starts_with path.this.as_string
+  =>
+    path.of (o.names.drop names.count) false
+
+  public starts_with(p path) bool =>
+    is_absolute = p.is_absolute &&
+      p.names.count <= names.count &&
+      (names.take p.names.count).as_equatable=p.names.as_equatable
+
+  public normalize path =>
+    path names is_absolute
+
+  public redef as_string String =>
+    (if is_absolute then "/" else "") + (if names.is_empty then "." else String.join names "/" )
+
+  public redef type.equality(a, b path.this) bool =>
+    a.is_absolute=b.is_absolute && a.names.as_equatable=b.names.as_equatable
+
+  public type.of(str String) path =>
+    t := str.trim
+    path.of (t.split "/").as_array (t.starts_with "/")
+
+  public type.of(seq Sequence String, is_absolute bool) path =>
+    path (seq.filter !=".").as_array is_absolute
