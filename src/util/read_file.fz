@@ -11,6 +11,14 @@
 # its contents as a String
 #
 module read_file_as_string(p String) outcome String =>
+  (read_file p).bind b->
+    String.from_bytes b
+
+
+# read file p file and return
+# its contents as an array of bytes
+#
+module read_file(p String) outcome (array u8) =>
+  # NYI: UNDER DEVELOPMENT cache these reads?
   io.file.use p io.file.mode.read ()->
-    String
-      .from_bytes (io.buffered io.file.file_mutate).read_fully
+    (io.buffered io.file.file_mutate).read_fully
