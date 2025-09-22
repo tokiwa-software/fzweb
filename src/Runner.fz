@@ -1,0 +1,55 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature Runner
+#
+# -----------------------------------------------------------------------
+
+module Runner ref is
+
+  # maximum bytes to read from process
+  #
+  max_output_bytes => 1E4
+
+  # maximum time to wait for process to finish
+  #
+  max_wait_time    => time.duration.s 10
+
+  #
+  #
+  run_code(s Session, code String, results_to String, normal bool) =>
+
+    # NYI bwrap, ssh jenkins etc.
+    # NYI read_lines, send intermediate results
+    r := os.process.start "fz" (normal ? ["-unsafeIntrinsics=off" , "-"] : ["-unsafeIntrinsics=off" , "-effects" , "-"])
+      .bind p->
+
+        # write code to stdin
+        _ := p.write_string code
+
+        x := p.wait max_wait_time
+         .bind ec->
+           lm : mutate is
+           if ec = 0
+             lm ! ()->
+               p.with_out _ lm ()->
+                 (io.buffered lm).read_string max_output_bytes
+           else
+             lm ! ()->
+               p.with_err _ lm ()->
+                 (io.buffered lm).read_string max_output_bytes
+
+        _ := p.send_signal os.signals.kill
+
+        x
+
+    s.send_event "pushElementContents" results_to r.as_string
+
+
+  module run(s Session, form_data lock_free.Map String String) unit =>
+    run_code s form_data["code"].val form_data["resultsTo"].val true
+
+
+  module runeff(s Session, form_data lock_free.Map String String) unit =>
+    run_code s form_data["code"].val form_data["resultsTo"].val false

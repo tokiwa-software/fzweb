@@ -75,7 +75,38 @@ module document2 (module page String,
   # NYI tags!
   #
   add_session_info_to_html (s String) String =>
-    s.replace "##SESSION_ID##" session.session_id
+    s
+      .replace "##SESSION_ID##" session.session_id
+      .replace_runcode
+
+
+  String.replace_runcode =>
+    id := uuid.create_random.as_string
+    code := "say \"NYI\""
+    rows := max 3 code.lines.count
+    rc := """
+      <div class="runcode-wrapper">
+        <i class="far fa-spinner fa-spin"></i>
+        <div class="mb-15 runcode" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,40ch), min(100%, 80ch))); max-width: 102rem; opacity: 0;">
+          <div class="position-relative">
+            <form id="{id}">
+              <label for="{id}.code" class="visually-hidden">Code input</label>
+              <textarea class="codeinput" required="required" maxlength="4096" id="{id}.code" name="code" rows="{rows}" spellcheck="false">{code}</textarea>
+              <div class="position-absolute runbuttons">
+                <input type="button" onclick="runit('{id}')"    class="runbutton" value="Run!" />
+                <input type="button" onclick="runiteff('{id}')" class="runbutton" value="Effects!" />
+                <a href="/tutorial/effects.html"><i>What are effects?</i></a>
+              </div>
+            </form>
+          </div>
+          <div class="computeroutput" id="{id}.result"></div>
+        </div>
+      </div>
+    """
+
+    # NYI :
+    replace "<runcode file=\"../examples/HelloWorld.fz\"/>" rc
+
 
 
   # given an HTML document, check if a closing tag "</html>" is present
