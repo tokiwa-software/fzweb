@@ -255,7 +255,7 @@ module identifier (module file_to_send option path,
 
   module get_bytes (s Session) outcome (array u8) =>
     match file_to_send
-      fts Java.java.nio.file.Path =>
+      fts path =>
         match util.read_file fts.as_string
           ba array u8 =>
             if is_html_template
