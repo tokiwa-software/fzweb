@@ -255,11 +255,8 @@ module identifier (module file_to_send option path,
 
   module get_bytes (s Session) outcome (array u8) =>
     match file_to_send
-      fts path =>
-        data := io.file.use fts.as_string io.file.mode.read ()->
-          (io.buffered io.file.file_mutate).read_fully
-
-        match data
+      fts Java.java.nio.file.Path =>
+        match util.read_file fts.as_string
           ba array u8 =>
             if is_html_template
               s.set_current (simple_path.get "")
