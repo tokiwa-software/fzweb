@@ -16,9 +16,17 @@ module Runner ref is
   #
   max_wait_time    => time.duration.s 10
 
+  # compile and run some code
   #
-  #
-  run_code(s Session, code String, results_to String, normal bool) =>
+  run_code(
+    # the Session used for sending back results
+    s Session,
+    # the actual code
+    code String,
+    # the id of where the results belong in the html
+    results_to String,
+    # true execute, false analyze for effects
+    normal bool) =>
 
     # NYI bwrap, ssh jenkins etc.
     # NYI read_lines, send intermediate results
@@ -47,9 +55,12 @@ module Runner ref is
     s.send_event "pushElementContents" results_to r.as_string
 
 
+  # helper feature
+  #
   module run(s Session, form_data lock_free.Map String String) unit =>
     run_code s form_data["code"].val form_data["resultsTo"].val true
 
-
+  # helper feature
+  #
   module runeff(s Session, form_data lock_free.Map String String) unit =>
     run_code s form_data["code"].val form_data["resultsTo"].val false

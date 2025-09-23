@@ -136,22 +136,6 @@ module document2 (module page String,
       .or_else ""
 
 
-  # extract attribute contents from a String
-  # like: <page file="http/index" />
-  #
-  extract_attribute_contents(str String)
-  =>
-    start := "=\""
-    str.find start
-      .bind s->
-        idx := s+start.byte_length
-        str.substring idx
-          .find "\""
-          .bind e->
-            str.substring idx idx+e
-      .or_else ""
-
-
   # add run code wrapper for code in file `file`
   #
   runcode_wrapper(file String) =>
@@ -195,6 +179,22 @@ module document2 (module page String,
   # the λ would be called with this String: "lock_free/index.html"
   #
   String.replace_tag(tag String, replacer String->String) =>
+
+    # extract attribute contents from a String
+    # like: <page file="http/index" />
+    #
+    extract_attribute_contents(str String)
+    =>
+      start := "=\""
+      str
+        .find extract_attribute_contents.this.start
+        .bind s->
+          idx := s+extract_attribute_contents.this.start.byte_length
+          str.substring idx
+             .find "\""
+             .bind e->
+               str.substring idx idx+e
+        .or_else ""
 
     start := "<$tag "
     end := "/>"
