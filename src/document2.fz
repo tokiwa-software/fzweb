@@ -77,36 +77,144 @@ module document2 (module page String,
   add_session_info_to_html (s String) String =>
     s
       .replace "##SESSION_ID##" session.session_id
-      .replace_runcode
+      .replace_tag "runcode" runcode_wrapper
+      .replace_tag "page" page_tag
+      .replace_tag "browse" browse_tag
 
 
-  String.replace_runcode =>
+  # page tag replacer, used to replace HTML this:
+  #
+  # <page file="sqlite/index" /><br>
+  #
+  page_tag(str String) =>
+    to :=
+      path
+        .of page
+        .parent
+        .val
+        .resolve str
+        .as_string
+    page_link to
+
+
+  # browse tag replacer, used to replace HTML this:
+  #
+  # <browse dir="../../link/clang/src/"/>
+  #
+  browse_tag(attribute_value String) =>
+
+    append(a String, md io.file.meta_data) =>
+      if md.is_dir
+        """
+          <div class="mydir" data-dir"{util.url_encoded.html_encode a}">NYI: {browse_tag a}</div>
+        """
+      else if md.is_regular
+        """
+          <div><a href="{a}">NYI: {util.url_encoded.html_encode (String.join ((path.of a).names.drop data_path.parent.val.names.count) "/")}</a></div>
+        """
+      else ""
+
+    dir := data_path
+      .parent
+      .val
+      .resolve attribute_value
+      .as_string
+
+    io.dir
+      .use dir ()->
+        for res := container.expanding_array String .empty,
+            {
+              x := "{dir}/{a.val}"
+              match io.file.stat x false
+                e error => res
+                md io.file.meta_data => res.add <| append x md
+            }
+            a := io.dir.open.read
+        while a.ok
+        else
+          String.join res
+      .or_else ""
+
+
+  # extract attribute contents from a String
+  # like: <page file="http/index" />
+  #
+  extract_attribute_contents(str String)
+  =>
+    start := "=\""
+    str.find start
+      .bind s->
+        idx := s+start.byte_length
+        str.substring idx
+          .find "\""
+          .bind e->
+            str.substring idx idx+e
+      .or_else ""
+
+
+  # add run code wrapper for code in file `file`
+  #
+  runcode_wrapper(file String) =>
     id := uuid.create_random.as_string
-    code := "say \"NYI\""
-    rows := max 3 code.lines.count
-    rc := """
-      <div class="runcode-wrapper">
-        <i class="far fa-spinner fa-spin"></i>
-        <div class="mb-15 runcode" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,40ch), min(100%, 80ch))); max-width: 102rem; opacity: 0;">
-          <div class="position-relative">
-            <form id="{id}">
-              <label for="{id}.code" class="visually-hidden">Code input</label>
-              <textarea class="codeinput" required="required" maxlength="4096" id="{id}.code" name="code" rows="{rows}" spellcheck="false">{code}</textarea>
-              <div class="position-absolute runbuttons">
-                <input type="button" onclick="runit('{id}')"    class="runbutton" value="Run!" />
-                <input type="button" onclick="runiteff('{id}')" class="runbutton" value="Effects!" />
-                <a href="/tutorial/effects.html"><i>What are effects?</i></a>
-              </div>
-            </form>
-          </div>
-          <div class="computeroutput" id="{id}.result"></div>
-        </div>
-      </div>
+    code := util
+      .read_file_as_string (data_path.parent.val.resolve file).as_string
+      .val
     """
+    <div class="runcode-wrapper">
+      <i class="far fa-spinner fa-spin"></i>
+      <div class="mb-15 runcode" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,40ch), min(100%, 80ch))); max-width: 102rem; opacity: 0;">
+        <div class="position-relative">
+          <form id="{id}">
+            <label for="{id}.code" class="visually-hidden">Code input</label>
+            <textarea class="codeinput" required="required" maxlength="4096" id="{id}.code" name="code" rows="{max 3 code.lines.count}" spellcheck="false">{code}</textarea>
+            <div class="position-absolute runbuttons">
+              <input type="button" onclick="runit('{id}')"    class="runbutton" value="Run!" />
+              <input type="button" onclick="runiteff('{id}')" class="runbutton" value="Effects!" />
+              <a href="/tutorial/effects.html"><i>What are effects?</i></a>
+            </div>
+          </form>
+        </div>
+        <div class="computeroutput" id="{id}.result"></div>
+      </div>
+    </div>
+  """
 
-    # NYI :
-    replace "<runcode file=\"../examples/HelloWorld.fz\"/>" rc
 
+  # replace tag `tag` by some custom html
+  #
+  # e.g. for this String
+  #
+  # """
+  #  <div class="itembody">
+  #    <page file="lock_free/index.html" /><br>
+  #  </div>
+  # """
+  #
+  # and call replace_tag "page" λ
+  #
+  # the λ would be called with this String: "lock_free/index.html"
+  #
+  String.replace_tag(tag String, replacer String->String) =>
+
+    start := "<$tag "
+    end := "/>"
+
+    for res := "", res + rest.substring 0 m_idx.val + (match e_idx
+                                                        nil => ""
+                                                        e i32 =>
+                                                          attr := rest2.substring 0 e+end.byte_length
+                                                          replacer (extract_attribute_contents attr))
+        rest String := String.this,
+          match e_idx
+            nil => ""
+            e i32 =>
+              rest2.substring e+end.byte_length
+        m_idx := rest.find start
+    while m_idx.ok
+      rest2 := rest.substring m_idx.val
+      e_idx := rest2.find end
+    else
+      res + rest
 
 
   # given an HTML document, check if a closing tag "</html>" is present
@@ -133,6 +241,19 @@ module document2 (module page String,
       nil => html
 
 
+  # generate a link to a page
+  #
+  # example:
+  #
+  # `page_link "tutorial/helloworld"`
+  # results in
+  # <a class="shylinkfix" href="/tutorial/helloworld">"Hello, World!" Example</a>
+  #
+  page_link (to String) =>
+    title := document.get_title to (content.get_data_path session.user.read to)
+    template.page_link to title
+
+
   # feature to generate the navigation menu for this document
   #
   # the menu consists of these things:
@@ -148,10 +269,6 @@ module document2 (module page String,
   # that is being generated.
   #
   navigation (top bool) String =>
-    page_link (to String) =>
-      title := document.get_title to (content.get_data_path session.user.read to)
-      template.page_link to title
-
     fn := (content.file_path page).as_string
     pp := content.base_simple_path page
     is_toc := fn = "index"
