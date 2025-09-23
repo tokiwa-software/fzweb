@@ -283,7 +283,7 @@ module Session (sessions lock_free.Map String Session,
   # send events along with data on the session's connection
   #
   module send_event(event, field_name, field_data String) =>
-    html_encoded_data := util.url_encoded.html_encode "{field_name}\n{field_data}"
+    html_encoded_data := util.url_encoded.html_encode "{field_name}\n{prepend_data (field_data.split "\n").as_array}"
     send_event event html_encoded_data
 
 

@@ -168,9 +168,11 @@ module route_request (raw_path0 String, cmd http.request_method, client list u8,
     goto s form_data
     send_ok_or_reload s
   else if raw_path = "/run"
-    send_nyi
+    runner.run s form_data
+    send_ok_or_reload cmd s
   else if raw_path = "/runeff"
-    send_nyi
+    runner.runeff s form_data
+    send_ok_or_reload cmd s
   else if raw_path = "/playground"
     send_nyi
   else if raw_path = "/events"
