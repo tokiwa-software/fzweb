@@ -43,7 +43,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # initialize user and login state
-  # NYI: thread-safety!
   #
   match old_session
     nil => unit
@@ -68,7 +67,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # log session activity
-  # NYI: thread-safety!
   #
   activity =>
     count_activities.write (count_activities.read + 1)
@@ -76,7 +74,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # authenticate the session with a user account
-  # NYI: thread-safety!
   #
   module login (name, password String) =>
     activity
@@ -92,7 +89,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # logout the session
-  # NYI: thread-safety!
   #
   module logout =>
     activity
@@ -116,7 +112,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # send login status to client
-  # NYI: thread-safety!
   #
   module send_login_status unit =>
     match login.read
@@ -125,7 +120,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # session status string
-  # NYI: thread-safety!
   #
   module status_string =>
     match login.read
@@ -148,19 +142,17 @@ module Session (sessions lock_free.Map String Session,
 
 
   # send history information about session's visited pages
-  # NYI: thread-safety!
   #
   send_push_history =>
     last := last_pushed_history.read
     c := current_page.read
-    last_pushed_history.write c
 
-    if last!! || (option c).as_equatable != last.as_equatable
+    if last.is_nil || c.page != last.val.page
+      last_pushed_history.write c
       send_event "pushHistory" "/{c.page}"
 
 
   # send data on the session's connection
-  # NYI: thread-safety!
   #
   module send_data (msg String) =>
     match connection.read
@@ -188,7 +180,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # associate a session with a connection
-  # NYI: thread-safety!
   #
   module set_connection (c net.connection) =>
     reset_connection_timer
@@ -207,7 +198,6 @@ module Session (sessions lock_free.Map String Session,
 
 
   # close session connection
-  # NYI: thread-safety!
   #
   close_connection (o outcome unit) =>
     match o
