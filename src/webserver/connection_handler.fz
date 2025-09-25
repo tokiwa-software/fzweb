@@ -79,7 +79,7 @@ get_response(LM type : mutate, req_context request_context LM) =>
       route_request req_context.path req_context.request.method req_context.client x req_context.query_string
     e error =>
       logger.log e
-      response.new 415 ((lock_free.Map String String).from_entries [("Accept", "application/x-www-form-urlencode, multipart/form-data")])
+      response.new 415 (map_of_strings [("Accept", "application/x-www-form-urlencode, multipart/form-data")])
 
 
 # helper to process the request
