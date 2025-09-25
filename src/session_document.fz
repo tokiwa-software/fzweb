@@ -2,16 +2,16 @@
 #
 #  Tokiwa Software GmbH, Germany
 #
-#  Source code of Fuzion webserver feature document2
+#  Source code of Fuzion webserver feature session_document
 #
 # -----------------------------------------------------------------------
 
 
-# document2 -- features used to handle documents that are rendered for a
+# session_document -- features used to handle documents that are rendered for a
 # specific session
 #
-module document2 (module page String,
-                  session Session) : property.equatable is
+module session_document (module page String,
+                         session Session) is
 
   # path to this document as an abstract path
   #
@@ -333,12 +333,6 @@ module document2 (module page String,
         </div>
       </div>
     """
-
-
-  # equality of documents
-  #
-  public redef type.equality (a, b document2.this) bool =>
-    a.page = b.page && a.session.session_id = b.session.session_id
 
 
 up_arrow_link => "<i class='far fa-angle-up' aria-hidden='true'></i>"

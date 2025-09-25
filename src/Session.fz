@@ -15,22 +15,13 @@ module Session (sessions lock_free.Map String Session,
 
 
   # session belongs to which user, if at all?
-  # NYI: this is a hack for effect-free thread-safe mutation
   #
-  module user :=
-    concur.atomic (option user) nil
+  module user := concur.atomic (option user) nil
 
-
-  # NYI: hack
-  #
-  unauthenticated_status util.login_status =>
-    util.unauthenticated
 
   # login state of the session
-  # NYI: this is a hack for effect-free thread-safe mutation
   #
-  login
-    := concur.atomic util.login_status unauthenticated_status
+  login := concur.atomic util.login_status util.unauthenticated
 
 
   # activity information
@@ -47,8 +38,8 @@ module Session (sessions lock_free.Map String Session,
 
   # session history information
   #
-  current_page := concur.atomic (document2 "index" Session.this)
-  last_pushed_history := concur.atomic (option document2) nil
+  current_page := concur.atomic (session_document "index" Session.this)
+  last_pushed_history := concur.atomic (option session_document) nil
 
 
   # initialize user and login state
@@ -330,7 +321,7 @@ module Session (sessions lock_free.Map String Session,
   #
   module set_current (page String) =>
     p := document.strip_html page
-    d := document2 p Session.this
+    d := session_document p Session.this
     current_page.write d
 
 
