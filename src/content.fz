@@ -273,7 +273,7 @@ module identifier (module file_to_send option path,
     # NYI: logging, mime types
     match get_bytes s
       b array u8 =>
-        attributes := (lock_free.Map String String).from_entries [("Content-Length", b.length.as_string)]
+        attributes := map_of_strings [("Content-Length", b.length.as_string)]
         response.new 200 attributes b
       e error =>
         s.log "*** error sending content: {e}"

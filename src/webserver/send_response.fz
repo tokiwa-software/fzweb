@@ -6,7 +6,7 @@
 #
 # -----------------------------------------------------------------------
 
-# like its three-argument counterpart, but sends a blank response
+# like its two-argument counterpart, but sends a blank response
 #
 module send_ok_or_reload (s Session) response =>
   send_ok_or_reload s ""
@@ -17,19 +17,19 @@ module send_ok_or_reload (s Session) response =>
 # response and ask the client to reload
 #
 module send_ok_or_reload (s Session, datastr String) response =>
-  returncode := if !s.is_connection_ok then 500 else 200
-  must_message := "must reconnect"
-  data := if returncode = 500 then must_message.utf8 else datastr.utf8
-  data2 := data.as_array
-  header := (lock_free.Map String String).from_entries [("Content-Length", data2.length.as_string), ("Content-Type", "text/html")]
-  response.new returncode header data2
+  returncode := s.is_connection_ok ? 200 : 500
+  data := (s.is_connection_ok ? datastr : "must reconnect")
+    .utf8
+    .as_array
+  header := map_of_strings [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
+  response.new returncode header data
 
 
 # send an HTTP 200 response along with the given data
 #
 module send_ok (datastr String) response =>
   data := datastr.utf8.as_array
-  header := (lock_free.Map String String).from_entries [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
+  header := map_of_strings [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
   response.new 200 header data
 
 

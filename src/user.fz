@@ -275,7 +275,7 @@ module user (module base_dir String) is
             ("registration_date", date),
             ("registration_token", token)
           ]
-          m := (lock_free.Map String String).from_entries entries
+          m := map_of_strings entries
 
           c := config_file m user_text
           c.save
