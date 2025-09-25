@@ -19,7 +19,7 @@ module user (module base_dir String) is
   # verify username password combination
   #
   module verify_login (username, password String) =>
-    if compare_with_option username name || compare_with_option username email || compare_with_option username login
+    if name.as_equatable = username || email.as_equatable = username || login.as_equatable = username
       match password_hash
         nil => false
         hash String =>
@@ -156,35 +156,33 @@ module user (module base_dir String) is
   # verify the password of the given user, and return the user
   # in case the password is correct
   #
-  module type.get (username, password String) outcome user =>
-    for
-      f in (list_dir users_dir)
-    until check_user (u->u.verify_login username password && !u.has_registration_token) "{users_dir}/f"
-      outcome user (user "{users_dir}/f")
-    else
-      outcome user (error "no user found")
+  module type.get (username, password String) =>
+    get_user u->
+      u.verify_login username password && !u.has_registration_token
 
 
   # get user by loginname or email
   #
-  module type.get (login_or_email String) outcome user =>
-    for
-      f in (list_dir users_dir)
-    until check_user (u->compare_with_option login_or_email u.login || compare_with_option login_or_email u.email) "{users_dir}/f"
-      outcome user (user "{users_dir}/f")
-    else
-      outcome user (error "no user found")
+  module type.get (login_or_email String) =>
+    get_user u->
+      u.login.as_equatable = login_or_email || u.email.as_equatable = login_or_email
 
 
   # get user by a deletion token
   #
-  module type.get_by_deletion_token (token String) outcome user =>
+  module type.get_by_deletion_token (token String) =>
+    get_user u->
+      u.deletion_token.as_equatable = token
+
+
+  module type.get_user(predicate user->bool) outcome user =>
     for
       f in (list_dir users_dir)
-    until check_user (u->compare_with_option token u.deletion_token) "{users_dir}/f"
-      outcome user (user "{users_dir}/f")
+      user_dir := "$users_dir/$f"
+    until check_user predicate user_dir
+      user user_dir
     else
-      outcome user (error "no user found")
+      error "no user found"
 
 
   # get the default user
@@ -368,12 +366,3 @@ module user (module base_dir String) is
   type.form_data_password => "password"
   type.form_data_newsletter => "newsletter"
   type.form_data_terms => "terms"
-
-
-# compare a value of type T with a value of type option T,
-# returns true iff the option is not nil and a = b.get
-#
-compare_with_option (T type : property.equatable, a T, b option T) =>
-  match b
-    nil => false
-    x T => a = x
