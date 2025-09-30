@@ -45,6 +45,16 @@ module email_service is
   prop_put "mail.smtp.ssl.trust" (secrets.get "host" .get)
 
 
+  # send an email containing a text body
+  #
+  # from is the email address used as the sender
+  # to is the recipient of the email
+  # subject is the subject of the message
+  # body is the body of the message, as a string
+  #
+  # the email automatically gets sent as a blind carbon copy to
+  # an internal mailbox
+  #
   module send_text_mail (from, to, subject, body String) =>
     a := Java.dev.flang.EmailService_static.getPasswordAuthenticator username password
     s := Java.javax.mail.Session_static.getInstance prop a
@@ -60,6 +70,9 @@ module email_service is
     Java.javax.mail.Transport_static.send m
 
 
+  # send an email containing a text body
+  # with the company information added as a footer
+  #
   module send_text_mail_with_footer (from, to, subject, body) =>
     footer :=  """
 \nHave fun!
