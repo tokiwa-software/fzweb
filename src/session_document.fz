@@ -62,7 +62,11 @@ module session_document (module page String,
 
           res.add "</div>"
 
-          # NYI: last changed!
+          match io.file.stat data_path.as_string true
+            e error =>
+              session.log "error retrieving file metadata in session_document get_content: {e}"
+            metadata io.file.meta_data =>
+              res.add "<div class='last-changed'>last changed: {metadata.time}</div>"
 
           if permitted
             res.add (navigation false)
