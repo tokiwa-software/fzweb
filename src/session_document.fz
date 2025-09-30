@@ -72,7 +72,6 @@ module session_document (module page String,
 
 
   # add session-specific information to the html
-  # NYI tags!
   #
   add_session_info_to_html (s String) String =>
     s
@@ -84,7 +83,7 @@ module session_document (module page String,
 
   # page tag replacer, used to replace HTML this:
   #
-  # <page file="sqlite/index" /><br>
+  # <page file="sqlite/index" />
   #
   page_tag(str String) =>
     to :=
