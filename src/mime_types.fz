@@ -1,0 +1,49 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature mime_types
+#
+# -----------------------------------------------------------------------
+
+# mime_types -- features used to work with the MIME types of files
+#
+module mime_types is
+
+
+  # mapping of filename suffixes to MIME types
+  #
+  mime_type_table := map_of_strings
+    [
+      ("atom", "application/atom+xml"),
+      ("css", "text/css"),
+      ("html", "text/html"),
+      ("htm", "text/html"),
+      ("ico", "image/x-icon"),
+      ("jpeg", "image/jpeg"),
+      ("jpe", "image/jpeg"),
+      ("jpg", "image/jpeg"),
+      ("js", "application/javascript"),
+      ("json", "application/json"),
+      ("otf", "font/otf"),
+      ("png", "image/png"),
+      ("svg", "image/svg+xml"),
+      ("tiff", "image/tiff"),
+      ("tif", "image/tiff"),
+      ("ttf", "font/ttf"),
+      ("txt", "text/plain"),
+      ("webp", "image/webp"),
+      ("woff2", "font/woff2"),
+      ("woff", "font/woff"),
+      ("xht", "application/xhtml+xml"),
+      ("xhtml", "application/xhtml+xml"),
+      ("xml", "application/xml"),
+      ("xsl", "application/xml"),
+      ("xslt", "application/xslt+xml")
+    ]
+
+
+  # given a suffix, look up the corresponding MIME type in the map and return it
+  #
+  module get_mime_type (suffix String) String =>
+    mime_type_table[suffix].get "text/plain"
