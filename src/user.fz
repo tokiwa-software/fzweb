@@ -121,7 +121,7 @@ module user (module base_dir String) is
 
         https://fuzion-lang.dev/confirm_account_deletion?token={token}
     """
-    Java.dev.flang.EmailService_static.getInstance.sendTextMailWithFooter user.noreply_tokiwa_software (email.get "") subject message_content
+    email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.get "") subject message_content
 
 
 
@@ -343,7 +343,7 @@ module user (module base_dir String) is
 
         https://fuzion-lang.dev/confirm_registration?username={username}&token={token}
     """
-    Java.dev.flang.EmailService_static.getInstance.sendTextMailWithFooter noreply_tokiwa_software email subject mail_content
+    email_service.send_text_mail_with_footer noreply_tokiwa_software email subject mail_content
 
 
   # constants
