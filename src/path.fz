@@ -26,6 +26,13 @@ is
   =>
     names.last.get
 
+  # return the suffix of the file at this path
+  #
+  public suffix String
+    pre debug: !file_name.is_empty
+  =>
+    file_name.split "." .last.get
+
   public parent option path
   =>
     if names.is_empty
