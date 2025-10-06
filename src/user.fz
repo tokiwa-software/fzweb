@@ -19,7 +19,7 @@ module user (module base_dir String) is
   # verify username password combination
   #
   module verify_login (username, password String) =>
-    if name.as_equatable = username || email.as_equatable = username || login.as_equatable = username
+    if name.as_equatable_switch = username || email.as_equatable_switch = username || login.as_equatable_switch = username
       match password_hash
         nil => false
         hash String =>
@@ -165,14 +165,14 @@ module user (module base_dir String) is
   #
   module type.get (login_or_email String) =>
     get_user u->
-      u.login.as_equatable = login_or_email || u.email.as_equatable = login_or_email
+      u.login.as_equatable_switch = login_or_email || u.email.as_equatable_switch = login_or_email
 
 
   # get user by a deletion token
   #
   module type.get_by_deletion_token (token String) =>
     get_user u->
-      u.deletion_token.as_equatable = token
+      u.deletion_token.as_equatable_switch = token
 
 
   module type.get_user(predicate user->bool) outcome user =>
