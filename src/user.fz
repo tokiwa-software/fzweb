@@ -266,7 +266,7 @@ module user (module base_dir String) is
             ("email", email),
             ("login", username),
             ("password.pepper-id", "0".as_string),
-            ("password.hash", id String (Java.dev.flang.password_static.getHash pazzword)),
+            ("password.hash", id String (hash_password pazzword)),
             ("groups", "users"),
             ("terms_accepted", terms.as_string),
             ("newsletter", newsletter.as_string),
