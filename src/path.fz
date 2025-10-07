@@ -49,7 +49,7 @@ is
   public starts_with(p path) bool =>
     is_absolute = p.is_absolute &&
       p.names.count <= names.count &&
-      (names.take p.names.count).as_equatable=p.names.as_equatable
+      (names.take p.names.count) = p.names
 
   public normalize path =>
     path names is_absolute
@@ -58,7 +58,7 @@ is
     (if is_absolute then "/" else "") + (if names.is_empty then "." else String.join names "/" )
 
   public redef type.equality(a, b path.this) bool =>
-    a.is_absolute=b.is_absolute && a.names.as_equatable=b.names.as_equatable
+    a.is_absolute = b.is_absolute && a.names = b.names
 
   public type.of(str String) path =>
     t := str.trim

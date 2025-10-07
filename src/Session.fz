@@ -237,7 +237,7 @@ module Session (sessions lock_free.Map String Session,
         logger.log "No session found in map for id: {id}"
         nil
       s Session =>
-        if s.client.as_equatable = c.as_equatable
+        if s.client = c
           s
         else
           logger.log "Mismatch of clients for session with id: {id}"
