@@ -66,7 +66,7 @@ module session_document (module page String,
             e error =>
               session.log "error retrieving file metadata in session_document get_content: {e}"
             metadata io.file.meta_data =>
-              ts := time.date_time.from_seconds metadata.time.as_u64
+              ts := time.date_time.from_seconds metadata.mtime.as_u64
               ts_formatted := "{ts.year.as_string 4 10}-{ts.month.as_string 2 10}-{ts.day.as_string 2 10}"
               res.add "<div class='last-changed'>last changed: {ts_formatted}</div>"
 
