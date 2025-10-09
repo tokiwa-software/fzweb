@@ -23,10 +23,10 @@ COPY . .
 WORKDIR /fzweb/fuzion
 RUN make
 WORKDIR /fzweb/flang_dev
-RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' /fzweb/fuzion/build/modules/webserver.fum
+RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' build
 WORKDIR /fzweb
 RUN /fzweb/fuzion/build/bin/fz -classes -verbose=2 -unsafeIntrinsics=on -modules=http,lock_free,uuid,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver -sourceDirs=src run
-RUN sed -i 's|-cp "|-cp "/fzweb/flang_dev/classes:|g' run
+RUN sed -i 's|-cp "|-cp "/fzweb/classes:|g' run
 
 
 FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS runner

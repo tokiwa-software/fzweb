@@ -56,7 +56,7 @@ module email_service is
   # an internal mailbox
   #
   module send_text_mail (from, to, subject, body String) =>
-    a := Java.dev.flang.EmailService_static.getPasswordAuthenticator username password
+    a := Java.software.tokiwa.fzweb.EmailService_static.getPasswordAuthenticator username password
     s := Java.javax.mail.Session_static.getInstance prop a
 
     m := Java.javax.mail.internet.MimeMessage_static.new s

@@ -20,25 +20,20 @@
 ## About
 
 This webserver is intended to replace our current Java-based webserver
-for the [Fuzion website](https://fuzion-lang.dev/). It currently depends
-on that Java-based webserver, which means it is currently impossible to
-run without having access to this internal code. This is due to change
-soon. Note however that the full website source code will likely be never
-published.
+for the [Fuzion website](https://fuzion-lang.dev/). It can be built and
+run without any internal files, but the actual website content is not
+public.
 
 ## Clone
 
 > Note that the webserver must be cloned into the parent directory of
-> your Fuzion and `flang_dev` (this is the part internal to Tokiwa
-> Software) clone.
+> your Fuzion clone.
 
     git clone https://github.com/tokiwa-software/fzweb.git
 
 ## Required Setup
 
 1. Build Fuzion as usual, building all the modules (`make`).
-2. In your `flang_dev` clone, build the `webserver.fum` module using
-   `make /full/path/to/fuzion/build/modules/webserver.fum`.
 
 ## Build and Run
 
