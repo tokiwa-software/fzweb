@@ -65,9 +65,9 @@ form_data(LM type : mutate, req_context request_context LM) =>
     (io.buffered lm2).reader req_context.request.body ! ()->
       (io.buffered lm2).read_bytes post_len
   post_data := String.from_bytes post_data_raw.as_list
-  val := (Java.dev.flang.webserver_S_Value_static.new (req_context.request.header["content-type"].or_else ""))
-  content_type := val.getType
-  content_type_boundary := val.getBoundary
+  val := util.mime_value.from_type_string (req_context.request.header["content-type"].get "")
+  content_type := val.get_type
+  content_type_boundary := val.get_boundary
   get_form_data post_data req_context.request.method req_context.query_string content_type content_type_boundary
 
 
