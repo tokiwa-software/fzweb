@@ -6,25 +6,17 @@
 #
 # -----------------------------------------------------------------------
 
-module mime_value(mime_type String, parameters lock_free.Map String String) is
-
-  # return the type value
-  #
-  module get_type =>
-    mime_type
-
-
-  # return the value of the boundary key in the parameters,
-  # or an empty string if the key does not exist in that map
-  #
-  module get_boundary =>
-    parameters["boundary"].get ""
+module mime_value (
+  # main Content-Type of this value
+  module mime_type String,
+  # parameters to the Content-Type
+  parameters lock_free.Map String String) is
 
 
   # return the value of a given key in the parameters,
   # or an empty string if the given key is not in that map
   #
-  module get_parameter(param String) =>
+  module index [ ] (param String) String =>
     parameters[param].get ""
 
 
