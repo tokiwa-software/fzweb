@@ -25,7 +25,7 @@ COPY . .
 WORKDIR /fzweb/fuzion
 RUN make
 WORKDIR /fzweb/flang_dev
-RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' build
+RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' FZ='/fzweb/fuzion/build/bin/fz' build
 WORKDIR /fzweb
 RUN /fzweb/fuzion/build/bin/fz -classes -verbose=2 -unsafeIntrinsics=on -modules=http,lock_free,uuid,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver -sourceDirs=src run
 RUN sed -i 's|-cp "|-cp "/fzweb/classes:|g' run
