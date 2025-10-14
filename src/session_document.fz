@@ -91,13 +91,13 @@ module session_document (module page String,
   #
   # <page file="sqlite/index" />
   #
-  page_tag(str String) =>
+  page_tag(m container.Map String String) =>
     to :=
       path
         .of page
         .parent
         .val
-        .resolve str
+        .resolve m["file"].get
         .as_string
     page_link to
 
@@ -106,12 +106,13 @@ module session_document (module page String,
   #
   # <browse dir="../../link/clang/src/"/>
   #
-  browse_tag(attribute_value String) =>
+  browse_tag(m container.Map String String) =>
 
     append(a String, md io.file.meta_data) =>
       if md.is_dir
+        dir_map := container.ordered_map ["dir"] [a]
         """
-          <div class="mydir" data-dir"{util.url_encoded.html_encode a}">NYI: {browse_tag a}</div>
+          <div class="mydir" data-dir"{util.url_encoded.html_encode a}">NYI: {browse_tag dir_map}</div>
         """
       else if md.is_regular
         """
@@ -122,7 +123,7 @@ module session_document (module page String,
     dir := data_path
       .parent
       .val
-      .resolve attribute_value
+      .resolve m["dir"].get
       .as_string
 
     io.dir
@@ -143,10 +144,10 @@ module session_document (module page String,
 
   # add run code wrapper for code in file `file`
   #
-  runcode_wrapper(file String) =>
+  runcode_wrapper(m container.Map String String) =>
     id := uuid.create_random.as_string
     code := util
-      .read_file_as_string (data_path.parent.val.resolve file).as_string
+      .read_file_as_string (data_path.parent.val.resolve m["file"].get).as_string
       .val
     """
     <div class="runcode-wrapper">
@@ -183,23 +184,47 @@ module session_document (module page String,
   #
   # the λ would be called with this String: "lock_free/index.html"
   #
-  String.replace_tag(tag String, replacer String->String) =>
+  String.replace_tag(tag String, replacer (container.Map String String)->String) =>
 
-    # extract attribute contents from a String
+    # extract attribute contents from a String, helper method for recursion
     # like: <page file="http/index" />
     #
-    extract_attribute_contents(str String)
+    extract_attribute_contents (s String, m container.ordered_map String String) container.ordered_map String String
     =>
-      start := "=\""
-      str
-        .find extract_attribute_contents.this.start
-        .bind s->
-          idx := s+extract_attribute_contents.this.start.byte_length
-          str.substring idx
-             .find "\""
-             .bind e->
-               str.substring idx idx+e
-        .or_else ""
+      st := s.trim_start
+
+      if st.is_empty
+        m
+      else
+        a := st.split_n "=\"" 1
+        match a.first
+          nil => panic "invalid attribute string 1: $st"
+          k String =>
+            match a.nth 1
+              nil => panic "invalid attribute string 2: $st"
+              ppv String =>
+                pv := ppv.split_n "\"" 1
+                match pv.first
+                  nil => panic "invalid attribute string 3: $ppv"
+                  v String =>
+                    nm := m.add k v
+                    rest := pv.nth 1 .get ""
+                    extract_attribute_contents rest nm
+
+
+    # extract attribute contents of a String like
+    #
+    #   file="http/index.html"
+    #
+    # or
+    #
+    #   userdata="true"
+    #
+    # and store the attributes in a map
+    #
+    extract_attribute_contents (s String) container.ordered_map String String
+    =>
+      extract_attribute_contents s (container.ordered_map String String .empty)
 
     start := "<$tag "
     end := "/>"
@@ -207,7 +232,7 @@ module session_document (module page String,
     for res := "", res + rest.substring 0 m_idx.val + (match e_idx
                                                         nil => ""
                                                         e i32 =>
-                                                          attr := rest2.substring 0 e+end.byte_length
+                                                          attr := rest2.substring 0+start.byte_length e
                                                           replacer (extract_attribute_contents attr))
         rest String := String.this,
           match e_idx
