@@ -20,7 +20,7 @@ pipeline {
 
           dir('rrd-antlr4') {
             checkout scmGit(
-              branches: [[name: 'master']],
+              branches: [[name: 'af15d7d9151ce30a9b26bc8782a16643c93e3d6d']],
               userRemoteConfigs: [[url: 'https://github.com/bkiers/rrd-antlr4.git']])
           }
         }
