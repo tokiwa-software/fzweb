@@ -198,7 +198,7 @@ module session_document (module page String,
       else
         a := st.split_n "=\"" 1
         match a.first
-          nil => panic "invalid attribute string 1: $st"
+          nil => m
           k String =>
             match a.nth 1
               nil => panic "invalid attribute string 2: $st"
