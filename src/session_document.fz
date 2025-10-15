@@ -82,9 +82,9 @@ module session_document (module page String,
   add_session_info_to_html (s String) String =>
     s
       .replace "##SESSION_ID##" session.session_id
-      .replace_tag "runcode" runcode_wrapper
-      .replace_tag "page" page_tag
-      .replace_tag "browse" browse_tag
+      |> replace_tag "runcode" runcode_wrapper
+      |> replace_tag "page" page_tag
+      |> replace_tag "browse" browse_tag
 
 
   # page tag replacer, used to replace HTML this:
@@ -184,7 +184,7 @@ module session_document (module page String,
   #
   # the λ would be called with this String: "lock_free/index.html"
   #
-  String.replace_tag(tag String, replacer (container.Map String String)->String) =>
+  replace_tag(tag String, replacer (container.Map String String)->String, str String) =>
 
     # extract attribute contents from a String, helper method for recursion
     # like: <page file="http/index" />
@@ -234,7 +234,7 @@ module session_document (module page String,
                                                         e i32 =>
                                                           attr := rest2.substring 0+start.byte_length e
                                                           replacer (extract_attribute_contents attr))
-        rest String := String.this,
+        rest String := str,
           match e_idx
             nil => ""
             e i32 =>
