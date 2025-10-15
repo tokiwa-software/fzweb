@@ -201,11 +201,11 @@ module session_document (module page String,
           nil => m
           k String =>
             match a.nth 1
-              nil => panic "invalid attribute string (attribute name but no value found): $st"
+              nil => m
               ppv String =>
                 pv := ppv.split_n "\"" 1
                 match pv.first
-                  nil => panic "invalid attribute string (attribute value start but not end found): $ppv"
+                  nil => m
                   v String =>
                     nm := m.add k v
                     rest := pv.nth 1 .get ""
