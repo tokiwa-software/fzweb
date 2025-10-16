@@ -158,7 +158,7 @@ module user (module base_dir String) is
   #
   module type.get (username, password String) =>
     get_user u->
-      u.verify_login username password && !u.has_registration_token
+      !u.has_registration_token && u.verify_login username password
 
 
   # get user by loginname or email
