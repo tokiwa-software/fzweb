@@ -270,7 +270,7 @@ module identifier (module file_to_send option path,
   # get response
   #
   module response (s Session) response =>
-    # NYI: logging, mime types
+    # NYI: logging
     match get_bytes s
       b array u8 =>
         suffix := file_to_send.get.suffix
