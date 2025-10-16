@@ -198,14 +198,20 @@ module session_document (module page String,
       else
         a := st.split_n "=\"" 1
         match a.first
-          nil => m
+          nil =>
+            session.log "invalid attribute string on $page (no attribute found): $st"
+            m
           k String =>
             match a.nth 1
-              nil => m
+              nil =>
+                session.log "invalid attribute string on $page (no value found): $st"
+                m
               ppv String =>
                 pv := ppv.split_n "\"" 1
                 match pv.first
-                  nil => m
+                  nil =>
+                    session.log "invalid attribute string on $page (end of value not found): $st"
+                    m
                   v String =>
                     nm := m.add k v
                     rest := pv.nth 1 .get ""
