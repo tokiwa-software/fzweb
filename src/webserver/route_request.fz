@@ -153,7 +153,7 @@ module route_request (raw_path0 String, cmd http.request_method, client list u8,
     send_ok_or_reload s s.status_string
   else if raw_path = "/logout"
     s.logout
-    send_ok_or_reload s
+    send_ok_or_reload s s.status_string
   else if cmd = http.post_r && raw_path = "/register"
     send_ok (do_register client form_data)
   else if cmd = http.post_r && raw_path = "/delete_account"
