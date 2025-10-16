@@ -19,14 +19,15 @@ module logger is
 
   # Logger function that outputs to the console
   module log(c String|error) =>
-    say "{logger.thread_id}: {c ? s String => s | e error => e.as_string}"
+    say "{time.now.get} {logger.thread_id}: {c ? s String => s | e error => e.as_string}"
 
   # Logger function that writes to a file
   module log(log_path String, msg String) =>
+    m := "{time.now.get} {logger.thread_id}: {msg}"
+
     res := io.file.use unit log_path io.file.mode.append ()->
-        m := "{logger.thread_id}: {msg}"
         (io.file.writer.write "{m}\n".utf8).error
 
     match res
-      unit => say "{logger.thread_id}: {msg}"  # Also log to console
+      unit => say m # Also log to console
       e error => say "*** failed to write to log: {e}"
