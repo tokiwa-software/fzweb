@@ -150,7 +150,7 @@ module route_request (raw_path0 String, cmd http.request_method, client list u8,
     response.new 501
   else if raw_path = "/login"
     s.login form_data["login"].val form_data["password"].val
-    send_ok_or_reload s
+    send_ok_or_reload s s.status_string
   else if raw_path = "/logout"
     s.logout
     send_ok_or_reload s
