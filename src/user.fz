@@ -221,7 +221,7 @@ module user (module base_dir String) is
     else
       full_name := full_name first_name last_name email0.get
 
-      match create_user_txt first_name last_name full_name affiliation username0.get email0.get password0.get terms newsletter "NYI: time"
+      match create_user_txt first_name last_name full_name affiliation username0.get email0.get password0.get terms newsletter time.now.get.as_string
         error => "<div class='text-center'>Registration failed. Already registered?</div>"
         token String =>
           logger.log "send registration token email to: {email0}"
