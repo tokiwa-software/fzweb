@@ -191,7 +191,7 @@ module content is
       path_from_url <- path_from_url.substring 1
       p := path.of path_from_url
 
-      if !p.is_absolute && p = p.normalize && (content_dir.resolve p).normalize.starts_with content_dir
+      if !p.is_absolute && (content_dir.resolve p).starts_with content_dir
         if path_from_url.ends_with ".html"
           path_from_url <- path_from_url.substring 0 (path_from_url.find_last ".html").get
 
@@ -234,9 +234,9 @@ module content is
 
   # constants
   #
-  type.content_dir path => (path.of "./content").normalize
+  type.content_dir path => (path.of "./content")
   type.pages_dir_relative path => path.of "pages"
-  module type.templates_dir path => (path.of "./templates").normalize
+  module type.templates_dir path => (path.of "./templates")
 
 
 # identifies a page alongside a template to send to the user
