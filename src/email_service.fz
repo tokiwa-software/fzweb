@@ -20,30 +20,7 @@ module email_service is
   #
   username := secrets.get "username" .get
   password := secrets.get "password" .get
-
-
-  # helper for fzjava problems
-  #
-  prop_put (key String, val choice bool String) =>
-    key_j := fuzion.jvm.env.cast Java.java.lang.Object key.as_java_object .get
-
-    val_ajo :=
-      match val
-        b bool => b.as_java_object
-        s String => s.as_java_object
-    val_j := fuzion.jvm.env.cast Java.java.lang.Object val_ajo .get
-
-    _ := prop.put key_j val_j
-
-  # connection details
-  #
-  prop Java.java.util.Properties := Java.java.util.Properties_static.new
-  prop_put "mail.smtp.auth" true
-  prop_put "mail.smtp.starttls.enable" "true"
-  prop_put "mail.smtp.host" (secrets.get "host" .get)
-  prop_put "mail.smtp.port" (secrets.get "port" .get)
-  prop_put "mail.smtp.ssl.trust" (secrets.get "host" .get)
-
+  host     := secrets.get "host"     .get
 
   # send an email containing a text body
   #
@@ -56,18 +33,7 @@ module email_service is
   # an internal mailbox
   #
   module send_text_mail (from, to, subject, body String) =>
-    a := Java.software.tokiwa.fzweb.EmailService_static.getPasswordAuthenticator username password
-    s := Java.javax.mail.Session_static.getInstance prop a
-
-    m := Java.javax.mail.internet.MimeMessage_static.new s
-    # NYI: handle errors from Java
-    _ := m.setFrom (Java.javax.mail.internet.InternetAddress_static.new from .get)
-    _ := m.setRecipients Java.javax.mail.Message_S_RecipientType_static.TO [ (Java.javax.mail.internet.InternetAddress_static.parse to .get.first.get) ]
-    _ := m.setRecipients Java.javax.mail.Message_S_RecipientType_static.BCC [ (Java.javax.mail.internet.InternetAddress_static.parse "admin@fuzion-lang.dev" .get.first.get) ]
-    _ := m.setSubject subject
-    _ := m.setText body
-
-    Java.javax.mail.Transport_static.send m
+    mail.send host username password from to subject body
 
 
   # send an email containing a text body
