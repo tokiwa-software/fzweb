@@ -10,16 +10,16 @@ FUZION_BUILD = $(shell readlink -f $(FUZION_SRC)/../build)
 FUZION_BIN = $(shell readlink -f $(FUZION_BUILD)/bin)
 
 MODULES = http,lock_free,uuid,mail,wolfssl,java.base
-MODULES_WITH_WEBSERVER = $(MODULES),webserver
+MODULES_WITH_BCRYPT = $(MODULES),bcrypt
 
 .PHONY: run_fz
 run_fz: export FUZION_JAVA_ADDITIONAL_CLASSPATH = classes
-run_fz: classes $(FUZION_BUILD)/modules/webserver.fum
-	$(FUZION_BIN)/fz -jvm -JLibraries=wolfssl -verbose=2 -unsafeIntrinsics=on -modules=$(MODULES_WITH_WEBSERVER) -sourceDirs=src run
+run_fz: classes $(FUZION_BUILD)/modules/bcrypt.fum
+	$(FUZION_BIN)/fz -jvm -JLibraries=wolfssl -verbose=2 -unsafeIntrinsics=on -modules=$(MODULES_WITH_BCRYPT) -sourceDirs=src run
 
 webserver: export FUZION_JAVA_ADDITIONAL_CLASSPATH = classes
-webserver: classes $(FUZION_BUILD)/modules/webserver.fum
-	$(FUZION_BIN)/fz -c -CLink=wolfssl -CInclude="wolfssl/options.h wolfssl/ssl.h" -unsafeIntrinsics=on -modules=$(MODULES_WITH_WEBSERVER) -sourceDirs=src -o=webserver run
+webserver: classes $(FUZION_BUILD)/modules/bcrypt.fum
+	$(FUZION_BIN)/fz -c -CLink=wolfssl -CInclude="wolfssl/options.h wolfssl/ssl.h" -unsafeIntrinsics=on -modules=$(MODULES_WITH_BCRYPT) -sourceDirs=src -o=webserver run
 
 .PHONY: run_fz_c
 run_fz_c: export FUZION_JAVA_ADDITIONAL_CLASSPATH = classes
@@ -50,15 +50,15 @@ jars/bcrypt-0.9.0-optimized.jar: | jars
 jars/bytes-1.3.0.jar: | jars
 	wget -O $@ https://github.com/patrickfav/bytes-java/releases/download/v1.3.0/$(@F)
 
-webserver.jmod: classes
+bcrypt.jmod: classes
 	rm -f $@
 	jmod create --class-path classes $@
 
-$(FUZION_BUILD)/modules/webserver: export FUZION_JAVA_ADDITIONAL_CLASSPATH = classes
-$(FUZION_BUILD)/modules/webserver: classes webserver.jmod
+$(FUZION_BUILD)/modules/bcrypt: export FUZION_JAVA_ADDITIONAL_CLASSPATH = classes
+$(FUZION_BUILD)/modules/bcrypt: classes bcrypt.jmod
 	rm -rf "$@"
-	$(FUZION_BIN)/fzjava -to="$@" -modules=$(MODULES) webserver.jmod
+	$(FUZION_BIN)/fzjava -to="$@" -modules=$(MODULES) bcrypt.jmod
 
-$(FUZION_BUILD)/modules/webserver.fum: $(FUZION_BUILD)/modules/webserver
+$(FUZION_BUILD)/modules/bcrypt.fum: $(FUZION_BUILD)/modules/bcrypt
 	rm -rf "$@"
-	$(FUZION_BIN)/fz -sourceDirs="$(FUZION_BUILD)/modules/webserver" -modules=$(MODULES) -saveModule="$@"
+	$(FUZION_BIN)/fz -sourceDirs="$(FUZION_BUILD)/modules/bcrypt" -modules=$(MODULES) -saveModule="$@"
