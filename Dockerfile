@@ -34,7 +34,7 @@ WORKDIR /fzweb/flang_dev
 RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' FZ='/fzweb/fuzion/build/bin/fz' build
 WORKDIR /fzweb
 RUN make /fzweb/fuzion/build/modules/bcrypt.fum
-RUN /fzweb/fuzion/build/bin/fz -classes -JLibraries=wolfssl -verbose=2 -unsafeIntrinsics=on -modules=http,lock_free,uuid,mail,wolfssl,java.base,webserver -sourceDirs=src run
+RUN /fzweb/fuzion/build/bin/fz -classes -JLibraries=wolfssl -verbose=2 -unsafeIntrinsics=on -modules=http,lock_free,uuid,mail,wolfssl,java.base,bcrypt -sourceDirs=src run
 RUN sed -i 's|-cp "|-cp "/fzweb/classes:|g' run
 
 
