@@ -1,2 +1,2 @@
-module webserver {
+module bcrypt {
 }
