@@ -17,7 +17,9 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
   inkscape \
   unzip \
   locales \
-  maven
+  maven \
+  libwolfssl-dev \
+  libwolfssl42t64
 RUN ln -s /usr/bin/clang-18 /usr/bin/clang
 RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG=en_US.utf8 FUZION_REPRODUCIBLE_BUILD="true" PRECONDITIONS="true" POSTCONDITIONS="true"
@@ -32,7 +34,7 @@ WORKDIR /fzweb/flang_dev
 RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' FZ='/fzweb/fuzion/build/bin/fz' build
 WORKDIR /fzweb
 RUN make /fzweb/fuzion/build/modules/webserver.fum
-RUN /fzweb/fuzion/build/bin/fz -classes -verbose=2 -unsafeIntrinsics=on -modules=http,lock_free,uuid,java.base,java.desktop,java.datatransfer,java.xml,java.logging,java.security.sasl,webserver -sourceDirs=src run
+RUN /fzweb/fuzion/build/bin/fz -classes -JLibraries=wolfssl -verbose=2 -unsafeIntrinsics=on -modules=http,lock_free,uuid,mail,wolfssl,java.base,webserver -sourceDirs=src run
 RUN sed -i 's|-cp "|-cp "/fzweb/classes:|g' run
 
 

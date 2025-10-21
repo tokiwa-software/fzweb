@@ -198,11 +198,26 @@ module user (module base_dir String) is
       full0 := "{first} {last}".trim
       full0.is_empty ? email : full0
 
+    validate_mail(str String) =>
+      s := str.split "@" .as_array
+      if s.count != 2
+        logger.log "illegal mail address: {str}"
+        false
+      # NYI: UNDER DEVELOPMENT: allow non ASCII mail addresses?
+      else if !(str.utf8 ∀ b->
+          # ASCII but no space and no control character
+          0x21 <= b <= 0x7E)
+        logger.log "illegal mail address: >{str}<"
+        false
+      else
+        true
+
+
     first_name := (form_data[form_data_first_name].get "").trim
     last_name := (form_data[form_data_last_name].get "").trim
     affiliation := (form_data[form_data_affiliation].get "").trim
     username0 := form_data[form_data_username]
-    email0 := form_data[form_data_email]
+    email0 := form_data[form_data_email].bind (.trim)
     password0 := form_data[form_data_password]
     terms := "on" = form_data[form_data_terms].get "off"
     newsletter := "off" = form_data[form_data_newsletter].get "off"
@@ -212,7 +227,7 @@ module user (module base_dir String) is
     else if email0.get.contains "," || email0.get.contains ";"
       # TODO check if really true
       error "Comma or semicolon in email are not allowed."
-    else if (Java.javax.mail.internet.InternetAddress_static.parse email0.get).is_error
+    else if !(validate_mail email0.get)
       error "Email address invalid."
     else if false # NYI
       error "Username contains illegal characters. Only A-Z, a-z, 0-9, and _ are allowed."
@@ -227,7 +242,7 @@ module user (module base_dir String) is
           logger.log "send registration token email to: {email0}"
 
           match send_user_registration_email full_name email0.get token username0.get
-            error => "<div class='text-center'>Registration failed. Already registered?</div>"
+            error => "<div class='text-center'>Registration failed. Failed sending mail.</div>"
             unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
 
 
