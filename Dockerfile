@@ -26,7 +26,7 @@ ENV LANG=en_US.utf8 FUZION_REPRODUCIBLE_BUILD="true" PRECONDITIONS="true" POSTCO
 WORKDIR /fzweb
 COPY . .
 WORKDIR /fzweb/fuzion
-RUN make no-java build/modules/java.base.fum
+RUN make no-java build/modules/java.base.fum build/fuzion.ebnf
 WORKDIR /fzweb/flang_dev/rrd-antlr4
 RUN sed -i 1,3d src/main/resources/railroad-diagram.css
 RUN mvn clean package
