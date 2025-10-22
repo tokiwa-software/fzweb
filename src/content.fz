@@ -29,20 +29,16 @@ module content is
   module type.base_simple_path (simple_path String) option path =>
     sp := path.of simple_path
 
-    base_simple_path_loop_helper (i i32) option path =>
-      if i > 0
-        base_simple_path := sp.subpath 0 i
-        base_dir0 := content_dir.resolve base_simple_path
-        access := base_dir0.resolve "access.txt"
+    for i := sp.names.count, i-1
+    while i > 0
+      base_simple_path := sp.subpath 0 i
+      base_dir0 := content_dir.resolve base_simple_path
+      access := base_dir0.resolve "access.txt"
+    until io.file.exists access.as_string
+      base_simple_path
+    else
+      nil
 
-        if io.file.exists access.as_string
-          base_simple_path
-        else
-          base_simple_path_loop_helper i-1
-      else
-        nil
-
-    base_simple_path_loop_helper sp.names.count
 
 
   # The file part of a simple_path.
