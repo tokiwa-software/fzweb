@@ -285,7 +285,9 @@ module session_document (module page String,
   # results in
   # <a class="shylinkfix" href="/tutorial/helloworld">"Hello, World!" Example</a>
   #
-  page_link (to String) =>
+  page_link (to String)
+    pre debug: !to.starts_with "/"
+  =>
     title := document.get_title to (content.get_data_path session.user.read to)
     template.page_link to title
 
@@ -346,32 +348,79 @@ module session_document (module page String,
       # now we recurse upwards in the directory tree to show parent pages
       recursive_helper temp pup
 
-    attractive_next := "<div>NYI</div>"
-    prev := "NYI"
-    next := "NYI"
+    toc := read_toc_from_index_html
 
-    # generate the link to navigate upwards with respect to a given
-    # path
+    # get the index in the toc, or nil if none
+    #
+    idx =>
+      if is_toc
+        nil
+      else
+        j := toc.index_of fn
+        if j.is_nil && !(fn.ends_with ".html")
+          toc.index_of "$fn.html"
+        else
+          j
+
+    prev, next := idx
+      .bind x->
+        (if x>0 then toc.nth x-1 else nil, toc.nth x+1)
+      # NYI: UNDER DEVELOPMENT: better type inference necessary
+      .or_else (id (option String) nil, id (option String) nil)
+
+    attractive_next :=
+      next.bind x->
+        l := pp
+          .bind (p -> p.resolve x .as_string)
+          .or_else x
+        template.attractive_link l (is_toc ? "start: " : "next: ") + (document.get_title l (content.get_data_path session.user.read l))
+
+    arrow_link(str String) =>
+      "<i class='far fa-angle-$str' aria-hidden='true'></i>"
+
+    # generate the link to navigate upwards
+    # with respect to a given path
     #
     up_link (p option path) String =>
-      if p.ok
-        template.nav_link p.get.parent "index" up_arrow_link "aria-label='up a level'"
-      else
-        template.nav_link nil          nil     up_arrow_link "aria-label='up a level'"
+      p.bind x->
+        template.nav_link x.parent "index" (arrow_link "up") "aria-label='up a level'"
+       .or_else (template.nav_link nil nil (arrow_link "up") "aria-label='up a level'")
 
     """
       <div class='d-flex justify-content-between'>
-        {top ? "<div class='navtitle'>{generate_title_bar}</div>" : attractive_next}
+        {top ? "<div class='navtitle'>{generate_title_bar}</div>" : attractive_next.or_else ""}
         <div class='d-flex justify-content-between w-75 {top ? "nav_top" : "nav_bot"}'>
-          <div class='nav_left'>{prev}</div>
+          <div class='nav_left'>{template.nav_link pp prev (arrow_link "left")  "aria-label='previous item'"}</div>
           <div class='nav_up'>{up_link pup}</div>
-          <div class='nav_right'>{next}</div>
+          <div class='nav_right'>{template.nav_link pp next (arrow_link "right") "aria-label='next item'"}</div>
         </div>
       </div>
     """
 
 
-up_arrow_link => "<i class='far fa-angle-up' aria-hidden='true'></i>"
+  # extracts toc from index.html
+  #
+  # returns e.g. ["helloworld", "feature_decl", "feature_decl_fields", ...] for tutorial
+  #
+  read_toc_from_index_html =>
+
+    # NYI: CLEANUP: code is a ugly and inefficient
+
+    res := mut ((container.expanding_array String) .empty)
+    s := String.join (document.read_all_lines <| data_path.parent.get.resolve "index.html") "\n"
+    _:= s
+      |> replace_tag "page" m->
+        if m["file"].ok
+          res <- res.add m["file"].val
+        ""
+    _:= s
+      |> replace_tag "browse" m->
+        if m["dir"].ok
+          res <- res.add m["dir"].val
+        else
+          res <- res.add "--no directory--"
+        ""
+    res.as_array
 
 
 # local mutate effect used in this file

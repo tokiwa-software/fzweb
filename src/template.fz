@@ -36,10 +36,8 @@ module template is
   # if there is no path, just link to the destination as is
   #
   module link (p option path, dest String) String =>
-    if p.ok
-      (p.get.resolve dest).as_string
-    else
-      dest
+    p.bind (.resolve dest .as_string)
+     .or_else dest
 
 
   # apply the given parameters to the `attractivelink.html` template
@@ -68,7 +66,7 @@ module template is
           ]
       d String =>
         apply "navigation.html" [
-            ("##LINK##", link p.get d),
+            ("##LINK##", "/{link p.get d}"),
             ("##TITLE##", sym),
             ("##ARIA##", aria_label)
           ]

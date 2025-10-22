@@ -15,10 +15,10 @@
 #     path.of ["some", "path"] true
 #
 private:module path(public names array String, public is_absolute bool) : property.equatable
-pre debug: !names.contains "."
-    # allow ".." only at start in relative paths
-    safety: is_absolute && !names.contains ".."
-            || !(names.drop_while ="..").contains ".."
+  pre debug: !names.contains "."
+      # allow ".." only at start in relative paths
+      safety: is_absolute && !names.contains ".."
+              || !(names.drop_while ="..").contains ".."
 is
 
   # resolve o in this path
@@ -32,9 +32,9 @@ is
   #     path.of "/tmp/folder/file"
   #
   public resolve(o path|String) path
-  pre match o
-        p path => !p.is_absolute
-        String => true
+    pre match o
+          p path => !p.is_absolute
+          String => true
   =>
     match o
       p path => path.of names++p.names is_absolute
