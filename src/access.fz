@@ -1,0 +1,59 @@
+
+# identifies a page alongside a template to send to the user
+#
+module identifier (module file_to_send option path,
+                   module simple_path option String,
+                   content_path option path) is
+
+  is_html_template := content_path.exists
+
+
+  module type.new (file_to_send option path,
+                   simple_path option String) identifier =>
+    identifier file_to_send simple_path nil
+
+
+  get_bytes (s Session) outcome (array u8) =>
+    match file_to_send
+      fts path =>
+        match util.read_file fts.as_string
+          ba array u8 =>
+            if is_html_template
+              s.set_current (simple_path.get "")
+              s.add_session_info_to_html_bytes ba
+            else
+              ba
+          e error => e
+      nil => error "no file to send"
+
+
+  # get response
+  #
+  module response (s Session) response =>
+    # NYI: logging
+    match get_bytes s
+      b array u8 =>
+        suffix := file_to_send.get.suffix
+        attributes := map_of_strings [
+          ("Content-Length", b.length.as_string),
+          ("Content-Type", mime_types.get_mime_type suffix)
+        ]
+        response.new 200 attributes b
+      e error =>
+        s.log "*** error sending content: {e}"
+        response.new 500
+
+
+# indicates a page that is missing
+#
+module missing is
+
+
+# indicates a page that the user is not allowed to access
+#
+module forbidden is
+
+
+# type denoting access to a resource
+#
+module access : choice missing forbidden identifier is
