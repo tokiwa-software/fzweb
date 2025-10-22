@@ -20,6 +20,8 @@ module mime_value (
     parameters[param].get ""
 
 
+  # NYI: BUG: documentation missing
+  #
   module type.from_type_string(type_string String) util.mime_value =>
     # Recursive function to parse the key-value pairs in the string
     #
