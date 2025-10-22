@@ -31,8 +31,9 @@ request_context (LM type : mutate, connection net.connection) is
     if !attributes["Connection"].exists
       attributes.put "Connection" "close"
 
-    lm2 ! ()->
-      br := array_read_handler lm2 data
+    lm : mutate is
+    lm ! ()->
+      br := io.Read_Handler.from_array_u8 lm data
       response := http.response_message.new request 1 1 return_code "OK" attributes.items.as_array br
 
       match ((io.buffered LM)
@@ -54,6 +55,7 @@ module handle_connection (LM type : mutate, conn net.connection) unit =>
 
   process_request LM req_context
 
+
 # extract form data from request_context
 #
 form_data(LM type : mutate, req_context request_context LM) =>
@@ -61,9 +63,10 @@ form_data(LM type : mutate, req_context request_context LM) =>
     match (req_context.request.header["content-length"].or_else "0").parse_i32
       error => 0
       i i32 => i
-  post_data_raw := lm2 ! ()->
-    (io.buffered lm2).reader req_context.request.body ! ()->
-      (io.buffered lm2).read_bytes post_len
+  lm : mutate is
+  post_data_raw := lm ! ()->
+    (io.buffered lm).reader req_context.request.body ! ()->
+      (io.buffered lm).read_bytes post_len
   post_data := String.from_bytes post_data_raw.as_list
   val := util.mime_value.from_type_string (req_context.request.header["content-type"].get "")
   content_type := val.mime_type
@@ -97,29 +100,3 @@ process_request(LM type : mutate, req_context request_context LM) =>
     s Session =>
       s.set_connection req_context.connection
 
-
-# file local mutate
-#
-lm2 : mutate is
-
-
-# custom read handler for reading from an array (helper feature)
-#
-array_read_handler(LM type : mutate, arr array u8) : io.Read_Handler is
-
-
-  # position indicator for the read feature
-  #
-  pos := LM.env.new 0
-
-  # read `count` bytes from the array and "discard" them (by setting a position
-  # indicator)
-  #
-  public redef read(count i32) choice (array u8) io.end_of_file error =>
-    p := pos.get
-    if p >= arr.count
-      io.end_of_file
-    else
-      pos <- p + count
-      end := p+count > arr.count ? arr.count : p+count
-      arr.slice p end .as_array
