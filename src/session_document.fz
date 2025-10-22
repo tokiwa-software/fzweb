@@ -336,15 +336,11 @@ module session_document (module page String,
       # the current state of the title bar is stored as `current`, and `ppup`
       # is the current level in the directory hierarchy
       #
-      recursive_helper (current String, ppup option path) String =>
-        if ppup.ok
-          next_title := (page_link (template.link ppup.get.parent "index")) + " • " + current
-          recursive_helper next_title ppup.get.parent
-        else
-          current
-
-      # now we recurse upwards in the directory tree to show parent pages
-      recursive_helper temp pup
+      for current := temp, (page_link (template.link ppup.get.parent "index")) + " • " + current
+          ppup := pup, ppup.get.parent
+      while ppup.ok
+      else
+        current
 
     attractive_next := "<div>NYI</div>"
     prev := "NYI"
