@@ -10,6 +10,6 @@
 # at the given path
 #
 module exists (path String) bool =>
-  match io.file.stat path true
-    io.file.meta_data => true
-    error => false
+  io.file
+    .stat path true
+    .ok

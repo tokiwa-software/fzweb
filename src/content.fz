@@ -57,8 +57,7 @@ module content is
   type.access_attr (simple_path, attribute, default String) String =>
     access_file := (base_dir simple_path).resolve "access.txt"
     c := config_file.open access_file.as_string
-    a := c.get attribute
-    a.get default
+    c[attribute].or_else default
 
 
   # Check if access to a given path is permitted for user u.
@@ -125,13 +124,8 @@ module content is
   # check if a file is known to be preformatted
   #
   module type.is_known_preformatted_file (file_name String) bool =>
-    file_name.ends_with ".c" ||
-      file_name.ends_with ".fz" ||
-      file_name.ends_with ".fuzion" ||
-      file_name.ends_with ".sh" ||
-      file_name.ends_with ".txt" ||
-      file_name.ends_with ".ebnf"
-
+    for sfx in [".c", ".fz", ".fuzion", ".sh", ".txt", ".ebnf"]
+    until file_name.ends_with sfx
 
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
@@ -195,15 +189,15 @@ module content is
           missing =>
             dir := base_dir path_from_url
             access_file := dir.resolve (path.of "access.txt")
-            access := config_file.open access_file.as_string
             content_path := dir.resolve (file_path path_from_url)
 
-            if path_from_url.ends_with ".png" || path_from_url.ends_with ".svg" || path_from_url.ends_with ".jpg" || path_from_url.ends_with ".jpeg" || path_from_url.ends_with ".pdf"
+            if (for sfx in [".png", ".svg", ".jpg", ".jpeg", ".pdf"]
+                until path_from_url.ends_with sfx)
               if access_permitted s.get_user path_from_url
                 res <- identifier.new content_path path_from_url
             else
               res <- missing
-              match access.get "template"
+              match (config_file.open access_file.as_string)["template"]
                 nil => s.log "no template defined in {access_file}"
                 t String =>
                   res <- identifier (dir.resolve t) path_from_url content_path

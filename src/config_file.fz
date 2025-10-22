@@ -13,7 +13,7 @@ module config_file (values lock_free.Map String String, path String) is
 
   # get the value corresponding to the given key in this config
   #
-  module get (s String) =>
+  module index [] (s String) =>
     values[s]
 
 
