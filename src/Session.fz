@@ -16,30 +16,30 @@ module Session (sessions lock_free.Map String Session,
 
   # session belongs to which user, if at all?
   #
-  module user := concur.atomic (option user) nil
+  module user := concur.atomic (option user) .new nil
 
 
   # login state of the session
   #
-  login := concur.atomic util.login_status util.unauthenticated
+  login := concur.atomic util.login_status .new util.unauthenticated
 
 
   # activity information
   # NYI: not thread-safe!
   #
-  last_activity := concur.atomic (option time.date_time) nil
-  count_activities := concur.atomic (u64 0)
+  last_activity := concur.atomic (option time.date_time) .new nil
+  count_activities := concur.atomic u64 .new 0
 
 
   # connection tied to this session for sending events to the client
   #
-  connection := concur.atomic (option net.connection) nil
+  connection := concur.atomic (option net.connection) .new nil
 
 
   # session history information
   #
-  current_page := concur.atomic (session_document "index" Session.this)
-  last_pushed_history := concur.atomic (option session_document) nil
+  current_page := concur.atomic session_document .new (session_document "index" Session.this)
+  last_pushed_history := concur.atomic (option session_document) .new nil
 
 
   # initialize user and login state

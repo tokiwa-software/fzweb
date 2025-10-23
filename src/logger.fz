@@ -9,7 +9,7 @@
 module logger is
 
   # Atomic integer to maintain a unique thread ID
-  thread_id_count := concur.atomic 0
+  thread_id_count := concur.atomic i32 .new 0
 
   # Thread local storage for thread IDs
   thread_id :=
