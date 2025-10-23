@@ -173,6 +173,8 @@ module content is
   # From a URL path, find the corresponding content identifier, or FORBIDDEN /
   # MISSING in case this does not exist.
   #
+  # NYI: CLEANUP: reduce code nesting
+  #
   module type.get_contents (s Session, path_from_url0 String) access =>
     res := mut access forbidden
     path_from_url := mut path_from_url0

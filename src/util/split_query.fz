@@ -19,6 +19,6 @@ module split_query(query String) lock_free.Map String String =>
       res := k.bind unit (jkey -> (v.bind unit (jval -> query_pairs.put (id String jkey) (id String jval))))
       if res.is_error then panic "decoding error :"+res.err.msg
     else
-      panic "pleasy check query missing '=' character"
+      panic "please check query missing '=' character"
 
   query_pairs
