@@ -33,7 +33,7 @@ module session_document (module page String,
   #
   module get_content array String =>
     lm ! ()->
-      res := (mutate.array String).new lm
+      res := (mutate.array String).empty lm
 
       match document.read_all_lines data_path true (file_name.ends_with ".fz")
         lines list String =>
