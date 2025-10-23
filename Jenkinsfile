@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'flang' }
+  agent any
 
   stages {
     stage('Checkout') {
@@ -31,6 +31,12 @@ pipeline {
         // deployment missing
         script {
           docker.build("tokiwa-software/fzweb:${env.BRANCH_NAME}")
+
+          if (env.BRANCH_NAME == 'main') {
+            sshagent(credentials: ['5b49490a-ba7a-49be-af2f-1f5a7de4b8b9']) {
+              sh "docker image save tokiwa-software/fzweb:${env.BRANCH_NAME} | gzip | ssh jenkins@fuzion-lang.dev docker image load"
+            }
+          }
         }
       }
     }
