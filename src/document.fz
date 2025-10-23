@@ -37,10 +37,7 @@ module document is
   module read_all_lines (file path,
                          return_nil_on_error, pretty_print bool)
                         option (list String) =>
-    res := util
-      .read_file_as_string file.as_string
-
-    match res
+    match util.read_file_as_string file.as_string
       e error =>
         logger.log "error reading from path {file.as_string}: {e}"
         if return_nil_on_error

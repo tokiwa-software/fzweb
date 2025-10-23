@@ -41,49 +41,49 @@ module user (module base_dir String) is
   # name of the user
   #
   module name =>
-    config.get "name"
+    config["name"]
 
 
   # email of the user
   #
   module email =>
-    config.get "email"
+    config["email"]
 
 
   # login of the user
   #
   module login =>
-    config.get "login"
+    config["login"]
 
 
   # password pepper-id of the user
   #
   module password_pepper_id =>
-    config.get "password.pepper-id"
+    config["password.pepper-id"]
 
 
   # password hash of the user
   #
   module password_hash =>
-    config.get "password.hash"
+    config["password.hash"]
 
 
   # does the user have a registration token?
   #
   module has_registration_token =>
-    (config.get "registration_token").exists
+    config["registration_token"].exists
 
 
   # groups of the user
   #
   module groups =>
-    config.get "groups"
+    config["groups"]
 
 
   # deletion token of the user
   #
   deletion_token =>
-    config.get "deletion_token"
+    config["deletion_token"]
 
 
   # checks if groups_to_check contains a group in groups
@@ -255,7 +255,7 @@ module user (module base_dir String) is
       user_text := "{user.users_dir}/{username}/{user.user_file}"
       c := config_file.open user_text
 
-      if (c.get "registration_token").get "" = token
+      if c["registration_token"].get "" = token
         _ := c.remove "registration_token"
         c.save
 
@@ -265,7 +265,7 @@ module user (module base_dir String) is
   type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
     user_dir := "{user.users_dir}/{username}"
     user_text := "{user_dir}/{user.user_file}"
-    if util.exists user_text
+    if io.file.exists user_text
       error "*** user already exists: {username}"
     else
       match io.dir.make user_dir
@@ -337,7 +337,7 @@ module user (module base_dir String) is
     match get_by_deletion_token token
       error => error "no user found with token: {token}"
       u user =>
-        if !(util.exists deleted_users_dir)
+        if !(io.file.exists deleted_users_dir)
           io.dir
             .make deleted_users_dir
             .or_else (() -> u.log "failed making dir: {deleted_users_dir}")

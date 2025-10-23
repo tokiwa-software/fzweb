@@ -9,7 +9,7 @@
 # check if the given client has registered within the last ten minutes
 #
 has_registered_recently (client list u8) bool =>
-  # NYI
+  # NYI: UNDER DEVELOPMENT:
   false
 
 
@@ -19,9 +19,8 @@ do_register (client list u8, form_data lock_free.Map String String) String =>
   if has_registered_recently client
     "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
   else
-    registration_result := user.register form_data
-    # NYI: registration rate limit
-    match registration_result
+    # NYI: UNDER DEVELOPMENT: registration rate limit, add logging.
+    match user.register form_data
       rr String => rr
       e error => "<div class='text-center'>*** Registration failed: {e}</div>"
 
