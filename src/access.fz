@@ -16,7 +16,7 @@ module identifier (module file_to_send option path,
   get_bytes (s Session) outcome (array u8) =>
     match file_to_send
       fts path =>
-        match util.read_file fts.as_string
+        match util.read_file fts
           ba array u8 =>
             if is_html_template
               s.set_current (simple_path.get "")

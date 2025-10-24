@@ -105,7 +105,6 @@ robots_txt =>
   r := content
     .templates_dir
     .resolve "robots.txt"
-    .as_string
   match util.read_file_as_string r
     str String =>
       send_ok str
