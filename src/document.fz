@@ -31,38 +31,6 @@ module document is
       page
 
 
-  # read lines from the path and return them in a list of string
-  # NYI: pretty printing
-  #
-  module read_all_lines (file path,
-                         return_nil_on_error, pretty_print bool)
-                        option (list String) =>
-    match util.read_file_as_string file.as_string
-      e error =>
-        logger.log "error reading from path {file.as_string}: {e}"
-        if return_nil_on_error
-          nil
-        else
-          ["--error reading file--"].as_list
-      str String => str.split "\n"
-
-
-  # same as read_all_lines (3 args) but without the option
-  # for pretty printing
-  #
-  read_all_lines (file path,
-                  return_nil_on_error bool)
-                 option (list String) =>
-    read_all_lines file return_nil_on_error false
-
-
-  # same as read_all_lines (2 args) but without the option of
-  # returning nil on error
-  #
-  module read_all_lines (file path) list String =>
-    (read_all_lines file false).get
-
-
   # given a `link` and a path `page_file`, attempt to extract the title of
   # the page at `page_file`.
   #
@@ -78,7 +46,7 @@ module document is
     title_end := "</h1>"
 
     for
-      line in document.read_all_lines page_file
+      line in util.read_file_as_string page_file .get "" .split "\n"
       start_open := (line.find title_start_open).get -1
       start_close :=
         if start_open >= 0
