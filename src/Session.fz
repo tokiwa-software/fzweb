@@ -156,7 +156,7 @@ module Session (sessions lock_free.Map String Session,
   #
   module send_data (msg String) =>
     match connection.read
-      nil => log "failed to send {(msg.split "\n").head.get}, connection is nil"
+      nil => log "failed to send {msg.lines[0]}, connection is nil"
       c net.connection =>
         reset_connection_timer
 
