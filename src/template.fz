@@ -20,9 +20,8 @@ module template is
       template_id identifier =>
         match template_id.file_to_send
           p path =>
-            lines := document.read_all_lines p
             for
-              res := (String.join lines "\n"), res.replace r.values.0 r.values.1
+              res := util.read_file_as_string p .get "", res.replace r.values.0 r.values.1
               r in repl
             else
               res

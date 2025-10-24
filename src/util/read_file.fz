@@ -10,15 +10,18 @@
 # read file p file and return
 # its contents as a String
 #
-module read_file_as_string(p String) outcome String =>
-  (read_file p).bind b->
+module read_file_as_string(c choice String path) outcome String =>
+  (read_file c).bind b->
     String.from_bytes b
 
 
 # read file p file and return
 # its contents as an array of bytes
 #
-module read_file(p String) outcome (array u8) =>
+module read_file(c choice String path) outcome (array u8) =>
+  str := match c
+    s String => s
+    p path => p.as_string
   # NYI: UNDER DEVELOPMENT cache these reads?
-  io.file.use p io.file.mode.read ()->
+  io.file.use str io.file.mode.read ()->
     (io.buffered io.file.file_mutate).read_fully
