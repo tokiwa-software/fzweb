@@ -35,26 +35,30 @@ module session_document (module page String,
     lm ! ()->
       res := (mutate.array String).empty lm
 
-      match document.read_all_lines data_path true (file_name.ends_with ".fz")
-        lines list String =>
+      match util.read_file_as_string data_path
+        str String =>
           if permitted
             res.add (navigation true)
 
           res.add "<div class='fd-page-content'>"
 
           if file_name.ends_with ".html"
-            html := add_session_info_to_html (String.join lines "\n")
+            html := add_session_info_to_html str
 
             if has_embedded_html html
               res.add (embed_html_in_iframe html)
             else
               res.add html
           else if content.is_known_preformatted_file file_name
+
+            # NYI: UNDER DEVELOPMENT: pretty printing
+
             title := (content.file_path page).as_string
             res.add "<h1>{util.url_encoded.html_encode title.as_string}</h1>\n"
             # opacity is reset in main.js:initAnsiUp()
             res.add "<pre class='code' style='opacity: 0'>\n"
-            lines.for_each line->(res.add (util.url_encoded.html_encode line.as_string))
+            str.lines .for_each line->
+              res.add <| util.url_encoded.html_encode line
             res.add "</pre>\n"
           else
             fname := util.url_encoded.html_encode data_path.file_name
@@ -72,7 +76,7 @@ module session_document (module page String,
 
           if permitted
             res.add (navigation false)
-        nil => res.add "<p>404: page not found</p>"
+        error => res.add "<p>404: page not found</p>"
 
       res.as_array
 
@@ -403,19 +407,21 @@ module session_document (module page String,
     # NYI: CLEANUP: code is a ugly and inefficient
 
     res := mut ((container.expanding_array String) .empty)
-    s := String.join (document.read_all_lines <| data_path.parent.get.resolve "index.html") "\n"
-    _:= s
-      |> replace_tag "page" m->
-        if m["file"].ok
-          res <- res.add m["file"].val
-        ""
-    _:= s
-      |> replace_tag "browse" m->
-        if m["dir"].ok
-          res <- res.add m["dir"].val
-        else
-          res <- res.add "--no directory--"
-        ""
+    match util.read_file_as_string <| data_path.parent.get.resolve "index.html"
+      s String =>
+        _:= s
+          |> replace_tag "page" m->
+            if m["file"].ok
+              res <- res.add m["file"].val
+            ""
+        _:= s
+          |> replace_tag "browse" m->
+            if m["dir"].ok
+              res <- res.add m["dir"].val
+            else
+              res <- res.add "--no directory--"
+            ""
+      error =>
     res.as_array
 
 
