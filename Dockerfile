@@ -17,7 +17,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
   inkscape \
   unzip \
   locales \
-  maven \
   libwolfssl-dev \
   libwolfssl42t64
 RUN ln -s /usr/bin/clang-18 /usr/bin/clang
@@ -29,7 +28,6 @@ WORKDIR /fzweb/fuzion
 RUN make no-java build/modules/java.base.fum build/fuzion.ebnf
 WORKDIR /fzweb/flang_dev/rrd-antlr4
 RUN sed -i 1,3d src/main/resources/railroad-diagram.css
-RUN mvn clean package
 WORKDIR /fzweb/flang_dev
 RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' FZ='/fzweb/fuzion/build/bin/fz' build
 WORKDIR /fzweb
