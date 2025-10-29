@@ -17,7 +17,7 @@ module mime_value (
   # or an empty string if the given key is not in that map
   #
   module index [ ] (param String) String =>
-    parameters[param].get ""
+    parameters[param].val ""
 
 
   # NYI: BUG: documentation missing

@@ -19,7 +19,7 @@ module identifier (module file_to_send option path,
         match util.read_file fts
           ba array u8 =>
             if is_html_template
-              s.set_current (simple_path.get "")
+              s.set_current (simple_path.val "")
               s.add_session_info_to_html_bytes ba
             else
               ba

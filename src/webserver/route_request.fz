@@ -30,7 +30,7 @@ do_register (client list u8, form_data lock_free.Map String String) String =>
 confirm_registration(s Session, query String) =>
   s_q := util.split_query query
   webserver.this.log s "got confirm_registration"
-  match user.complete_registration (s_q["username"].get "") (s_q["token"].get "")
+  match user.complete_registration (s_q["username"].val "") (s_q["token"].val "")
     unit =>
       webserver.this.log s "got confirm_registration send 302 success"
       response.new 302 (map_of_strings [("Location", "/registration_successful")])
@@ -44,7 +44,7 @@ confirm_registration(s Session, query String) =>
 confirm_account_deletion(s Session, query String) =>
   s_q := util.split_query query
   webserver.this.log s "got confirm_account_deletion"
-  match user.complete_account_deletion (s_q["token"].get "")
+  match user.complete_account_deletion (s_q["token"].val "")
     unit =>
       webserver.this.log s "got confirm_account_deletion send 302 success"
       response.new 302 (map_of_strings [("Location", "/account_deletion_successful")])

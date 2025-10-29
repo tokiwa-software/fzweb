@@ -89,7 +89,7 @@ module user (module base_dir String) is
   # groups_to_check and groups are both separated by " "
   #
   module check_group_access (groups_to_check String) =>
-    groups0 := container.set_of_ordered (groups.get "").split
+    groups0 := container.set_of_ordered (groups.val "").split
     checked_groups := container.set_of_ordered groups_to_check.split
     common_groups := groups0 ∩ checked_groups
 
@@ -101,7 +101,7 @@ module user (module base_dir String) is
         else
           check_for_all := checked_groups.contains "all"
           access_to_all := groups0.contains "all"
-          check_for_any := (groups0.size_option.get 0) > 0 && checked_groups.contains "any"
+          check_for_any := (groups0.size_option.val 0) > 0 && checked_groups.contains "any"
           check_for_all || check_for_any || access_to_all
 
 
@@ -113,13 +113,13 @@ module user (module base_dir String) is
     config.save
     subject := "[fuzion-lang.dev] - Confirm account deletion"
     message_content := """
-      Dear {name.get "fuzion-lang.dev user"},
+      Dear {name.or_panic},
 
       Please confirm the deletion of your account by clicking the following link:
 
         https://fuzion-lang.dev/confirm_account_deletion?token={token}
     """
-    email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.get "") subject message_content
+    email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.val "") subject message_content
 
 
 
@@ -211,14 +211,14 @@ module user (module base_dir String) is
         true
 
 
-    first_name := (form_data[form_data_first_name].get "").trim
-    last_name := (form_data[form_data_last_name].get "").trim
-    affiliation := (form_data[form_data_affiliation].get "").trim
+    first_name := (form_data[form_data_first_name].val "").trim
+    last_name := (form_data[form_data_last_name].val "").trim
+    affiliation := (form_data[form_data_affiliation].val "").trim
     username0 := form_data[form_data_username]
     email0 := form_data[form_data_email].bind (.trim)
     password0 := form_data[form_data_password]
-    terms := "on" = form_data[form_data_terms].get "off"
-    newsletter := "off" = form_data[form_data_newsletter].get "off"
+    terms := "on" = form_data[form_data_terms].val "off"
+    newsletter := "off" = form_data[form_data_newsletter].val "off"
 
     if email0.is_nil || username0.is_nil || password0.is_nil || !terms
       error "Required fields not present: email, username, password, accepting terms."
@@ -253,7 +253,7 @@ module user (module base_dir String) is
       user_text := "{user.users_dir}/{username}/{user.user_file}"
       c := config_file.open user_text
 
-      if c["registration_token"].get "" = token
+      if c["registration_token"].val "" = token
         _ := c.remove "registration_token"
         c.save
 

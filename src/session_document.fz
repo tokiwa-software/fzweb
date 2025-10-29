@@ -218,7 +218,7 @@ module session_document (module page String,
                     m
                   v String =>
                     nm := m.add k v
-                    rest := pv.nth 1 .get ""
+                    rest := pv.nth 1 .val ""
                     extract_attribute_contents rest nm
 
 
