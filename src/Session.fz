@@ -137,7 +137,7 @@ module Session (sessions lock_free.Map String Session,
   # send events along with data on the session's connection
   #
   send_event (event String, html_encoded_data option String) =>
-    data := html_encoded_data.get ""
+    data := html_encoded_data.val ""
     send_data "event: {event}\ndata: {data}\n\n"
 
 
@@ -259,7 +259,7 @@ module Session (sessions lock_free.Map String Session,
     else if id??
       res <- get sessions id.get c
 
-    res.get.get (Session sessions c orig)
+    res.get.or_else (Session sessions c orig)
 
 
   # send events along with data on the session's connection

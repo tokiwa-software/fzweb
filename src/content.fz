@@ -112,7 +112,7 @@ module content is
   # "true", the user directory.
   #
   type.get_dir_from_browse (u option user, data_path path, map lock_free.Map String String) option String =>
-    if "true" = (map["userdata"].get "false")
+    if "true" = (map["userdata"].val "false")
       u.bind String u0->
         ud := path.of u0.base_dir
         ru := data_path.parent.get.relativize ud
@@ -217,7 +217,7 @@ module content is
       io.file.stat
         .stats p.as_string
         .bind (.is_regular)
-        .get false
+        .val false
     if is_valid_file
       identifier.new p nil
     else

@@ -46,4 +46,4 @@ module mime_types is
   # given a suffix, look up the corresponding MIME type in the map and return it
   #
   module get_mime_type (suffix String) String =>
-    mime_type_table[suffix].get "text/plain"
+    mime_type_table[suffix].val "text/plain"

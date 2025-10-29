@@ -79,14 +79,14 @@ module document is
 
     for
       line in document.read_all_lines page_file
-      start_open := (line.find title_start_open).get -1
+      start_open := (line.find title_start_open).val -1
       start_close :=
         if start_open >= 0
-          (line.find title_start_close (start_open + title_start_open.byte_length)).get -1
+          (line.find title_start_close (start_open + title_start_open.byte_length)).val -1
         else -1
       end :=
         if start_close >= 0
-          (line.find title_end (start_close + title_start_close.byte_length)).get -1
+          (line.find title_end (start_close + title_start_close.byte_length)).val -1
         else -1
     until start_close >= 0 && end >= 0
       line.substring (start_close + title_start_close.byte_length) end
