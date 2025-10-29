@@ -162,9 +162,10 @@ module Session (sessions lock_free.Map String Session,
 
         r := lm.instate_self (outcome unit) ()->
           c.with (outcome unit) lm ()->
+            final_msg := "{msg.byte_length.hex}\r\n{msg}\r\n"
             io.buffered lm
               .writer.env
-              .write msg.utf8
+              .write final_msg.utf8
               .error
               .and_then _->(io.buffered lm).writer.env.flush
 

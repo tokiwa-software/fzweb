@@ -81,7 +81,7 @@ goto(s Session, form_data lock_free.Map String String) =>
 # e.g. when running code example, login status etc.
 #
 events(s Session) =>
-  response 200 (map_of_strings [("Cache-Control", "no-cache"), ("Connection", "keep-alive"), ("Content-Type", "text/event-stream")]) [0] s
+  response 200 (map_of_strings [("Cache-Control", "no-cache"), ("Connection", "keep-alive"), ("Content-Type", "text/event-stream"), ("Transfer-Encoding", "chunked")]) [] s
 
 
 # send content and login status via session
