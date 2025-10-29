@@ -33,10 +33,7 @@ run =>
           _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
             fuzion.runtime.contract_fault
               .try ()->
-                # NYI: PERFORMANCE: shared JVM for all threads?
-                # start a JVM with CLASS_PATH=classes
-                fuzion.jvm.use _ ["-Djava.class.path=classes"] ()->
-                  webserver.handle_connection lm conn
+                webserver.handle_connection lm conn
               .catch  e->
                 logger.log "contract_fault: $e"
 

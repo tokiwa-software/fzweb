@@ -23,9 +23,7 @@ module user (module base_dir String) is
       match password_hash
         nil => false
         hash String =>
-          p := password.utf8.map (.cast_to_i8)
-          h := hash.utf8.map (.cast_to_i8)
-          res := (Java.at.favre.lib.crypto.bcrypt.BCrypt_static.verifyer.verify__u00005b_B_u00005b_B p h).verified
+          res := crypto.password_hash_verify password hash
           log (res ? "successful login" : "*** failed login attempt")
           res
     else
