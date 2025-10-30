@@ -37,7 +37,7 @@ module document is
   module read_all_lines (file path,
                          return_nil_on_error, pretty_print bool)
                         option (list String) =>
-    match util.read_file_as_string file.as_string
+    match util.read_file_as_string file
       e error =>
         logger.log "error reading from path {file.as_string}: {e}"
         if return_nil_on_error
@@ -77,21 +77,23 @@ module document is
     title_start_close := ">"
     title_end := "</h1>"
 
-    for
-      line in document.read_all_lines page_file
-      start_open := (line.find title_start_open).val -1
-      start_close :=
-        if start_open >= 0
-          (line.find title_start_close (start_open + title_start_open.byte_length)).val -1
-        else -1
-      end :=
-        if start_close >= 0
-          (line.find title_end (start_close + title_start_close.byte_length)).val -1
-        else -1
-    until start_close >= 0 && end >= 0
-      line.substring (start_close + title_start_close.byte_length) end
-    else
-      strip_html (content.file_path link).as_string
+    match util.read_file_as_string page_file
+      error =>
+        "-- error reading {page_file} --"
+      str String =>
+        start_open := (str.find title_start_open).val -1
+        start_close :=
+          if start_open >= 0
+            (str.find title_start_close (start_open + title_start_open.byte_length)).val -1
+          else -1
+        end :=
+          if start_close >= 0
+            (str.find title_end (start_close + title_start_close.byte_length)).val -1
+          else -1
+        if start_close >= 0 && end >= 0
+          str.substring (start_close + title_start_close.byte_length) end
+        else
+          strip_html (content.file_path link).as_string
 
 
   # create attribute_map based on the entry provided
