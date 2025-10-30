@@ -96,14 +96,13 @@ module session_document (module page String,
   # <page file="sqlite/index" />
   #
   page_tag(m container.Map String String) =>
-    to :=
-      path
-        .of page
-        .parent
-        .val
-        .resolve m["file"].get
-        .as_string
-    page_link to
+    path
+      .of page
+      .parent
+      .val
+      .resolve m["file"].get
+      .as_string
+      |> page_link
 
 
   # browse tag replacer, used to replace HTML this:
