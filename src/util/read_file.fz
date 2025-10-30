@@ -23,5 +23,8 @@ module read_file(c choice String path) outcome (array u8) =>
     s String => s
     p path => p.as_string
   # NYI: UNDER DEVELOPMENT cache these reads?
-  io.file.use str io.file.mode.read ()->
-    (io.buffered io.file.file_mutate).read_fully
+  io.file.use str io.file.mode.append ()->
+    sz := (io.file.stat str false).val.size
+    io.file.open.mmap 0 sz ()->
+      array u8 sz.as_i32 i->
+        io.file.mapped_buffer.env[i.as_i64]
