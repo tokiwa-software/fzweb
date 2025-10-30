@@ -300,7 +300,7 @@ module user (module base_dir String) is
     uuid.create_random.as_string
 
 
-  module type.trigger_account_deletion (client list u8, form_data lock_free.Map String String) String =>
+  module type.trigger_account_deletion (client Sequence u8, form_data lock_free.Map String String) String =>
     if has_triggered_account_deletion_recently client
       "<div class='text-center'>Only one deletion request per IP possible within 10 minutes.</div>"
     else
@@ -323,7 +323,7 @@ module user (module base_dir String) is
   # has given client triggered an account deletion
   # in the last 10 minutes?
   #
-  type.has_triggered_account_deletion_recently (client list u8) bool =>
+  type.has_triggered_account_deletion_recently (client Sequence u8) bool =>
     # NYI
     false
 
