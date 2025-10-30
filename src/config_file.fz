@@ -9,7 +9,7 @@
 # config_file -- handle config files read and written by the Fuzion
 # webserver
 #
-module config_file (values lock_free.Map String String, path String) is
+module config_file (values lock_free.Map String String, p path) is
 
   # get the value corresponding to the given key in this config
   #
@@ -33,7 +33,7 @@ module config_file (values lock_free.Map String String, path String) is
   # its path
   #
   module save =>
-    res := io.file.use unit path io.file.mode.write ()->
+    res := io.file.use unit p.as_string io.file.mode.write ()->
       data := values.items
                     .map (e -> "{e.0}: {e.1}")
                     .as_string "\n"
@@ -41,7 +41,7 @@ module config_file (values lock_free.Map String String, path String) is
 
     match res
       unit => unit
-      e error => logger.log "Writing to config file {path} failed: {e}."
+      e error => logger.log "Writing to config file {p} failed: {e}."
 
 
   # open the config file located at the given path p
@@ -50,7 +50,7 @@ module config_file (values lock_free.Map String String, path String) is
   # no error is raised and an internal representation of an
   # empty config is created
   #
-  module type.open (p String) config_file =>
+  module type.open (p path) config_file =>
     m := (lock_free.Map String String).empty
 
     util

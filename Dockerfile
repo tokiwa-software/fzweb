@@ -37,7 +37,7 @@ RUN mvn clean package
 WORKDIR /fzweb/flang_dev
 RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' FZ='/fzweb/fuzion/build/bin/fz' build
 WORKDIR /fzweb
-RUN /fzweb/fuzion/build/bin/fz -classes -JLibraries="wolfssl sodium" -verbose=2 -unsafeIntrinsics=on -modules=http,lock_free,uuid,mail,wolfssl,crypto,sodium -sourceDirs=src run
+RUN /fzweb/fuzion/build/bin/fz -classes -JLibraries="wolfssl sodium" -verbose=2 -modules=http,lock_free,uuid,mail,wolfssl,crypto,sodium -sourceDirs=src run
 
 
 # runner

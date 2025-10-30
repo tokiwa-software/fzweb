@@ -22,10 +22,10 @@ module logger is
     say "{time.now.get} {logger.thread_id}: {c ? s String => s | e error => e.as_string}"
 
   # Logger function that writes to a file
-  module log(log_path String, msg String) =>
+  module log(log_path path, msg String) =>
     m := "{time.now.get} {logger.thread_id}: {msg}"
 
-    res := io.file.use unit log_path io.file.mode.append ()->
+    res := io.file.use unit log_path.as_string io.file.mode.append ()->
         (io.file.writer.write "{m}\n".utf8).error
 
     match res

@@ -28,12 +28,12 @@ bench_root:
 .PHONY: profile
 profile:
 	printf "output will be in out.prof\n"
-	$(FUZION_BIN)/fz -XjavaProf=out.prof -jvm -JLibraries="wolfssl sodium" -verbose=2 -unsafeIntrinsics=on -modules=$(MODULES) -sourceDirs=src run
+	$(FUZION_BIN)/fz -XjavaProf=out.prof -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
 
 .PHONY: flamegraph
 flamegraph:
 	printf "output will be in out.svg\n"
-	$(FUZION_BIN)/fz -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -verbose=2 -unsafeIntrinsics=on -modules=$(MODULES) -sourceDirs=src run
+	$(FUZION_BIN)/fz -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
 
 .PHONY: run_benchmarks
 run_benchmarks:
@@ -42,3 +42,4 @@ run_benchmarks:
 .PHONY: run_tests
 run_tests:
 	$(FUZION_BIN)/fz -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src tests
+	$(FUZION_BIN)/fz -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
