@@ -15,17 +15,15 @@
 
 include Makefile
 
-SHELL := /bin/bash
-
 .PHONY: bench_tutorial
 bench_tutorial:
-	ss -ltnp|grep :8080 || (echo "fzweb not running?" && exit 1)
-	for i in {1..50}; do curl -o /dev/null -s -w "%{time_total}\n" http://127.0.0.1:8080/tutorial/index; done | sort | awk '{ total += $$1; count++ } END { print "Avg:", total/count }'
+	ss -ltnp | grep :8080 || (echo "fzweb not running?" && exit 1)
+	for i in $$(seq 1 50); do curl -o /dev/null -s -w "%{time_total}\n" http://127.0.0.1:8080/tutorial/index; done | sort | awk '{ total += $$1; count++ } END { print "Avg:", total/count }'
 
 .PHONY: bench_root
 bench_root:
-	ss -ltnp|grep :8080 || (echo "fzweb not running?" && exit 1)
-	for i in {1..50}; do curl -o /dev/null -s -w "%{time_total}\n" http://127.0.0.1:8080/; done | sort | awk '{ total += $$1; count++ } END { print "Avg:", total/count }'
+	ss -ltnp | grep :8080 || (echo "fzweb not running?" && exit 1)
+	for i in $$(seq 1 50); do curl -o /dev/null -s -w "%{time_total}\n" http://127.0.0.1:8080/; done | sort | awk '{ total += $$1; count++ } END { print "Avg:", total/count }'
 
 .PHONY: profile
 profile:
