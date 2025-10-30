@@ -13,10 +13,10 @@ MODULES = http,lock_free,uuid,mail,wolfssl,crypto,sodium
 
 .PHONY: run_fz
 run_fz:
-	$(FUZION_BIN)/fz -jvm -JLibraries="wolfssl sodium" -verbose=2 -unsafeIntrinsics=on -modules=$(MODULES) -sourceDirs=src run
+	$(FUZION_BIN)/fz -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
 
 webserver:
-	$(FUZION_BIN)/fz -c -CLink="wolfssl sodium" -CInclude="wolfssl/options.h wolfssl/ssl.h sodium.h" -unsafeIntrinsics=on -modules=$(MODULES) -sourceDirs=src -o=webserver run
+	$(FUZION_BIN)/fz -c -CLink="wolfssl sodium" -CInclude="wolfssl/options.h wolfssl/ssl.h sodium.h" -modules=$(MODULES) -sourceDirs=src -o=webserver run
 
 .PHONY: run_fz_c
 run_fz_c: webserver
