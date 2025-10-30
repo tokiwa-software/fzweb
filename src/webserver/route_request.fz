@@ -8,14 +8,14 @@
 
 # check if the given client has registered within the last ten minutes
 #
-has_registered_recently (client list u8) bool =>
+has_registered_recently (client Sequence u8) bool =>
   # NYI: UNDER DEVELOPMENT:
   false
 
 
 # create a user account given the data submitted via the form content
 #
-do_register (client list u8, form_data lock_free.Map String String) String =>
+do_register (client Sequence u8, form_data lock_free.Map String String) String =>
   if has_registered_recently client
     "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
   else
@@ -93,7 +93,7 @@ send_content_and_login_status(s Session) =>
 
 # get current session
 #
-session(form_data lock_free.Map String String, client list u8) Session =>
+session(form_data lock_free.Map String String, client Sequence u8) Session =>
   sessid_original := form_data["originalsessionid"]
   sessid := form_data["sessionid"]
   Session.get sessions sessid_original sessid client
@@ -134,7 +134,7 @@ get_file_response(s Session, form_data lock_free.Map String String, raw_path Str
 # routes a given request to the code that handles it,
 # and returns the response
 #
-module route_request (raw_path0 String, cmd http.request_method, client list u8, form_data lock_free.Map String String, query String) response =>
+module route_request (raw_path0 String, cmd http.request_method, client Sequence u8, form_data lock_free.Map String String, query String) response =>
 
   s =>
     session form_data client

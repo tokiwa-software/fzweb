@@ -42,7 +42,7 @@ module template is
   # apply the given parameters to the `attractivelink.html` template
   #
   module attractive_link (to, title String) String =>
-    apply "attractivelink.html" [("##LINK##" ,"/{to}"), ("##TITLE##", title)].as_list
+    apply "attractivelink.html" [("##LINK##" ,"/{to}"), ("##TITLE##", title)]
 
 
   # apply the given parameters to the `page.html` template

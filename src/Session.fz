@@ -10,7 +10,7 @@
 # webserver
 #
 module Session (sessions lock_free.Map String Session,
-                client list u8,
+                client Sequence u8,
                 old_session option Session) ref is
 
 
@@ -232,7 +232,7 @@ module Session (sessions lock_free.Map String Session,
 
   # find a session by id and client
   #
-  module type.get (sessions lock_free.Map String Session, id String, c list u8) option Session =>
+  module type.get (sessions lock_free.Map String Session, id String, c Sequence u8) option Session =>
     match sessions[id]
       nil =>
         logger.log "No session found in map for id: {id}"
@@ -250,7 +250,7 @@ module Session (sessions lock_free.Map String Session,
   #
   module type.get (sessions lock_free.Map String Session,
                    old_id, id option String,
-                   c list u8) Session =>
+                   c Sequence u8) Session =>
     res := mut (option Session) nil
     orig := mut (option Session) nil
 
