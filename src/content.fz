@@ -56,7 +56,7 @@ module content is
   #
   type.access_attr (simple_path, attribute, default String) String =>
     access_file := (base_dir simple_path).resolve "access.txt"
-    c := config_file.open access_file.as_string
+    c := config_file.open access_file
     c[attribute].or_else default
 
 
@@ -114,7 +114,7 @@ module content is
   type.get_dir_from_browse (u option user, data_path path, map lock_free.Map String String) option String =>
     if "true" = (map["userdata"].val "false")
       u.bind String u0->
-        ud := path.of u0.base_dir
+        ud := u0.base_dir
         ru := data_path.parent.get.relativize ud
         ru.as_string
     else
@@ -199,7 +199,7 @@ module content is
                 res <- identifier.new content_path path_from_url
             else
               res <- missing
-              match (config_file.open access_file.as_string)["template"]
+              match (config_file.open access_file)["template"]
                 nil => s.log "no template defined in {access_file}"
                 t String =>
                   res <- identifier (dir.resolve t) path_from_url content_path

@@ -13,7 +13,7 @@ module email_service is
 
   # read secrets from config file
   #
-  secrets := config_file.open "./smtp_config.txt"
+  secrets := config_file.open (path.of "./smtp_config.txt")
 
 
   # authentication details

@@ -9,11 +9,11 @@
 # user -- facilities providing the user management for the Fuzion
 # webserver
 #
-module user (module base_dir String) is
+module user (module base_dir path) is
 
-  config := config_file.open (base_dir + "/" + user.user_file)
-  log_path := base_dir + "/" + user.log_file
-  _ /* run_dir_path */ := base_dir + "/" + user.run_dir
+  config := config_file.open (base_dir.resolve user.user_file)
+  log_path := base_dir.resolve user.log_file
+  _ /* run_dir_path */ := base_dir.resolve user.run_dir
 
 
   # verify username password combination
@@ -125,8 +125,8 @@ module user (module base_dir String) is
 
   # get a list of the directory entries
   #
-  type.list_dir (path String) array String =>
-    res := io.dir.use _ path ()->
+  type.list_dir (p path) array String =>
+    res := io.dir.use _ p.as_string ()->
       for
         entries := (container.expanding_array String).empty, entries.add next.get
         next := io.dir.open.read
@@ -140,12 +140,12 @@ module user (module base_dir String) is
 
   # given a path of a user directory, check if the given predicate applies
   #
-  type.check_user (predicate user->bool, path String) bool =>
-    match io.file.stat path true
+  type.check_user (predicate user->bool, p path) bool =>
+    match io.file.stat p.as_string true
       error => false
       m io.file.meta_data =>
         if m.is_dir
-          u := user path
+          u := user p
           predicate u
         else
           false
@@ -176,7 +176,7 @@ module user (module base_dir String) is
   module type.get_user(predicate user->bool) outcome user =>
     for
       f in (list_dir users_dir)
-      user_dir := "$users_dir/$f"
+      user_dir := users_dir.resolve f
     until check_user predicate user_dir
       user user_dir
     else
@@ -186,7 +186,7 @@ module user (module base_dir String) is
   # get the default user
   #
   module type.default_user user =>
-    user (users_dir + "/" + no_user)
+    user (users_dir.resolve no_user)
 
 
   # register a using the data submitted by the form
@@ -250,7 +250,9 @@ module user (module base_dir String) is
     if username.contains "." || username.contains "/" || username.is_empty
       error "Dots and slashes in username are not allowed."
     else
-      user_text := "{user.users_dir}/{username}/{user.user_file}"
+      user_text := user.users_dir
+                       .resolve username
+                       .resolve user.user_file
       c := config_file.open user_text
 
       if c["registration_token"].val "" = token
@@ -261,12 +263,12 @@ module user (module base_dir String) is
   # create and store user information on the file system
   #
   type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
-    user_dir := "{user.users_dir}/{username}"
-    user_text := "{user_dir}/{user.user_file}"
-    if io.file.exists user_text
+    user_dir := user.users_dir.resolve username
+    user_text := user_dir.resolve user.user_file
+    if io.file.exists user_text.as_string
       error "*** user already exists: {username}"
     else
-      match io.dir.make user_dir
+      match io.dir.make user_dir.as_string
         e error => e
         unit =>
           token := generate_uuid
@@ -335,12 +337,12 @@ module user (module base_dir String) is
     match get_by_deletion_token token
       error => error "no user found with token: {token}"
       u user =>
-        if !(io.file.exists deleted_users_dir)
+        if !(io.file.exists deleted_users_dir.as_string)
           io.dir
-            .make deleted_users_dir
+            .make deleted_users_dir.as_string
             .or_else (() -> u.log "failed making dir: {deleted_users_dir}")
 
-        io.file.move u.base_dir "{deleted_users_dir}/{time.now}"
+        io.file.move u.base_dir.as_string "{deleted_users_dir}/{time.now}"
 
 
   # send email with account confirmation link
@@ -363,8 +365,8 @@ module user (module base_dir String) is
   #
   type.noreply_tokiwa_software => "noreply@tokiwa.software"
 
-  type.users_dir => "./users"
-  type.deleted_users_dir => "./users_deleted"
+  type.users_dir => path.of "./users"
+  type.deleted_users_dir => path.of "./users_deleted"
   type.user_file => "user.txt"
   type.log_file => "log.txt"
   type.run_dir => "runDir"
