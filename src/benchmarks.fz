@@ -1,0 +1,35 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature benchmarks
+#
+#  for running benchmarks of webserver code
+#
+#  NOTE: that this is not part of a running webserver
+#
+# -----------------------------------------------------------------------
+
+
+benchmarks =>
+
+  duration := time.duration.s 20
+  warmup := time.duration.s 3
+
+  bench(f ()->unit) =>
+    bench f duration warmup
+
+
+  session_document_get_content(where String) =>
+    s := Session (lock_free.Map String Session .empty) (list u8 .empty) nil
+    sd := session_document where s
+    _ := sd.get_content
+
+    x := bench ()->
+      _ := sd.get_content
+
+    say "session_document.get_content {where} iter/s: {x}"
+
+
+  session_document_get_content "tutorial"
+  session_document_get_content "."

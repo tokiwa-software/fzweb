@@ -1,0 +1,40 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature tests
+#
+#  for running tests of webserver code
+#
+#  NOTE: that this is not part of a running webserver
+#
+# -----------------------------------------------------------------------
+
+
+tests =>
+
+  Test(EQ type : property.equatable, exp EQ, l Lazy EQ) ref : Function bool is
+    public redef call bool =>
+      l = exp
+
+
+  test_definitions =>
+    [
+      Test "font/woff2" (mime_types.get_mime_type "woff2")
+    ]
+
+
+
+  results := test_definitions
+    .map_to_array (.call)
+
+
+  ok, failed := results
+    .reduce (0,0) (r, t)->
+      if t
+        (r.0+1, r.1)
+      else
+        (r.0, r.1+1)
+
+  say "Of {results.count} tests, $ok tests passed, $failed failed."
+
