@@ -21,15 +21,29 @@ benchmarks =>
 
 
   session_document_get_content(where String) =>
-    s := Session (lock_free.Map String Session .empty) (list u8 .empty) nil
-    sd := session_document where s
-    _ := sd.get_content
-
-    x := bench ()->
+    x := io.Out.instate _ io.Out.blackhole ()->
+      s := Session (lock_free.Map String Session .empty) (list u8 .empty) nil
+      sd := session_document where s
       _ := sd.get_content
+
+      bench ()->
+        _ := sd.get_content
 
     say "session_document.get_content {where} iter/s: {x}"
 
 
+  session_event_msg(where String) =>
+    x := io.Out.instate _ io.Out.blackhole ()->
+      s := Session (lock_free.Map String Session .empty) (list u8 .empty) nil
+      s.set_current where
+
+      bench ()->
+        _ := s.event_msg
+
+    say "Session.event_msg {where} iter/s: {x}"
+
+
   session_document_get_content "tutorial"
   session_document_get_content "."
+  session_event_msg "tutorial"
+  session_event_msg "."

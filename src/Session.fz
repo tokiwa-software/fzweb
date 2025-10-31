@@ -295,16 +295,19 @@ module Session (sessions lock_free.Map String Session,
       .as_array
 
 
-  # send current page content to the client
+  # the message to send via an event connection
   #
-  module send_content =>
-    msg := """
+  module event_msg =>
+    """
       id: 0
       event: content
       {prepend_data current_page.read.get_content}\n
     """
 
-    send_data msg
+  # send current page content to the client
+  #
+  module send_content =>
+    send_data event_msg
     send_push_history
 
 
