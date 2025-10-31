@@ -8,10 +8,22 @@
 
 # response -- represents an http response from the webserver
 #
-module response (module returncode i32,
-                 module attributes lock_free.Map String String,
-                 module data Sequence u8,
+module response (returncode i32,
+                 attributes lock_free.Map String String,
+                 data Sequence u8,
                  module session option Session) is
+
+
+  # get the bytes of this response
+  #
+  module bytes(LM type : mutate) =>
+    attributes.put "Server" "Fuzion WebServer v0.0.2"
+    if !attributes["Connection"].exists
+      attributes.put "Connection" "close"
+    br := io.Read_Handler.from_array_u8 LM data.as_array
+    http.response_message
+        .new nil 1 1 returncode "NYI" attributes.items.as_array br
+        .bytes i32.max
 
 
   # short-hand for creating a response with an empty session field
