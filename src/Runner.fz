@@ -10,11 +10,11 @@ module Runner ref is
 
   # maximum bytes to read from process
   #
-  max_output_bytes => 1E4
+  max_output_bytes => 1E5
 
   # maximum time to wait for process to finish
   #
-  max_wait_time    => time.duration.s 10
+  max_wait_time    => time.duration.s 30
 
   # compile and run some code
   #
