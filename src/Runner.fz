@@ -30,7 +30,7 @@ module Runner ref is
 
     # NYI bwrap, ssh jenkins etc.
     # NYI read_lines, send intermediate results
-    r := os.process.start "fz" (normal ? ["-"] : ["-effects" , "-"])
+    r := os.process.start "fz" (normal ? [$"-"] : ["-effects" , $"-"])
       .bind p->
 
         # write code to stdin
