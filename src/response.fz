@@ -23,7 +23,7 @@ module response (returncode i32,
     br := io.Read_Handler.from_array_u8 LM data.as_array
     http.response_message
         .new nil 1 1 returncode "NYI" attributes.items.as_array br
-        .bytes i32.max
+        .bytes data.count
 
 
   # short-hand for creating a response with an empty session field
