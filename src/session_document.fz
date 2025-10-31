@@ -291,7 +291,7 @@ module session_document (module page String,
   page_link (to String)
     pre debug: !to.starts_with "/"
   =>
-    title := document.get_title to (content.get_data_path session.user.read to)
+    title := document.get_title to (content.get_data_path_unsafe session.user.read to)
     template.page_link to title
 
 

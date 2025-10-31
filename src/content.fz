@@ -130,7 +130,7 @@ module content is
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
   #
-  type.get_data_path2 (u option user, simple_path String) path =>
+  module type.get_data_path_unsafe (u option user, simple_path String) path =>
     pages := pages_dir simple_path
     html_file := mut simple_path
 
@@ -156,7 +156,7 @@ module content is
   #
   module type.get_data_path (u option user, simple_path String) path =>
     if access_permitted u simple_path
-      get_data_path2 u simple_path
+      get_data_path_unsafe u simple_path
     else
       if u!!
         path_from_access simple_path "alternative.need.login" "need_login.html"
