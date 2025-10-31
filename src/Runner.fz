@@ -28,9 +28,22 @@ module Runner ref is
     # true execute, false analyze for effects
     normal bool) =>
 
-    # NYI bwrap, ssh jenkins etc.
     # NYI read_lines, send intermediate results
-    r := os.process.start "fz" (normal ? [$"-"] : ["-effects" , $"-"])
+    args :=
+      if normal
+        ["-oLogLevel=FATAL", "flang@jenkins.tokiwa.software", "timeout", "--preserve-status", "--signal=15",
+         "--kill-after=22s", "20s", "bwrap", "--ro-bind", "/", "/", "--dev-bind", "/dev", "/dev", "--unshare-all",
+         "--clearenv", "--setenv", "PATH", "/run/current-system/sw/bin:/etc/profiles/per-user/flang/bin",
+         "fuzion/build/bin/fz", "-"]
+      else
+        ["-oLogLevel=FATAL", "flang@jenkins.tokiwa.software", "timeout", "--preserve-status", "--signal=15",
+         "--kill-after=22s", "20s", "bwrap", "--ro-bind", "/", "/", "--dev-bind", "/dev", "/dev", "--unshare-all",
+         "--clearenv", "--setenv", "PATH", "/run/current-system/sw/bin:/etc/profiles/per-user/flang/bin",
+         "fuzion/build/bin/fz", "-effects", "-"]
+
+    s.send_event "pushElementContents" results_to "starting job ..."
+
+    r := os.process.start "ssh" args
       .bind p->
 
         # write code to stdin
