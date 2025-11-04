@@ -31,36 +31,3 @@ module url_encoded is
         .map c->
           if c.is_ascii_alpha_num then c else "_"
 
-
-  # html encode str
-  #
-  # mapping:
-  #
-  # " " => "&nbsp;"
-  # "&" => "&amp;"
-  # "<" => "&lt;"
-  # ">" => "&gt;"
-  # "\" => "&quot;"
-  # "'" => "&#x27;"
-  # "/" => "&#x2F;"
-  #
-  module html_encode(str String) String =>
-
-    ref : String is
-
-      utf8_cached :=
-        str
-          .utf8
-          .flat_map b->
-            if      b=(" " ).val.as_u8 then "&nbsp;".utf8
-            else if b=("&" ).val.as_u8 then "&amp;" .utf8
-            else if b=("<" ).val.as_u8 then "&lt;"  .utf8
-            else if b=(">" ).val.as_u8 then "&gt;"  .utf8
-            else if b=("\"").val.as_u8 then "&quot;".utf8
-            else if b=("'" ).val.as_u8 then "&#x27;".utf8
-            else if b=("/" ).val.as_u8 then "&#x2F;".utf8
-            else [b]
-          .as_array
-
-      public redef utf8 Sequence u8 => utf8_cached
-

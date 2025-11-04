@@ -54,14 +54,14 @@ module session_document (module page String,
             # NYI: UNDER DEVELOPMENT: pretty printing
 
             title := (content.file_path page).as_string
-            res.add "<h1>{util.url_encoded.html_encode title.as_string}</h1>\n"
+            res.add "<h1>{encodings.html.encode title.as_string true}</h1>\n"
             # opacity is reset in main.js:initAnsiUp()
             res.add "<pre class='code' style='opacity: 0'>\n"
             str.lines .for_each line->
-              res.add <| util.url_encoded.html_encode line
+              res.add <| encodings.html.encode line true
             res.add "</pre>\n"
           else
-            fname := util.url_encoded.html_encode data_path.file_name
+            fname := encodings.html.encode data_path.file_name true
             res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
 
           res.add "</div>"
@@ -115,11 +115,11 @@ module session_document (module page String,
       if md.is_dir
         dir_map := container.ordered_map ["dir"] [a]
         """
-          <div class="mydir" data-dir"{util.url_encoded.html_encode a}">NYI: {browse_tag dir_map}</div>
+          <div class="mydir" data-dir"{encodings.html.encode a true}">NYI: {browse_tag dir_map}</div>
         """
       else if md.is_regular
         """
-          <div><a href="{a}">NYI: {util.url_encoded.html_encode (String.join ((path.of a).names.drop data_path.parent.val.names.count) "/")}</a></div>
+          <div><a href="{a}">NYI: {encodings.html.encode (String.join ((path.of a).names.drop data_path.parent.val.names.count) "/") true}</a></div>
         """
       else ""
 
