@@ -65,7 +65,7 @@ form_data(LM type : mutate, req_context request_context LM) =>
   post_data_raw := lm ! ()->
     (io.buffered lm).reader req_context.request.body ! ()->
       (io.buffered lm).read_bytes content_length
-  post_data := String.from_bytes post_data_raw
+  post_data := String.from post_data_raw
   val := util.mime_value.from_type_string (req_context.request.header["content-type"].val "")
   content_type := val.mime_type
   content_type_boundary := val["boundary"]
