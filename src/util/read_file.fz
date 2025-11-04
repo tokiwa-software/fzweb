@@ -12,7 +12,7 @@
 #
 module read_file_as_string(c choice String path) outcome String =>
   (read_file c).bind b->
-    String.from_bytes b
+    String.from b
 
 
 # read file p file and return

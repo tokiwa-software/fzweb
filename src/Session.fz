@@ -344,7 +344,7 @@ module Session (sessions lock_free.Map String Session,
     cp := current_page.read
 
     String
-      .from_bytes b
+      .from b
       .replace "##SESSION_ID##" session_id
       .replace "##URL##" "/{cp.page}"
       .replace "##CONTENT##" (String.join cp.get_content "\n")
