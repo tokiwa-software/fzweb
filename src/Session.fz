@@ -269,14 +269,71 @@ module Session (sessions lock_free.Map String Session,
     send_event event html_encoded_data
 
 
+######################  NYI: CLEANUP: REMOVE THIS CODE START ##############################
+
+
+  # NYI: BUG: this should be in base lib
+
+  # split sequence at s, if there is no limit, otherwise if limit is an integer n,
+  # for at most n occurrences of s
+  #
+  # if split_after is true, all but the last element of the resulting list include
+  # the separator
+  #
+  # helper feature which unifies the code of the different split features in one
+  #
+  Sequence.split2(s Sequence T, limit option u32, split_after bool) container.expanding_array (Sequence T)
+    pre
+      T : property.equatable
+      debug: !s.is_empty
+      debug: match limit
+              nil => true
+              n u32 => n > 0
+
+    post
+      debug: match limit
+              nil => true
+              n u32 => result.count.as_u32 <= n+1
+    =>
+
+      abs := s.as_array_backed
+
+      for cnt  := u32 1,
+                  cnt+1
+          res  := container.expanding_array (Sequence T) .empty,
+                  res.add (rest.take (if split_after then idx.get + abs.count else idx.get))
+          rest := as_array_backed,
+                  rest.drop (idx.get + abs.count)
+          idx  := rest.find abs
+      while idx.ok && (limit.is_empty || limit >=? cnt) do
+
+      else
+        res
+          .add rest
+
+
+  # NYI: BUG: this should be in base lib
+
+  # split string at s
+  #
+  String.split2(s String) Sequence String
+    pre
+      !s.is_empty
+    =>
+      utf8.split2 s.utf8 nil false
+          .map_to_array String.type.from_bytes
+
+
+######################  NYI: CLEANUP: REMOVE THIS CODE END ##############################
+
+
   # NYI: comment, revisit (originally intended for StringBuilder)
   #
   prepend_data(data array String) String =>
-    res :=
-      data
-        .flat_map (.split "\n")
-        .map (d -> "data: $d")
-    String.join res "\n"
+    for res := container.expanding_array String .empty, (line.split2 "\n").reduce res (r,t -> r.add "data: $t")
+        line in data
+    else
+      String.join res "\n"
 
 
   module add_session_info_to_html_bytes (b array u8) array u8 =>

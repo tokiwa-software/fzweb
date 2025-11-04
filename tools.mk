@@ -42,3 +42,11 @@ run_benchmarks:
 .PHONY: run_tests
 run_tests:
 	$(FUZION_BIN)/fz -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,tests tests
+
+.PHONY: flamegraph_benchmarks
+flamegraph_benchmarks:
+	$(FUZION_BIN)/fz -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,benchmarks benchmarks
+
+.PHONY: flamegraph_tests
+flamegraph_tests:
+	$(FUZION_BIN)/fz -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,tests tests
