@@ -269,6 +269,9 @@ module Session (sessions lock_free.Map String Session,
     send_event event html_encoded_data
 
 
+######################  NYI: CLEANUP: REMOVE THIS CODE START ##############################
+
+
   # NYI: BUG: this should be in base lib
 
   # split sequence at s, if there is no limit, otherwise if limit is an integer n,
@@ -319,6 +322,9 @@ module Session (sessions lock_free.Map String Session,
     =>
       utf8.split2 s.utf8 nil false
           .map_to_array String.type.from_bytes
+
+
+######################  NYI: CLEANUP: REMOVE THIS CODE END ##############################
 
 
   # NYI: comment, revisit (originally intended for StringBuilder)
