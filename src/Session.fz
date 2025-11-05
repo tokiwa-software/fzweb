@@ -321,7 +321,7 @@ module Session (sessions lock_free.Map String Session,
       !s.is_empty
     =>
       utf8.split2 s.utf8 nil false
-          .map_to_array String.type.from_bytes
+          .map_to_array String.type.from
 
 
 ######################  NYI: CLEANUP: REMOVE THIS CODE END ##############################
