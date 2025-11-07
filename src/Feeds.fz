@@ -6,20 +6,23 @@
 #
 # -----------------------------------------------------------------------
 
-
-module rss_feed_entry(title, href, updated String) is
-
-  public redef as_string String =>
-    "{title} ({href}) [{updated}]"
-
-
+# Feeds feature to periodically update rss-feeds
+# and store the results in fields
+#
 module Feeds ref is
 
+  # the update interval for the feeds
+  #
   update_interval := time.duration.minutes 15
+
   # module github   := concur.atomic (Sequence rss_feed_entry) .new []
+
   module mastodon := concur.atomic (Sequence rss_feed_entry) .new []
 
 
+  # init background thread to periodically update
+  # the rss feeds
+  #
   module init =>
     _ := concur.threads.spawn ()->
       do
@@ -32,7 +35,10 @@ module Feeds ref is
         time.nano.sleep update_interval
 
 
-
+  # download, parse and store the rss-feeds
+  #
+  # NYI: CLEANUP: ugly code, we need some better api for xml_nodes
+  #
   module get_feeds =>
 
     extract_nodes(n Sequence (choice nom.parsers.xml_node String)) Sequence nom.parsers.xml_node =>
