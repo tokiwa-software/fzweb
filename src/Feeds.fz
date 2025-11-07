@@ -1,0 +1,133 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature Feeds
+#
+# -----------------------------------------------------------------------
+
+
+module rss_feed_entry(title, href, updated String) is
+
+  public redef as_string String =>
+    "{title} ({href}) [{updated}]"
+
+
+module Feeds ref is
+
+  update_interval := time.duration.minutes 15
+  # module github   := concur.atomic (Sequence rss_feed_entry) .new []
+  module mastodon := concur.atomic (Sequence rss_feed_entry) .new []
+
+
+  module init =>
+    _ := concur.threads.spawn ()->
+      do
+        fuzion.runtime.contract_fault
+          .try ()->
+            get_feeds
+          .catch  e->
+            logger.log "contract_fault: $e"
+
+        time.nano.sleep update_interval
+
+
+
+  module get_feeds =>
+
+    extract_nodes(n Sequence (choice nom.parsers.xml_node String)) Sequence nom.parsers.xml_node =>
+      n.flat_map x->
+        match x
+          String => []
+          xn nom.parsers.xml_node => [xn]
+
+    stringify(c choice nom.parsers.xml_node String) =>
+      match c
+        str String => str
+        xn nom.parsers.xml_node => xn.as_string
+
+   /*****
+
+    # we fetch github via GraphQL API
+
+    commits_xml Sequence nom.parsers.xml_node =>
+      match web.get4 "https://github.com/tokiwa-software/fuzion/commits/main.atom"
+        error => []
+        str String =>
+          match nom.parsers.xml.call str
+            error => []
+            s nom.success => s.out
+
+
+    #
+    # feed: looks like this
+    #
+    # feed
+    #   entry
+    #     link href
+    #     title
+    #     updated
+    #
+
+    github.write <| extract_nodes (commits_xml[0].data)
+      .flat_map xn->
+        if xn.name = "entry" then
+          res := extract_nodes xn.data
+            .reduce (rss_feed_entry "" "" "") (r,t)->
+              if t.name = "title"
+                rss_feed_entry (stringify t.data[0]) r.href r.updated
+              else if t.name = "link"
+                rss_feed_entry r.title t.attributes["href"].as_string r.updated
+              else if t.name = "updated"
+                rss_feed_entry r.title r.href (stringify t.data[0])
+              else
+                r
+          [res]
+        else
+          []
+      .as_array
+
+    ******/
+
+    #
+    # feed: looks like this
+    #
+    # rss
+    #   channel
+    #     item
+    #       link
+    #       pubDate
+    #       description
+    #
+
+
+    mastodon_xml =>
+      match web.get6 "https://types.pl/@fuzion.rss"
+        error => []
+        str String =>
+          match nom.parsers.xml.call str
+            error => []
+            s nom.success => s.out
+
+
+    m_feed := extract_nodes (mastodon_xml[0].data)
+      .flat_map xn->
+        extract_nodes xn.data
+      .flat_map xn->
+        if xn.name = "item" then
+          res := extract_nodes xn.data
+            .reduce (rss_feed_entry "" "" "") (r,t)->
+              if t.name = "description"
+                rss_feed_entry (stringify t.data[0]) r.href r.updated
+              else if t.name = "link"
+                rss_feed_entry r.title (stringify t.data[0]) r.updated
+              else if t.name = "pubDate"
+                rss_feed_entry r.title r.href (stringify t.data[0])
+              else
+                r
+          [res]
+        else
+          []
+      .as_array
+
+    mastodon.write m_feed

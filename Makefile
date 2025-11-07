@@ -9,7 +9,7 @@ FUZION_SRC  = $(shell readlink -f $(FUZION_SRC3))
 FUZION_BUILD = $(shell readlink -f $(FUZION_SRC)/../build)
 FUZION_BIN = $(shell readlink -f $(FUZION_BUILD)/bin)
 
-MODULES = http,lock_free,uuid,mail,wolfssl,crypto,sodium
+MODULES = http,lock_free,uuid,mail,wolfssl,crypto,sodium,nom,web
 
 .PHONY: run_fz
 run_fz:
