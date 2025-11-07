@@ -17,7 +17,9 @@ run =>
 
     # global instance of webserver
     #
-    webserver := webserver (lock_free.Map String Session).empty Runner
+    webserver := webserver (lock_free.Map String Session).empty Runner Feeds
+
+    webserver.feeds.init
 
 
     # start a thread pool
