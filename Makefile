@@ -1,22 +1,18 @@
-FUZION_SRC0 = fuzion/src
-FUZION_SRC1 = ../fuzion/src
-FUZION_SRC2 = ../../fuzion/src
-FUZION_SRC3 = $(if $(shell test -e $(FUZION_SRC0) && echo OK),$(FUZION_SRC0), \
-              $(if $(shell test -e $(FUZION_SRC1) && echo OK),$(FUZION_SRC1), \
-              $(if $(shell test -e $(FUZION_SRC2) && echo OK),$(FUZION_SRC2),$(error "fuzion sources not found, tried $(FUZION_SRC0), $(FUZION_SRC1) or $(FUZION_SRC2)"))))
-FUZION_SRC  = $(shell readlink -f $(FUZION_SRC3))
+ifndef FUZION_HOME
+$(info ********FUZION_HOME not set************)
+$(info ********please set FUZION_HOME to the build dir************)
+endif
 
-FUZION_BUILD = $(shell readlink -f $(FUZION_SRC)/../build)
-FUZION_BIN = $(shell readlink -f $(FUZION_BUILD)/bin)
+FZ = $(shell readlink -f $(FUZION_HOME)/bin)/fz
 
 MODULES = http,lock_free,uuid,mail,wolfssl,crypto,sodium,nom,web
 
 .PHONY: run_fz
 run_fz:
-	$(FUZION_BIN)/fz -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
+	$(FZ) -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
 
 webserver:
-	$(FUZION_BIN)/fz -c -CLink="wolfssl sodium" -CInclude="wolfssl/options.h wolfssl/ssl.h sodium.h" -modules=$(MODULES) -sourceDirs=src -o=webserver run
+	$(FZ) -c -CLink="wolfssl sodium" -CInclude="wolfssl/options.h wolfssl/ssl.h sodium.h" -modules=$(MODULES) -sourceDirs=src -o=webserver run
 
 .PHONY: run_fz_c
 run_fz_c: webserver
