@@ -1,6 +1,6 @@
 ifndef FUZION_HOME
 $(info ********FUZION_HOME not set************)
-$(info ********please set FUZION_HOME to the build dir************)
+$(error ********please set FUZION_HOME to the build dir************)
 endif
 
 FZ = $(shell readlink -f $(FUZION_HOME)/bin)/fz
