@@ -15,7 +15,7 @@ module Feeds ref is
   #
   update_interval := time.duration.minutes 15
 
-  # module github   := concur.atomic (Sequence rss_feed_entry) .new []
+  module github   := concur.atomic (Sequence rss_feed_entry) .new []
 
   module mastodon := concur.atomic (Sequence rss_feed_entry) .new []
 
@@ -52,48 +52,81 @@ module Feeds ref is
         str String => str
         xn nom.parsers.xml_node => xn.as_string
 
-   /*****
 
-    # we fetch github via GraphQL API
-
-    commits_xml Sequence nom.parsers.xml_node =>
-      match web.get4 "https://github.com/tokiwa-software/fuzion/commits/main.atom"
-        error => []
-        str String =>
-          match nom.parsers.xml.call str
-            error => []
-            s nom.success => s.out
-
-
+    # parse and save github commits using the graphql api
     #
-    # feed: looks like this
-    #
-    # feed
-    #   entry
-    #     link href
-    #     title
-    #     updated
-    #
+    commits Sequence rss_feed_entry =>
+      token := util.read_file_as_string "./github-graphql-token.txt"
+                   .or_else ""
+                   .trim
 
-    github.write <| extract_nodes (commits_xml[0].data)
-      .flat_map xn->
-        if xn.name = "entry" then
-          res := extract_nodes xn.data
-            .reduce (rss_feed_entry "" "" "") (r,t)->
-              if t.name = "title"
-                rss_feed_entry (stringify t.data[0]) r.href r.updated
-              else if t.name = "link"
-                rss_feed_entry r.title t.attributes["href"].as_string r.updated
-              else if t.name = "updated"
-                rss_feed_entry r.title r.href (stringify t.data[0])
-              else
-                r
-          [res]
-        else
-          []
-      .as_array
+      request_header := container.ordered_map String String
+        .empty
+        .add "Content-Type" "application/json"
+        .add "User-Agent" "fzweb (+https://github.com/tokiwa-software/fzweb)"
+        .add "Authorization" "Bearer {token}"
 
-    ******/
+      github_graphql_endpoint := "https://api.github.com/graphql"
+
+      graphql_query := """
+        \{
+          "query": "query \{ \
+            repository(owner: \\"tokiwa-software\\", name: \\"fuzion\\") \{ \
+              ref(qualifiedName: \\"main\\") \{ \
+                target \{ \
+                  ... on Commit \{ \
+                    history(first: 10) \{ \
+                      edges \{ \
+                        node \{ \
+                          message url \
+                        } \
+                      } \
+                    } \
+                  } \
+                } \
+              } \
+            } \
+          }"
+        }"""
+
+      graphql_request := web.post4 github_graphql_endpoint graphql_query.utf8 request_header
+
+      match nom.parsers.json.call graphql_request.get
+        error => Sequence rss_feed_entry .empty
+        ns nom.success =>
+          ns.out.access [ "data", "repository", "ref", "target", "history", "edges" ]
+            .bind es->
+              match es
+                edges Sequence =>
+                  new_news := edges.map rss_feed_entry edge->
+                    edge
+                      .access [ "node" ]
+                      .bind n->
+                        title :=
+                          n.access [ "message" ]
+                           .bind msg->
+                             match msg
+                               msg_s String => msg_s.split "\n" .first.or_else "no title found"
+                               * => ""
+                           .as_string
+
+                        url :=
+                          n.access [ "url" ]
+                           .bind u->
+                             match u
+                               u2 String => u2
+                               * => ""
+                           .as_string
+
+                        rss_feed_entry title url "01 Jan 1970" # we don't show the date anywhere
+                      .or_else (rss_feed_entry "error while parsing" "https://fuzion-lang.dev" "01 Jan 1970")
+                  new_news.as_list
+                * => Sequence rss_feed_entry .empty
+            .or_else (Sequence rss_feed_entry).empty
+
+
+    github.write commits.as_array
+
 
     #
     # feed: looks like this

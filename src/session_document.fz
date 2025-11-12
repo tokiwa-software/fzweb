@@ -29,6 +29,8 @@ module session_document (module page String,
   permitted := content.access_permitted session.user.read page
 
 
+  # generate html code to replace ITEM_RECENT_TOOTS
+  #
   rss_html(feed Sequence rss_feed_entry) =>
     res := feed
       .take 7
@@ -52,6 +54,36 @@ module session_document (module page String,
     """
 
 
+  # generate html code to replace ITEM_RECENT_COMMITS
+  #
+  commits_html(feed Sequence rss_feed_entry) =>
+    res := feed
+      .take 7
+      .map f->
+         """
+          <div>
+            <a class="text-overflow-ellipsis" title="{f.title_encoded}" href="{f.href_encoded}" target="_blank">
+              <small>{f.updated_encoded}</small>
+              <strong>{f.title_encoded}</strong>
+            </a>
+          </div>
+         """
+
+    """
+      <div class = "item white">
+        <div class="itemhead"><div class="itemtitle">Recent commits</div><div class="itemicon">🌳</div></div>
+        <div class="itembody">
+          {String.join res}
+          <div>
+            <a class="d-flex justify-content-end text-overflow-ellipsis" href="https://github.com/tokiwa-software/fuzion/commits/main" target="_blank" aria-label="Read longer list of recent commits">
+              <span aria-hidden="true">more...</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    """
+
+
   # get file content as array of strings
   #
   module get_content(feeds Feeds) array String =>
@@ -68,6 +100,7 @@ module session_document (module page String,
           if file_name.ends_with ".html"
             html := add_session_info_to_html str
               .replace "##ITEM_RECENT_TOOTS##" (rss_html feeds.mastodon.read)
+              .replace "##ITEM_RECENT_COMMITS##" (commits_html feeds.github.read)
 
             if has_embedded_html html
               res.add (embed_html_in_iframe html)
