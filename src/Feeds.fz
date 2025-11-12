@@ -108,7 +108,7 @@ module Feeds ref is
 
 
     mastodon_xml =>
-      match web.get6 "https://types.pl/@fuzion.rss"
+      match web.get4 "https://types.pl/@fuzion.rss"
         error => []
         str String =>
           match nom.parsers.xml.call str
