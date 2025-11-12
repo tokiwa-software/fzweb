@@ -63,7 +63,7 @@ module session_document (module page String,
          """
           <div>
             <a class="text-overflow-ellipsis" title="{f.title_encoded}" href="{f.href_encoded}" target="_blank">
-              <small>{f.updated_encoded}</small>
+              <small>{f.updated}</small>
               <strong>{f.title_encoded}</strong>
             </a>
           </div>
