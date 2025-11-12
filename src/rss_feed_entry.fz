@@ -7,7 +7,51 @@
 # -----------------------------------------------------------------------
 
 
-module rss_feed_entry(public title, href, updated String) is
+module rss_feed_entry(module title, href, updated String) is
+
+  month_to_number(str String) =>
+    if str = "Jan"
+      "01"
+    else if str = "Feb"
+      "02"
+    else if str = "Mar"
+      "03"
+    else if str = "Apr"
+      "04"
+    else if str = "May"
+      "05"
+    else if str = "Jun"
+      "06"
+    else if str = "Jul"
+      "07"
+    else if str = "Aug"
+      "08"
+    else if str = "Sep"
+      "09"
+    else if str = "Oct"
+      "10"
+    else if str = "Nov"
+      "11"
+    else if str = "Dec"
+      "12"
+    else
+      "00"
+
+
+  module title_encoded := encodings.html
+    .encode (title.trim
+    .split "&lt;"
+    .map t->
+      if t.find "&gt;" .ok
+        "{t.split "&gt;" .drop 1 .as_string ""}"
+      else
+        t
+    |> String.type.join) false
+
+  module href_encoded := encodings.html.encode href.trim false
+
+  module updated_encoded := if updated.byte_length < 20 then "" else "{updated.substring 12 16}-{month_to_number (updated.substring 8 11)}-{updated.substring 5 7}"
+
 
   public redef as_string String =>
     "{title} ({href}) [{updated}]"

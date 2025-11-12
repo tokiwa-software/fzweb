@@ -96,7 +96,7 @@ send_content_and_login_status(s Session) =>
 session(form_data lock_free.Map String String, client Sequence u8) Session =>
   sessid_original := form_data["originalsessionid"]
   sessid := form_data["sessionid"]
-  Session.get sessions sessid_original sessid client
+  Session.get sessions sessid_original sessid client feeds
 
 
 # send robots.txt

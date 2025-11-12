@@ -29,9 +29,32 @@ module session_document (module page String,
   permitted := content.access_permitted session.user.read page
 
 
+  rss_html(feed Sequence rss_feed_entry) =>
+    res := feed
+      .take 7
+      .map f->
+         """
+          <div>
+            <a class="text-overflow-ellipsis" title="{f.title_encoded}" href="{f.href_encoded}" target="_blank">
+              <small>{f.updated_encoded}</small>
+              <strong>{f.title_encoded}</strong>
+            </a>
+          </div>
+         """
+
+    """
+      {String.join res}
+      <div>
+        <a class="d-flex justify-content-end text-overflow-ellipsis" href="https://types.pl/@fuzion" target="_blank">
+          more...
+        </a>
+      </div>
+    """
+
+
   # get file content as array of strings
   #
-  module get_content array String =>
+  module get_content(feeds Feeds) array String =>
     lm ! ()->
       res := (mutate.array String).empty lm
 
@@ -44,6 +67,7 @@ module session_document (module page String,
 
           if file_name.ends_with ".html"
             html := add_session_info_to_html str
+              .replace "##ITEM_RECENT_TOOTS##" (rss_html feeds.mastodon.read)
 
             if has_embedded_html html
               res.add (embed_html_in_iframe html)

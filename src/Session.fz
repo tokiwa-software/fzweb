@@ -11,7 +11,8 @@
 #
 module Session (sessions lock_free.Map String Session,
                 client Sequence u8,
-                old_session option Session) ref is
+                old_session option Session,
+                feeds Feeds) ref is
 
 
   # session belongs to which user, if at all?
@@ -250,7 +251,8 @@ module Session (sessions lock_free.Map String Session,
   #
   module type.get (sessions lock_free.Map String Session,
                    old_id, id option String,
-                   c Sequence u8) Session =>
+                   c Sequence u8,
+                   feeds Feeds) Session =>
     res := mut (option Session) nil
     orig := mut (option Session) nil
 
@@ -259,7 +261,7 @@ module Session (sessions lock_free.Map String Session,
     else if id??
       res <- get sessions id.get c
 
-    res.get.or_else (Session sessions c orig)
+    res.get.or_else (Session sessions c orig feeds)
 
 
   # send events along with data on the session's connection
@@ -347,7 +349,7 @@ module Session (sessions lock_free.Map String Session,
       .from b
       .replace "##SESSION_ID##" session_id
       .replace "##URL##" "/{cp.page}"
-      .replace "##CONTENT##" (String.join cp.get_content "\n")
+      .replace "##CONTENT##" (String.join (cp.get_content feeds) "\n")
       .utf8
       .as_array
 
@@ -358,7 +360,7 @@ module Session (sessions lock_free.Map String Session,
     """
       id: 0
       event: content
-      {prepend_data current_page.read.get_content}\n
+      {prepend_data (current_page.read.get_content feeds)}\n
     """
 
   # send current page content to the client
