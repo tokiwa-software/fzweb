@@ -43,4 +43,23 @@ pipeline {
       }
     }
   }
+  post {
+    failure {
+      script {
+        // Extract the author's email from the latest Git commit
+        def commitEmail = sh(script: 'git log -1 --pretty=format:"%ae"', returnStdout: true).trim()
+
+        // Send the email using the extracted email
+        emailext(
+            subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """
+                Build failed. Check the console output:
+                ${env.BUILD_URL}
+            """,
+            recipientProviders: [developers(), requestor()],
+            to: commitEmail
+        )
+      }
+    }
+  }
 }
