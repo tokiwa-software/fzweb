@@ -2,9 +2,7 @@
 
 ## A webserver written in the Fuzion language.
 
-> Please note that this webserver is work in progress, and that it is
-> currently not possible to run it without access to files internal to
-> Tokiwa Software.
+> Please note that this webserver is work in progress.
 
 ---
 
