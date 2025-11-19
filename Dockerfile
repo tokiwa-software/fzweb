@@ -2,7 +2,7 @@
 
 FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS builder
 RUN apt-get update && apt-get -y --no-install-recommends install \
-  openjdk-21-jdk-headless \
+  openjdk-25-jdk-headless \
   git \
   make \
   patch \
@@ -46,7 +46,7 @@ RUN /fzweb/fuzion/build/bin/fz -classes -JLibraries="wolfssl sodium" -verbose=2 
 FROM ubuntu:24.04@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9 AS runner
 RUN apt-get update && apt-get -y --no-install-recommends install \
   locales \
-  openjdk-21-jre-headless \
+  openjdk-25-jre-headless \
   libwolfssl-dev \
   libwolfssl42t64 \
   libsodium23 \
