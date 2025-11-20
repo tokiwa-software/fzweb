@@ -70,22 +70,22 @@ module Feeds ref is
 
       graphql_query := """
         \{
-          "query": "query \{ \
-            repository(owner: \\"tokiwa-software\\", name: \\"fuzion\\") \{ \
-              ref(qualifiedName: \\"main\\") \{ \
-                target \{ \
-                  ... on Commit \{ \
-                    history(first: 10) \{ \
-                      edges \{ \
-                        node \{ \
-                          message committedDate url \
-                        } \
-                      } \
-                    } \
-                  } \
-                } \
-              } \
-            } \
+          "query": "query \{
+            repository(owner: "tokiwa-software", name: "fuzion") \{
+              ref(qualifiedName: "main") \{
+                target \{
+                  ... on Commit \{
+                    history(first: 10) \{
+                      edges \{
+                        node \{
+                          message committedDate url
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }"
         }"""
 
