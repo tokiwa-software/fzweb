@@ -16,28 +16,30 @@ benchmarks =>
   duration := time.duration.s 20
   warmup := time.duration.s 3
 
-  bench(f ()->unit) =>
-    bench f duration warmup
+  feed := Feeds
+
+  b(f ()->unit) =>
+    bench warmup duration f
 
 
   session_document_get_content(where String) =>
     x := io.Out.instate _ io.Out.blackhole ()->
-      s := Session (lock_free.Map String Session .empty) (list u8 .empty) nil
+      s := Session (lock_free.Map String Session .empty) feed (list u8 .empty) nil
       sd := session_document where s
-      _ := sd.get_content
+      _ := sd.get_content feed
 
-      bench ()->
-        _ := sd.get_content
+      b ()->
+        _ := sd.get_content feed
 
     say "session_document.get_content {where} iter/s: {x}"
 
 
   session_event_msg(where String) =>
     x := io.Out.instate _ io.Out.blackhole ()->
-      s := Session (lock_free.Map String Session .empty) (list u8 .empty) nil
+      s := Session (lock_free.Map String Session .empty) feed (list u8 .empty) nil
       s.set_current where
 
-      bench ()->
+      b ()->
         _ := s.event_msg
 
     say "Session.event_msg {where} iter/s: {x}"
