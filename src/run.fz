@@ -33,11 +33,11 @@ run =>
           lm : mutate is
 
           _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
-            fuzion.runtime.contract_fault
+            fuzion.runtime.fault
               .try ()->
                 webserver.handle_connection lm conn
               .catch  e->
-                logger.log "contract_fault: $e"
+                logger.log "fault: $e"
 
         accept_res.or_else ()->
           logger.log "failed accepting connection {accept_res}"
