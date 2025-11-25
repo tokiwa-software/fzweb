@@ -26,7 +26,7 @@ module logger is
     m := "{time.now.get} {logger.thread_id}: {msg}"
 
     res := io.file.use unit log_path.as_string io.file.mode.append ()->
-        (io.file.writer.write "{m}\n".utf8).error
+        (io.file.writer.write "{m}\n".utf8)
 
     match res
       unit => say m # Also log to console

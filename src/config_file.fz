@@ -37,7 +37,7 @@ module config_file (values lock_free.Map String String, p path) is
       data := values.items
                     .map (e -> "{e.0}: {e.1}")
                     .as_string "\n"
-      (io.file.writer.write data.utf8).error
+      (io.file.writer.write data.utf8)
 
     match res
       unit => unit
