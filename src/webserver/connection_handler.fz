@@ -30,7 +30,6 @@ request_context (LM type : mutate, connection net.connection) is
     match (io.buffered LM)
               .writer.env
               .write (response.bytes LM)
-              .error
       e error => logger.log "#### {e}"
       unit =>
         flush_ok := (io.buffered LM).writer.env.flush
