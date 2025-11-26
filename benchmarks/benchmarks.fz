@@ -24,7 +24,7 @@ benchmarks =>
 
   session_document_get_content(where String) =>
     x := io.Out.instate _ io.Out.blackhole ()->
-      s := Session (lock_free.Map String Session .empty) feed (list u8 .empty) nil
+      s := Session (lock_free.Map String Session .empty) feed (net.ip_address u128.zero) nil
       sd := session_document where s
       _ := sd.get_content feed
 
@@ -36,7 +36,7 @@ benchmarks =>
 
   session_event_msg(where String) =>
     x := io.Out.instate _ io.Out.blackhole ()->
-      s := Session (lock_free.Map String Session .empty) feed (list u8 .empty) nil
+      s := Session (lock_free.Map String Session .empty) feed (net.ip_address u128.zero) nil
       s.set_current where
 
       b ()->
