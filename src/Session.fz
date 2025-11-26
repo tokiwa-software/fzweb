@@ -11,7 +11,7 @@
 #
 module Session (sessions lock_free.Map String Session,
                 feeds Feeds,
-                client Sequence u8,
+                client net.ip_address,
                 old_session option Session) ref is
 
 
@@ -232,7 +232,7 @@ module Session (sessions lock_free.Map String Session,
 
   # find a session by id and client
   #
-  module type.get (sessions lock_free.Map String Session, id String, c Sequence u8) option Session =>
+  module type.get (sessions lock_free.Map String Session, id String, c net.ip_address) option Session =>
     match sessions[id]
       nil =>
         logger.log "No session found in map for id: {id}"
@@ -251,7 +251,7 @@ module Session (sessions lock_free.Map String Session,
   module type.get (sessions lock_free.Map String Session,
                    feeds Feeds,
                    old_id, id option String,
-                   c Sequence u8) Session =>
+                   c net.ip_address) Session =>
     res := mut (option Session) nil
     orig := mut (option Session) nil
 

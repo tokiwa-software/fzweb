@@ -15,10 +15,9 @@ request_context (LM type : mutate, connection net.connection) is
   path => (request.target.split "?").first.get
   query_string => ((request.target.split "?").drop 1).first ""
 
-  client =>
-    match net.channel.env.get_peer_address
-      x Sequence u8 => x
-      error => [u8 0, 0, 0, 0]
+  client :=
+    net.channel.env.get_peer_address
+      .or_else (net.ip_address (u128 0 0))
 
   # send an HTTP response on the current socket
   #
