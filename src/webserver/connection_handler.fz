@@ -15,9 +15,16 @@ request_context (LM type : mutate, connection net.connection) is
   path => (request.target.split "?").first.get
   query_string => ((request.target.split "?").drop 1).first ""
 
+  x_forwarded_for := request.header["x-forwarded-for"]
+    .or_else ""
+    .split ","
+    .first ""
+    .trim
+    |> net.ip_address.type.from_string
+
   client :=
-    net.channel.env.get_peer_address
-      .or_else (net.ip_address (u128 0 0))
+    x_forwarded_for
+      .or_else (net.channel.env.get_peer_address.or_else (net.ip_address (u128 0 0)))
 
   # send an HTTP response on the current socket
   #
