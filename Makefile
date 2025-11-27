@@ -9,7 +9,7 @@ MODULES = http,lock_free,uuid,mail,wolfssl,crypto,sodium,nom,web
 
 .PHONY: run_fz
 run_fz:
-	$(FZ) -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
+	$(FZ) -jvm -JLibraries="wolfssl sodium" -verbose=3 -modules=$(MODULES) -sourceDirs=src run
 
 webserver:
 	$(FZ) -c -CLink="wolfssl sodium" -CInclude="wolfssl/options.h wolfssl/ssl.h sodium.h" -modules=$(MODULES) -sourceDirs=src -o=webserver run
