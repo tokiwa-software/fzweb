@@ -162,12 +162,9 @@ module Feeds ref is
 
 
     mastodon_xml =>
-      match web.get4 "https://types.pl/@fuzion.rss"
-        error => []
-        str String =>
-          match nom.parsers.xml.call str
-            error => []
-            s nom.success => s.out
+      nom.parsers.xml
+        .call (web.get4 "https://types.pl/@fuzion.rss" .val)
+        .val.out
 
 
     m_feed := extract_nodes (mastodon_xml[0].data)
