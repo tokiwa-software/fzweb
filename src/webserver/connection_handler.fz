@@ -100,6 +100,10 @@ process_request(LM type : mutate, req_context request_context LM) =>
   req_context.send resp
   match resp.session
     nil =>
+      match req_context.connection.close
+        e error => logger.log "failed closing connection {e}"
+        unit    =>
     s Session =>
+      check debug : req_context.path = "/events"
       s.set_connection req_context.connection
 
