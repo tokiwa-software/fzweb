@@ -10,36 +10,22 @@
 #
 run =>
 
-  port u16 := 8080
-  # start the server
-  res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
-    logger.log "started listening on port: $port"
+  feeds := Feeds
+  feeds.init
 
-    # global instance of webserver
-    #
-    webserver := webserver (lock_free.Map String Session).empty Runner Feeds
+  # single instance of webserver for holding state like sessions, feeds etc.
+  #
+  webserver := webserver (lock_free.Map String Session).empty feeds
 
-    webserver.feeds.init
+  _ :=
+    Webserver 8080 net.family.ipv4 (str -> logger.log str) [except (str -> logger.log str)] req->
+      # NYI: UNDER DEVELOPMENT: need option for Webserver to instate effect per request
+      _ := mut
+      webserver.handle_connection mutate req
 
 
-    # start a thread pool
-    # NYI: UNDER DEVELOPMENT: thread_pool size should be determined programmatically
-    concur.thread_pool 200 ()->
+  # NYI: UNDER DEVELOPMENT:
+  # ws.until_shutdown
+  do
+    time.nano.sleep (time.duration.min 1)
 
-      # the request accept loop
-      do
-        accept_res := net.server.env.accept.bind unit conn->
-
-          lm : mutate is
-
-          _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
-            fuzion.runtime.fault
-              .try ()->
-                webserver.handle_connection lm conn
-              .catch  e->
-                logger.log "fault: $e"
-
-        accept_res.or_else ()->
-          logger.log "failed accepting connection {accept_res}"
-
-  logger.log "some failure occurred: $res"

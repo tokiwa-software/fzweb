@@ -9,10 +9,10 @@
 # contains convenient access of request
 # like header fields, a send feature etc.
 #
-request_context (LM type : mutate, connection net.connection) is
-  request := (http.read_request LM).get
+request_context (LM type : mutate, request http.request_message) is
 
   path => (request.target.split "?").first.get
+
   query_string => ((request.target.split "?").drop 1).first ""
 
   x_forwarded_for := request.header["x-forwarded-for"]
@@ -26,27 +26,10 @@ request_context (LM type : mutate, connection net.connection) is
     x_forwarded_for
       .or_else (net.channel.env.get_peer_address.or_else (net.ip_address (u128 0 0)))
 
-  # send an HTTP response on the current socket
-  #
-  # return_code specifies the HTTP status code of the response
-  # attributes defines the headers of the response
-  # data contains the body of the response as an array of bytes
-  #
-  send(response response) =>
-    match (io.buffered LM)
-              .writer.env
-              .write (response.bytes LM)
-      e error => logger.log "#### {e}"
-      unit =>
-        flush_ok := (io.buffered LM).writer.env.flush
-        if flush_ok!!
-          logger.log "#### {flush_ok.err}"
-
-
 # entry point to the handling the request
 #
-module handle_connection (LM type : mutate, conn net.connection) unit =>
-  req_context := request_context LM conn
+module handle_connection (LM type : mutate, req http.request_message) =>
+  req_context := request_context LM req
   logger.log "{req_context.request.method} {req_context.request.target}"
 
   process_request LM req_context
@@ -97,9 +80,9 @@ process_request(LM type : mutate, req_context request_context LM) =>
     http.post_r => get_response req_context
     * => response.new 500
 
-  req_context.send resp
   match resp.session
     nil =>
-    s Session =>
-      s.set_connection req_context.connection
+    _ Session =>
+      # s.set_connection req_context.connection
 
+  resp.response_message LM
