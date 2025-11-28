@@ -45,7 +45,7 @@ request_context (LM type : mutate, connection net.connection) is
 
 # entry point to the handling the request
 #
-module handle_connection (LM type : mutate, conn net.connection) unit =>
+module handle_connection (LM type : mutate, conn net.connection) =>
   req_context := request_context LM conn
   logger.log "{req_context.request.method} {req_context.request.target}"
 
@@ -99,7 +99,9 @@ process_request(LM type : mutate, req_context request_context LM) =>
 
   req_context.send resp
   match resp.session
-    nil =>
+    nil => true
     s Session =>
+      check debug : req_context.path = "/events"
       s.set_connection req_context.connection
+      false
 

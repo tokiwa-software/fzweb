@@ -33,11 +33,19 @@ run =>
           lm : mutate is
 
           _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
-            fuzion.runtime.fault
-              .try ()->
-                webserver.handle_connection lm conn
-              .catch  e->
-                logger.log "fault: $e"
+            close_connection :=
+              fuzion.runtime.fault
+                .try ()->
+                  webserver.handle_connection lm conn
+                .catch  e->
+                  logger.log "fault: $e"
+                  true
+
+            if close_connection
+              match conn.close
+                e error => logger.log "failed closing connection {e}"
+                unit    =>
+
 
         accept_res.or_else ()->
           logger.log "failed accepting connection {accept_res}"
