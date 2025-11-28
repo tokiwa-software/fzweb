@@ -38,6 +38,9 @@ run =>
                 webserver.handle_connection lm conn
               .catch  e->
                 logger.log "fault: $e"
+                match conn.close
+                  cce error => logger.log "failed closing connection {cce}"
+                  unit    =>
 
         accept_res.or_else ()->
           logger.log "failed accepting connection {accept_res}"
