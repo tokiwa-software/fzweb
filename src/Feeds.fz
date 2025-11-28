@@ -28,30 +28,24 @@ module Feeds ref is
       do
         fuzion.runtime.contract_fault
           .try ()->
-            get_feeds
+            get_github
           .catch  e->
-            logger.log "contract_fault: $e"
+            logger.log "contract_fault (github feed): $e"
+
+        fuzion.runtime.contract_fault
+          .try ()->
+            get_mastodon
+          .catch  e->
+            logger.log "contract_fault (mastodon feed): $e"
 
         time.nano.sleep update_interval
 
 
-  # download, parse and store the rss-feeds
+  # download, parse and store the github rss-feed
   #
   # NYI: CLEANUP: ugly code, we need some better api for xml_nodes
   #
-  module get_feeds =>
-
-    extract_nodes(n Sequence (choice nom.parsers.xml_node String)) Sequence nom.parsers.xml_node =>
-      n.flat_map x->
-        match x
-          String => []
-          xn nom.parsers.xml_node => [xn]
-
-    stringify(c choice nom.parsers.xml_node String) =>
-      match c
-        str String => str
-        xn nom.parsers.xml_node => xn.as_string
-
+  module get_github =>
 
     # parse and save github commits using the graphql api
     #
@@ -136,6 +130,12 @@ module Feeds ref is
     github.write commits.as_array
 
 
+  # download, parse and store the mastodon rss-feed
+  #
+  # NYI: CLEANUP: ugly code, we need some better api for xml_nodes
+  #
+  module get_mastodon =>
+
     #
     # feed: looks like this
     #
@@ -146,6 +146,19 @@ module Feeds ref is
     #       pubDate
     #       description
     #
+
+
+    extract_nodes(n Sequence (choice nom.parsers.xml_node String)) Sequence nom.parsers.xml_node =>
+      n.flat_map x->
+        match x
+          String => []
+          xn nom.parsers.xml_node => [xn]
+
+
+    stringify(c choice nom.parsers.xml_node String) =>
+      match c
+        str String => str
+        xn nom.parsers.xml_node => xn.as_string
 
 
     mastodon_xml =>
