@@ -398,8 +398,8 @@ module session_document (module page String,
       # the current state of the title bar is stored as `current`, and `ppup`
       # is the current level in the directory hierarchy
       #
-      for current := temp, (page_link (template.link ppup.get.parent "index")) + " • " + current
-          ppup := pup, ppup.get.parent
+      for current := temp, (page_link (template.link ppup "index")) + " • " + current
+          ppup := pup.bind (.parent), ppup.get.parent
       while ppup.ok
       else
         current
