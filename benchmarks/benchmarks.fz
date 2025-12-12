@@ -13,8 +13,8 @@
 
 benchmarks =>
 
-  duration := time.duration.s 20
-  warmup := time.duration.s 3
+  duration := time.duration.s 10
+  warmup := time.duration.s 2
 
   feed := Feeds
 
@@ -46,6 +46,8 @@ benchmarks =>
 
 
   session_document_get_content "tutorial"
+  session_document_get_content "news"
   session_document_get_content "."
   session_event_msg "tutorial"
+  session_event_msg "news"
   session_event_msg "."
