@@ -24,7 +24,7 @@ run =>
 
     # start a thread pool
     # NYI: UNDER DEVELOPMENT: thread_pool size should be determined programmatically
-    concur.thread_pool 200 ()->
+    concur.thread_pool 4 ()->
 
       # the request accept loop
       do
