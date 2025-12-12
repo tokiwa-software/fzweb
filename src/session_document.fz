@@ -292,7 +292,8 @@ module session_document (module page String,
     =>
       extract_attribute_contents s (container.ordered_map String String .empty)
 
-    start := "<$tag "
+    # NYI: PERFORMANCE: find relies on pattern being array backed
+    start := String.from "<$tag ".utf8.as_array_backed
     end := "/>"
 
     for res := "", res + rest.substring 0 m_idx.val + (match e_idx
