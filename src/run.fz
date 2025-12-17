@@ -36,6 +36,16 @@ run =>
             fuzion.runtime.fault
               .try ()->
                 webserver.handle_connection lm conn
+
+                # NYI: ugly, since (io.buffered lm).writer is instated
+                # outside of lambda `fuzion.runtime.fault.try ()->`
+                # we need to flush to make sure deinstating writer effect later
+                # does not crash the whole webserver.
+                #
+                match (io.buffered lm).writer.env.flush
+                  e error => logger.log "failed flushing, connection meanwhile closed?\n\n {e}"
+                  unit =>
+
               .catch  e->
                 logger.log "fault: $e"
                 match conn.close
