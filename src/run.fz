@@ -10,6 +10,8 @@
 #
 run =>
 
+  max_open_sessions => 1E3
+
   port u16 := 8080
   # start the server
   res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
@@ -17,7 +19,7 @@ run =>
 
     # global instance of webserver
     #
-    webserver := webserver (lock_free.Map String Session).empty Runner Feeds
+    webserver := webserver (lock_free.Sieve_Cache String Session max_open_sessions) Runner Feeds
 
     webserver.feeds.init
 

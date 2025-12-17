@@ -9,7 +9,7 @@
 # Session -- facilities providing the session management for the Fuzion
 # webserver
 #
-module Session (sessions lock_free.Map String Session,
+module Session (sessions lock_free.Sieve_Cache String Session,
                 feeds Feeds,
                 client net.ip_address,
                 old_session option Session) ref is
@@ -59,12 +59,12 @@ module Session (sessions lock_free.Map String Session,
 
   # put session in global session list
   #
-  sessions.put session_id Session.this
+  _ := sessions.access session_id ()->Session.this
 
 
   # and log session creation
   #
-  log "new session {sessions.size} {session_id} for {client} user {user.read.bind x->x.login}"
+  log "new session {session_id} for {client} user {user.read.bind x->x.login}"
 
 
   # log session activity
@@ -232,23 +232,25 @@ module Session (sessions lock_free.Map String Session,
 
   # find a session by id and client
   #
-  module type.get (sessions lock_free.Map String Session, id String, c net.ip_address) option Session =>
-    match sessions[id]
-      nil =>
-        logger.log "No session found in map for id: {id}"
-        nil
-      s Session =>
+  module type.get (sessions lock_free.Sieve_Cache String Session, id String, c net.ip_address) option Session =>
+    (exception (option Session))
+      .try (option Session) ()->
+        s := sessions.access id ()->
+          logger.log "No session found in map for id: {id}"
+          (exception (option Session)).env.cause (error "NYI")
         if s.client = c
           s
         else
           logger.log "Mismatch of clients for session with id: {id}"
           nil
+      .catch _->
+        nil
 
 
   # find session and attach original session, or create new
   # session
   #
-  module type.get (sessions lock_free.Map String Session,
+  module type.get (sessions lock_free.Sieve_Cache String Session,
                    feeds Feeds,
                    old_id, id option String,
                    c net.ip_address) Session =>
