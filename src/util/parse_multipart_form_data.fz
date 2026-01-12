@@ -7,11 +7,11 @@
 # -----------------------------------------------------------------------
 
 # NYI: current complexity is O(n^2). this should be reduced.
-module parse_multipart_form_data(data, boundaryy String) lock_free.Map String String =>
+module parse_multipart_form_data(data, boundary String) lock_free.Map String String =>
 
   # Convert boundary to Fuzion-friendly format
-  boundary := "--" + boundaryy
-  end_boundary := boundary + "--"
+  bndry := "--" + boundary
+  end_bndry := bndry + "--"
   # Initialize form data map
   form_data := (lock_free.Map String String).empty
   lines := data
@@ -20,7 +20,7 @@ module parse_multipart_form_data(data, boundaryy String) lock_free.Map String St
   i := mut 0
   while i < lines.count do
     line := lines[i].trim
-    if line = boundary
+    if line = bndry
       # Start of a new part
       v := mime_values
       i <- i + 1
@@ -35,17 +35,17 @@ module parse_multipart_form_data(data, boundaryy String) lock_free.Map String St
         cd := v.get "Content-Disposition"
 
         if i < lines.count
-          valueStr :=
+          value_str :=
             for res := "", res + new_val
-            while i < lines.count && lines[i] != boundary && lines[i] != end_boundary
+            while i < lines.count && lines[i] != bndry && lines[i] != end_bndry
             do
               new_val := (res.is_empty ? "" : "") + lines[i]
               i <- i + 1
           name := cd["name"]
           if name != ""
-            form_data.put name valueStr
+            form_data.put name value_str
 
-    else if line = end_boundary
+    else if line = end_bndry
       # End of multipart data
       i <- lines.count
     else
