@@ -233,18 +233,16 @@ module Session (sessions lock_free.Sieve_Cache String Session,
   # find a session by id and client
   #
   module type.get (sessions lock_free.Sieve_Cache String Session, id String, c net.ip_address) option Session =>
-    (exception (option Session))
-      .try (option Session) ()->
-        s := sessions.access id ()->
-          logger.log "No session found in map for id: {id}"
-          (exception (option Session)).env.cause (error "NYI")
+    match sessions.get id
+      nil =>
+        logger.log "No session found in map for id: {id}"
+        nil
+      s Session =>
         if s.client = c
           s
         else
           logger.log "Mismatch of clients for session with id: {id}"
           nil
-      .catch _->
-        nil
 
 
   # find session and attach original session, or create new
