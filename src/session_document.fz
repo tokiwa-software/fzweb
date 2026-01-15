@@ -430,7 +430,7 @@ module session_document (module page String,
         l := pp
           .bind (p -> p.resolve x .as_string)
           .or_else x
-        template.attractive_link l (is_toc ? "start: " : "next: ") + (document.get_title l (content.get_data_path session.user.read l))
+        template.attractive_link l ((is_toc ? "start: " : "next: ") + (document.get_title l (content.get_data_path session.user.read l)))
 
     arrow_link(str String) =>
       "<i class='far fa-angle-$str' aria-hidden='true'></i>"
