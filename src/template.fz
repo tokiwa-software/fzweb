@@ -87,7 +87,7 @@ module template is
                             """
           part in parts
           name := encodings.percent
-            .decode_as_str part
+            .decode_as_str_tolerant part
             .get
             .split "("
             .first
