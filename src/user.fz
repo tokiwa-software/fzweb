@@ -112,7 +112,7 @@ module user (module base_dir path) is
     config.set0 "deletion_token" token
     config.save
     subject := "[fuzion-lang.dev] - Confirm account deletion"
-    io.file.read (path.of "templates/email_account_deletion.txt")
+    io.file.read (content.templates_dir.resolve "email_account_deletion.txt")
       .bind (tmplt ->
               body := tmplt.replace "##NAME##" (name.val "fuzion-lang.dev user")
                            .replace "##TOKEN##" token
@@ -348,7 +348,7 @@ module user (module base_dir path) is
   type.send_user_registration_email (name, email, token, username String) outcome unit =>
     # NYI - prevent abuse
     subject := "[fuzion-lang.dev] - Confirm registration"
-    io.file.read (path.of "templates/email_registration.txt")
+    io.file.read (content.templates_dir.resolve "email_registration.txt")
       .bind (tmplt ->
               body := tmplt.replace "##NAME##" send_user_registration_email.this.name
                            .replace "##USERNAME##" username

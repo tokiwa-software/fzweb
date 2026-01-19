@@ -41,5 +41,5 @@ module email_service is
   #
   module send_text_mail_with_footer (from, to, subject, body) =>
 
-    io.file.read (path.of "templates/email_footer.txt")
+    io.file.read (content.templates_dir.resolve "email_footer.txt")
       .bind (footer -> send_text_mail from to subject (body + footer))
