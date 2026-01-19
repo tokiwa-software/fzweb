@@ -112,14 +112,12 @@ module user (module base_dir path) is
     config.set0 "deletion_token" token
     config.save
     subject := "[fuzion-lang.dev] - Confirm account deletion"
-    message_content := """
-      Dear {name.val "fuzion-lang.dev user"},
+    io.file.read (path.of "templates/email_account_deletion.txt")
+      .bind (tmplt ->
+              body := tmplt.replace "##NAME##" (name.val "fuzion-lang.dev user")
+                           .replace "##TOKEN##" token
 
-      Please confirm the deletion of your account by clicking the following link:
-
-        https://fuzion-lang.dev/confirm_account_deletion?token={token}
-    """
-    email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.val "") subject message_content
+              email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.val "") subject body)
 
 
 
@@ -350,15 +348,13 @@ module user (module base_dir path) is
   type.send_user_registration_email (name, email, token, username String) outcome unit =>
     # NYI - prevent abuse
     subject := "[fuzion-lang.dev] - Confirm registration"
-    mail_content := """
-      Dear {send_user_registration_email.this.name},
-
-      Thank you for registering with fuzion-lang.dev Please confirm your
-      registration by clicking the following link:
-
-        https://fuzion-lang.dev/confirm_registration?username={username}&token={token}
-    """
-    email_service.send_text_mail_with_footer noreply_tokiwa_software email subject mail_content
+    io.file.read (path.of "templates/email_registration.txt")
+      .bind (tmplt ->
+              body := tmplt.replace "##NAME##" send_user_registration_email.this.name
+                           .replace "##USERNAME##" username
+                           .replace "##TOKEN##" token
+                           .substring 0 212 # NYI: HACK: removes last sentence but should be: .replace "##IP##" ip
+              email_service.send_text_mail_with_footer noreply_tokiwa_software email subject body)
 
 
   # constants
