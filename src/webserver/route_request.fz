@@ -20,7 +20,7 @@ do_register (client net.ip_address, form_data lock_free.Map String String) Strin
     "<div class='text-center'>Only one registration per IP possible within 10 minutes.</div>"
   else
     # NYI: UNDER DEVELOPMENT: registration rate limit, add logging.
-    match user.register form_data
+    match user.register client form_data
       rr String => rr
       e error => "<div class='text-center'>*** Registration failed: {e}</div>"
 
