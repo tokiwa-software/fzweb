@@ -112,14 +112,12 @@ module user (module base_dir path) is
     config.set0 "deletion_token" token
     config.save
     subject := "[fuzion-lang.dev] - Confirm account deletion"
-    message_content := """
-      Dear {name.val "fuzion-lang.dev user"},
+    io.file.read (content.templates_dir.resolve "email_account_deletion.txt")
+      .bind (tmplt ->
+              body := tmplt.replace "##NAME##" (name.val "fuzion-lang.dev user")
+                           .replace "##TOKEN##" token
 
-      Please confirm the deletion of your account by clicking the following link:
-
-        https://fuzion-lang.dev/confirm_account_deletion?token={token}
-    """
-    email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.val "") subject message_content
+              email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.val "") subject body)
 
 
 
@@ -191,7 +189,7 @@ module user (module base_dir path) is
 
   # register a using the data submitted by the form
   #
-  module type.register (form_data lock_free.Map String String) outcome String =>
+  module type.register (client net.ip_address, form_data lock_free.Map String String) outcome String =>
     full_name (first, last, email String) =>
       full0 := "{first} {last}".trim
       full0.is_empty ? email : full0
@@ -239,7 +237,7 @@ module user (module base_dir path) is
         token String =>
           logger.log "send registration token email to: {email0}"
 
-          match send_user_registration_email full_name email0.get token username0.get
+          match send_user_registration_email full_name email0.get token username0.get $client
             error => "<div class='text-center'>Registration failed. Failed sending mail.</div>"
             unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
 
@@ -347,18 +345,16 @@ module user (module base_dir path) is
 
   # send email with account confirmation link
   #
-  type.send_user_registration_email (name, email, token, username String) outcome unit =>
+  type.send_user_registration_email (name, email, token, username, ip String) outcome unit =>
     # NYI - prevent abuse
     subject := "[fuzion-lang.dev] - Confirm registration"
-    mail_content := """
-      Dear {send_user_registration_email.this.name},
-
-      Thank you for registering with fuzion-lang.dev Please confirm your
-      registration by clicking the following link:
-
-        https://fuzion-lang.dev/confirm_registration?username={username}&token={token}
-    """
-    email_service.send_text_mail_with_footer noreply_tokiwa_software email subject mail_content
+    io.file.read (content.templates_dir.resolve "email_registration.txt")
+      .bind (tmplt ->
+              body := tmplt.replace "##NAME##" send_user_registration_email.this.name
+                           .replace "##USERNAME##" username
+                           .replace "##TOKEN##" token
+                           .replace "##IP##" ip
+              email_service.send_text_mail_with_footer noreply_tokiwa_software email subject body)
 
 
   # constants

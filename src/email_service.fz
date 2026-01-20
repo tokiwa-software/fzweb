@@ -40,19 +40,6 @@ module email_service is
   # with the company information added as a footer
   #
   module send_text_mail_with_footer (from, to, subject, body) =>
-    footer :=  """
-\nHave fun!
 
---Your Fuzion Team.
-
---
-Tokiwa Software GmbH                        phone    +49 721 9631 2981
-Alter Schlachthof 33                         mail info@tokiwa.software
-D-76131 Karlsruhe, Germany                    web  www.tokiwa.software
-
-----------------------------------------------------------------------
-Tokiwa Software GmbH          HRB739955                Geschäftsführer
-Karlsruhe                    AG Mannheim          Dr. Fridtjof Siebert
-"""
-
-    send_text_mail from to subject (body + footer)
+    io.file.read (content.templates_dir.resolve "email_footer.txt")
+      .bind (footer -> send_text_mail from to subject (body + footer))
