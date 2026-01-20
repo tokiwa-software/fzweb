@@ -138,9 +138,18 @@ module content is
       html_file <- html_file + ".html"
 
     r := pages.resolve (file_path html_file)
+    decoded := encodings.percent.decode_as_str_tolerant html_file
+                .val
+                .replace " " "+"
+                .replace "/.html" "/index.html"
+    r_decoded := pages.resolve (file_path decoded)
     if !(io.file.exists r.as_string)
-      index_file pages
-      # NYI browsing
+      # might be docs file?
+      if !(io.file.exists r_decoded.as_string)
+        index_file pages
+        # NYI browsing
+      else
+        r_decoded
     else
       r
 
