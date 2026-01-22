@@ -397,7 +397,7 @@ module session_document (module page String,
       temp :=
         # we link to the docs if necessary
         if page.starts_with "docs/"
-          (template.doc_links fn) + (page_link page)
+          template.doc_links fn
         else
           page_link page
 
@@ -406,7 +406,7 @@ module session_document (module page String,
       # the current state of the title bar is stored as `current`, and `ppup`
       # is the current level in the directory hierarchy
       #
-      for current := temp, (page_link (template.link ppup "index")) + " • " + current
+      for current := temp, "{page_link (template.link ppup "index")} • {current}"
           ppup := pup.bind (.parent), ppup.get.parent
       while ppup.ok
       else

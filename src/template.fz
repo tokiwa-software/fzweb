@@ -76,23 +76,20 @@ module template is
   module doc_links (doc_file_name String) String =>
     parts := doc_file_name
       .split "/"
+      .filter (x -> x != "index")
       .as_array
-    if parts.count < 2
-      ""
+
+    for res Sequence String := [],
+               res ++ ["""
+                        <a class="shylink shylinkfix" href="/docs/{String.join (parts.take i+1) "/"}/">
+                          {encodings.percent
+                            .decode_as_str_tolerant (parts[i])
+                            .get
+                            .split "("
+                            .first
+                            .get}
+                        </a>
+                       """]
+        i in parts.indices
     else
-      for res := "", res +  """
-                              <a class="shylink shylinkfix" href="/docs/{doc_path}">
-                                  {name}
-                              </a> •
-                            """
-          part in parts
-          name := encodings.percent
-            .decode_as_str_tolerant part
-            .get
-            .split "("
-            .first
-            .get
-          end := (doc_file_name.find part).get + parts.count
-          doc_path := doc_file_name.substring 0
-      else
-        res
+      String.join res " • "
