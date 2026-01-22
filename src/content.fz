@@ -130,7 +130,7 @@ module content is
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
   #
-  module type.get_data_path_unsafe (u option user, simple_path String) path =>
+  module type.get_data_path_unsafe (u option user, simple_path String) option path =>
     pages := pages_dir simple_path
     html_file := mut simple_path
 
@@ -146,8 +146,11 @@ module content is
     if !(io.file.exists r.as_string)
       # might be docs file?
       if !(io.file.exists r_decoded.as_string)
-        index_file pages
         # NYI browsing
+        # when index_file has browse tag, consider showing index file
+        # (old webserver behavior):
+        # index_file pages
+        nil
       else
         r_decoded
     else
@@ -163,7 +166,7 @@ module content is
   # Get the data path to the contents of the given simple URL path and check if
   # the given user (or nil if none) is allowed to access it.
   #
-  module type.get_data_path (u option user, simple_path String) path =>
+  module type.get_data_path (u option user, simple_path String) option path =>
     if access_permitted u simple_path
       get_data_path_unsafe u simple_path
     else

@@ -20,7 +20,7 @@ module session_document (module page String,
 
   # the actual file name of the current document
   #
-  file_name := data_path.file_name
+  file_name := data_path.bind dp->dp.file_name .val "404.html"
 
 
   # is the user of the given session allowed to
@@ -90,51 +90,54 @@ module session_document (module page String,
     lm ! ()->
       res := (mutate.array String).empty lm
 
-      match util.read_file_as_string data_path
-        str String =>
-          nav := permitted ? navigation : ("","")
-          if permitted
-            res.add nav.0
+      match data_path
+        dp path =>
+          match util.read_file_as_string dp
+            str String =>
+              nav := permitted ? navigation : ("","")
+              if permitted
+                res.add nav.0
 
-          res.add "<div class='fd-page-content'>"
+              res.add "<div class='fd-page-content'>"
 
-          if file_name.ends_with ".html"
-            html := add_session_info_to_html str
-              .replace "##ITEM_RECENT_TOOTS##" (rss_html feeds.mastodon.read)
-              .replace "##ITEM_RECENT_COMMITS##" (commits_html feeds.github.read)
+              if file_name.ends_with ".html"
+                html := add_session_info_to_html str
+                  .replace "##ITEM_RECENT_TOOTS##" (rss_html feeds.mastodon.read)
+                  .replace "##ITEM_RECENT_COMMITS##" (commits_html feeds.github.read)
 
-            if has_embedded_html html
-              res.add (embed_html_in_iframe html)
-            else
-              res.add html
-          else if content.is_known_preformatted_file file_name
+                if has_embedded_html html
+                  res.add (embed_html_in_iframe html)
+                else
+                  res.add html
+              else if content.is_known_preformatted_file file_name
 
-            # NYI: UNDER DEVELOPMENT: pretty printing
+                # NYI: UNDER DEVELOPMENT: pretty printing
 
-            title := (content.file_path page).as_string
-            res.add "<h1>{encodings.html.encode title.as_string true}</h1>\n"
-            # opacity is reset in main.js:initAnsiUp()
-            res.add "<pre class='code' style='opacity: 0'>\n"
-            str.lines .for_each line->
-              res.add <| encodings.html.encode line true
-            res.add "</pre>\n"
-          else
-            fname := encodings.html.encode data_path.file_name true
-            res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
+                title := (content.file_path page).as_string
+                res.add "<h1>{encodings.html.encode title.as_string true}</h1>\n"
+                # opacity is reset in main.js:initAnsiUp()
+                res.add "<pre class='code' style='opacity: 0'>\n"
+                str.lines .for_each line->
+                  res.add <| encodings.html.encode line true
+                res.add "</pre>\n"
+              else
+                fname := encodings.html.encode dp.file_name true
+                res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
 
-          res.add "</div>"
+              res.add "</div>"
 
-          match io.file.stat data_path.as_string true
-            e error =>
-              session.log "error retrieving file metadata in session_document get_content: {e}"
-            metadata io.file.meta_data =>
-              ts := time.date_time.from_seconds metadata.mtime.as_u64
-              ts_formatted := "{ts.year.as_string 4 10}-{ts.month.as_string 2 10}-{ts.day.as_string 2 10}"
-              res.add "<div class='last-changed'>last changed: {ts_formatted}</div>"
+              match io.file.stat dp.as_string true
+                e error =>
+                  session.log "error retrieving file metadata in session_document get_content: {e}"
+                metadata io.file.meta_data =>
+                  ts := time.date_time.from_seconds metadata.mtime.as_u64
+                  ts_formatted := "{ts.year.as_string 4 10}-{ts.month.as_string 2 10}-{ts.day.as_string 2 10}"
+                  res.add "<div class='last-changed'>last changed: {ts_formatted}</div>"
 
-          if permitted
-            res.add nav.1
-        error => res.add "<p>404: page not found</p>"
+              if permitted
+                res.add nav.1
+            error => res.add "<p>404: page not found</p>"
+        nil => res.add "<p>404: page not found</p>"
 
       res.as_array
 
@@ -169,38 +172,41 @@ module session_document (module page String,
   #
   browse_tag(m container.Map String String) =>
 
-    append(a String, md io.file.meta_data) =>
-      if md.is_dir
-        dir_map := container.ordered_map ["dir"] [a]
-        """
-          <div class="mydir" data-dir"{encodings.html.encode a true}">NYI: {browse_tag dir_map}</div>
-        """
-      else if md.is_regular
-        """
-          <div><a href="{a}">NYI: {encodings.html.encode (String.join ((path.of a).names.drop data_path.parent.val.names.count) "/") true}</a></div>
-        """
-      else ""
+    match data_path
+      dp path =>
+        append(a String, md io.file.meta_data) =>
+          if md.is_dir
+            dir_map := container.ordered_map ["dir"] [a]
+            """
+              <div class="mydir" data-dir="{encodings.html.encode a true}">NYI: {browse_tag dir_map}</div>
+            """
+          else if md.is_regular
+            """
+              <div><a href="{a}">NYI: {encodings.html.encode (String.join ((path.of a).names.drop dp.parent.val.names.count) "/") true}</a></div>
+            """
+          else ""
 
-    dir := data_path
-      .parent
-      .val
-      .resolve m["dir"].get
-      .as_string
+        dir := dp
+          .parent
+          .val
+          .resolve m["dir"].get
+          .as_string
 
-    io.dir
-      .use dir ()->
-        for res := container.expanding_array String .empty,
-            {
-              x := "{dir}/{a.val}"
-              match io.file.stat x false
-                e error => res
-                md io.file.meta_data => res.add <| append x md
-            }
-            a := io.dir.open.read
-        while a.ok
-        else
-          String.join res
-      .or_else ""
+        io.dir
+          .use dir ()->
+            for res := container.expanding_array String .empty,
+                {
+                  x := "{dir}/{a.val}"
+                  match io.file.stat x false
+                    e error => res
+                    md io.file.meta_data => res.add <| append x md
+                }
+                a := io.dir.open.read
+            while a.ok
+            else
+              String.join res
+          .or_else ""
+      nil => ""
 
 
   # add run code wrapper for code in file `file`
@@ -208,7 +214,7 @@ module session_document (module page String,
   runcode_wrapper(m container.Map String String) =>
     id := uuid.create_random.as_string
     code := util
-      .read_file_as_string (data_path.parent.val.resolve m["file"].get).as_string
+      .read_file_as_string (data_path.or_panic.parent.val.resolve m["file"].get).as_string
       .val
     """
     <div class="runcode-wrapper">
@@ -468,7 +474,7 @@ module session_document (module page String,
     # NYI: CLEANUP: code is a ugly and inefficient
 
     res := mut ((container.expanding_array String) .empty)
-    match util.read_file_as_string <| data_path.parent.get.resolve "index.html"
+    match util.read_file_as_string <| data_path.or_panic.parent.get.resolve "index.html"
       s String =>
         _:= s
           |> replace_tag "page" m->
