@@ -86,7 +86,7 @@ module session_document (module page String,
 
   # get file content as array of strings
   #
-  module get_content(feeds Feeds) array String =>
+  module get_content(feeds Feeds) option (array String) =>
     lm ! ()->
       res := (mutate.array String).empty lm
 
@@ -136,10 +136,9 @@ module session_document (module page String,
 
               if permitted
                 res.add nav.1
-            error => res.add "<p>404: page not found</p>"
-        nil => res.add "<p>404: page not found</p>"
-
-      res.as_array
+              id (option (array String)) res.as_array
+            error => nil
+        nil => nil
 
 
   # add session-specific information to the html
