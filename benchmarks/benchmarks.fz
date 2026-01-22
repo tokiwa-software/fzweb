@@ -45,9 +45,11 @@ benchmarks =>
     say "Session.event_msg {where} iter/s: {x}"
 
 
+  session_document_get_content "docs/base/index"
   session_document_get_content "tutorial"
   session_document_get_content "news"
   session_document_get_content "."
+  session_event_msg "docs/base/index"
   session_event_msg "tutorial"
   session_event_msg "news"
   session_event_msg "."
