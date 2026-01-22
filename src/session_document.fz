@@ -92,8 +92,9 @@ module session_document (module page String,
 
       match util.read_file_as_string data_path
         str String =>
+          nav := permitted ? navigation : ("","")
           if permitted
-            res.add (navigation true)
+            res.add nav.0
 
           res.add "<div class='fd-page-content'>"
 
@@ -132,7 +133,7 @@ module session_document (module page String,
               res.add "<div class='last-changed'>last changed: {ts_formatted}</div>"
 
           if permitted
-            res.add (navigation false)
+            res.add nav.1
         error => res.add "<p>404: page not found</p>"
 
       res.as_array
@@ -367,7 +368,7 @@ module session_document (module page String,
   # the argument `top` indicates whether it is the top or bottom menu
   # that is being generated.
   #
-  navigation (top bool) String =>
+  navigation tuple String String =>
     fn := (content.file_path page).as_string
     pp := content.base_simple_path page
     is_toc := fn = "index"
@@ -443,16 +444,19 @@ module session_document (module page String,
         template.nav_link x.parent "index" (arrow_link "up") "aria-label='up a level'"
        .or_else (template.nav_link nil nil (arrow_link "up") "aria-label='up a level'")
 
-    """
-      <div class='d-flex justify-content-between'>
-        {top ? "<div class='navtitle'>{generate_title_bar}</div>" : attractive_next.or_else ""}
-        <div class='d-flex justify-content-between w-75 {top ? "nav_top" : "nav_bot"}'>
-          <div class='nav_left'>{template.nav_link pp prev (arrow_link "left")  "aria-label='previous item'"}</div>
-          <div class='nav_up'>{up_link pup}</div>
-          <div class='nav_right'>{template.nav_link pp next (arrow_link "right") "aria-label='next item'"}</div>
+    n(top bool) =>
+      """
+        <div class='d-flex justify-content-between'>
+          {top ? "<div class='navtitle'>{generate_title_bar}</div>" : attractive_next.or_else ""}
+          <div class='d-flex justify-content-between w-75 {top ? "nav_top" : "nav_bot"}'>
+            <div class='nav_left'>{template.nav_link pp prev (arrow_link "left")  "aria-label='previous item'"}</div>
+            <div class='nav_up'>{up_link pup}</div>
+            <div class='nav_right'>{template.nav_link pp next (arrow_link "right") "aria-label='next item'"}</div>
+          </div>
         </div>
-      </div>
-    """
+      """
+    (n true, n false)
+
 
 
   # extracts toc from index.html
