@@ -39,7 +39,7 @@ module Session (sessions lock_free.Sieve_Cache String Session,
 
   # session history information
   #
-  current_page := concur.atomic session_document .new (session_document "index" Session.this)
+  module current_page := concur.atomic session_document .new (session_document "index" Session.this)
   last_pushed_history := concur.atomic (option session_document) .new nil
 
 
@@ -337,30 +337,43 @@ module Session (sessions lock_free.Sieve_Cache String Session,
       String.join res "\n"
 
 
-  module add_session_info_to_html_bytes (b array u8) array u8 =>
+  # returns nil on Not Found
+  #
+  module add_session_info_to_html_bytes (b array u8) option (array u8) =>
     activity
     # NYI
     # - ByteArray from flang_dev
 
     cp := current_page.read
 
-    String
-      .from b
-      .replace "##SESSION_ID##" session_id
-      .replace "##URL##" "/{cp.page}"
-      .replace "##CONTENT##" (String.join (cp.get_content feeds) "\n")
-      .utf8
-      .as_array
+    match cp.get_content feeds
+      nil => nil
+      a array String =>
+        String
+          .from b
+          .replace "##SESSION_ID##" session_id
+          .replace "##URL##" "/{cp.page}"
+          .replace "##CONTENT##" (String.join a "\n")
+          .utf8
+          .as_array
 
 
   # the message to send via an event connection
   #
   module event_msg =>
-    """
-      id: 0
-      event: content
-      {prepend_data (current_page.read.get_content feeds)}\n
-    """
+    match current_page.read.get_content feeds
+      nil =>
+        """
+          id: 0
+          event: content
+          data: 404 : Not Found\n
+        """
+      c array String =>
+        """
+          id: 0
+          event: content
+          {prepend_data c}\n
+        """
 
   # send current page content to the client
   #
