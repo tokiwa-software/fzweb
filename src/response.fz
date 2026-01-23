@@ -13,6 +13,24 @@ module response (returncode i32,
                  data Sequence u8,
                  module session option Session) is
 
+  return_code_string =>
+    if returncode = 200
+      "OK"
+    else if returncode = 302
+      "Found"
+    else if returncode = 403
+      "Forbidden"
+    else if returncode = 404
+      "Not Found"
+    else if returncode = 415
+      "Unsupported Media Type"
+    else if returncode = 500
+      "Internal Server Error"
+    else if returncode = 501
+      "Not Implemented"
+    else
+      "NYI"
+
 
   # get the bytes of this response
   #
@@ -22,7 +40,7 @@ module response (returncode i32,
       attributes.put "Connection" "close"
     br := io.Read_Handler.from LM data.as_array
     http.response_message
-        .new nil 1 1 returncode "NYI" attributes.items.as_array br
+        .new nil 1 1 returncode return_code_string attributes.items.as_array br
         .bytes data.count
 
 
