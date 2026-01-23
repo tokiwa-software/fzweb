@@ -68,7 +68,7 @@ module identifier (module file_to_send option path,
         suffix := file_to_send.get.suffix
         attributes := map_of_strings [
           ("Content-Length", data.count.as_string),
-          ("Content-Type", mime_types.get_mime_type suffix)
+          ("Content-Type", "text/html")
         ]
         s.log "*** 404 : Not Found {s.current_page.read.page}"
         response.new 404 attributes data
