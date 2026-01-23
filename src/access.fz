@@ -65,7 +65,6 @@ module identifier (module file_to_send option path,
               <body><h1>404 Not found</h1></body>
             </html>
           """.utf8
-        suffix := file_to_send.get.suffix
         attributes := map_of_strings [
           ("Content-Length", data.count.as_string),
           ("Content-Type", "text/html")
