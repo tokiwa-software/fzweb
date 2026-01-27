@@ -9,4 +9,4 @@
 # webserver -- unit feature to group features that provide the main
 # functionality for the fuzion-lang.dev service
 #
-module webserver (module sessions lock_free.Sieve_Cache String Session, module runner Runner, module feeds Feeds) is
+module webserver is

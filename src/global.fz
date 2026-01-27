@@ -1,0 +1,26 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature global
+#
+# -----------------------------------------------------------------------
+
+# effect for holding global state in the webserver
+#
+module global : effect is
+
+  max_open_sessions => 1E3
+  module sessions := lock_free.Sieve_Cache String Session max_open_sessions
+
+  module feeds := Feeds
+
+  max_cached_files => 25
+  files := lock_free.Sieve_Cache String (outcome String) max_cached_files
+
+  module read_file_as_string(c choice String path) =>
+    str := match c
+      s String => s
+      p path => p.as_string
+    files.access str ()->
+      util.read_file_as_string str

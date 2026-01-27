@@ -9,9 +9,7 @@
 # Session -- facilities providing the session management for the Fuzion
 # webserver
 #
-module Session (sessions lock_free.Sieve_Cache String Session,
-                feeds Feeds,
-                client net.ip_address,
+module Session (client net.ip_address,
                 old_session option Session) ref is
 
 
@@ -59,7 +57,7 @@ module Session (sessions lock_free.Sieve_Cache String Session,
 
   # put session in global session list
   #
-  _ := sessions.access session_id ()->Session.this
+  _ := global.env.sessions.access session_id ()->Session.this
 
 
   # and log session creation
@@ -232,8 +230,8 @@ module Session (sessions lock_free.Sieve_Cache String Session,
 
   # find a session by id and client
   #
-  module type.get (sessions lock_free.Sieve_Cache String Session, id String, c net.ip_address) option Session =>
-    match sessions.get id
+  module type.get (id String, c net.ip_address) option Session =>
+    match global.env.sessions.get id
       nil =>
         logger.log "No session found in map for id: {id}"
         nil
@@ -248,19 +246,17 @@ module Session (sessions lock_free.Sieve_Cache String Session,
   # find session and attach original session, or create new
   # session
   #
-  module type.get (sessions lock_free.Sieve_Cache String Session,
-                   feeds Feeds,
-                   old_id, id option String,
+  module type.get (old_id, id option String,
                    c net.ip_address) Session =>
     res := mut (option Session) nil
     orig := mut (option Session) nil
 
     if old_id??
-      orig <- get sessions old_id.get c
+      orig <- get old_id.get c
     else if id??
-      res <- get sessions id.get c
+      res <- get id.get c
 
-    res.get.or_else (Session sessions feeds c orig)
+    res.get.or_else (Session c orig)
 
 
   # send events along with data on the session's connection
@@ -346,7 +342,7 @@ module Session (sessions lock_free.Sieve_Cache String Session,
 
     cp := current_page.read
 
-    match cp.get_content feeds
+    match cp.get_content
       nil => nil
       a array String =>
         String
@@ -361,7 +357,7 @@ module Session (sessions lock_free.Sieve_Cache String Session,
   # the message to send via an event connection
   #
   module event_msg =>
-    match current_page.read.get_content feeds
+    match current_page.read.get_content
       nil =>
         """
           id: 0

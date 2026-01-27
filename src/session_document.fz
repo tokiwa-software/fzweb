@@ -86,13 +86,13 @@ module session_document (module page String,
 
   # get file content as array of strings
   #
-  module get_content(feeds Feeds) option (array String) =>
+  module get_content option (array String) =>
     lm ! ()->
       res := (mutate.array String).empty lm
 
       match data_path
         dp path =>
-          match util.read_file_as_string dp
+          match global.env.read_file_as_string dp
             str String =>
               nav := permitted ? navigation : ("","")
               if permitted
@@ -102,8 +102,8 @@ module session_document (module page String,
 
               if file_name.ends_with ".html"
                 html := add_session_info_to_html str
-                  .replace "##ITEM_RECENT_TOOTS##" (rss_html feeds.mastodon.read)
-                  .replace "##ITEM_RECENT_COMMITS##" (commits_html feeds.github.read)
+                  .replace "##ITEM_RECENT_TOOTS##" (rss_html global.env.feeds.mastodon.read)
+                  .replace "##ITEM_RECENT_COMMITS##" (commits_html global.env.feeds.github.read)
 
                 if has_embedded_html html
                   res.add (embed_html_in_iframe html)
@@ -473,7 +473,7 @@ module session_document (module page String,
     # NYI: CLEANUP: code is a ugly and inefficient
 
     res := mut ((container.expanding_array String) .empty)
-    match util.read_file_as_string <| data_path.or_panic.parent.get.resolve "index.html"
+    match global.env.read_file_as_string <| data_path.or_panic.parent.get.resolve "index.html"
       s String =>
         _:= s
           |> replace_tag "page" m->

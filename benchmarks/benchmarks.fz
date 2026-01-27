@@ -16,27 +16,24 @@ benchmarks =>
   duration := time.duration.s 10
   warmup := time.duration.s 2
 
-  feed := Feeds
-
   b(f ()->unit) =>
     bench warmup duration f
 
 
   session_document_get_content(where String) =>
     x := io.Out.instate _ io.Out.blackhole ()->
-      s := Session (lock_free.Sieve_Cache String Session 100) feed (net.ip_address u128.zero) nil
+      s := Session (net.ip_address u128.zero) nil
       sd := session_document where s
-      _ := sd.get_content feed
-
+      _ := sd.get_content
       b ()->
-        _ := sd.get_content feed
+        _ := sd.get_content
 
     say "session_document.get_content {where} iter/s: {x}"
 
 
   session_event_msg(where String) =>
     x := io.Out.instate _ io.Out.blackhole ()->
-      s := Session (lock_free.Sieve_Cache String Session 100) feed (net.ip_address u128.zero) nil
+      s := Session (net.ip_address u128.zero) nil
       s.set_current where
 
       b ()->
@@ -44,12 +41,15 @@ benchmarks =>
 
     say "Session.event_msg {where} iter/s: {x}"
 
+  g := io.Out.instate _ io.Out.blackhole ()->
+    global
 
-  session_document_get_content "docs/base/index"
-  session_document_get_content "tutorial"
-  session_document_get_content "news"
-  session_document_get_content "."
-  session_event_msg "docs/base/index"
-  session_event_msg "tutorial"
-  session_event_msg "news"
-  session_event_msg "."
+  g ! ()->
+    session_document_get_content "docs/base/index"
+    session_document_get_content "tutorial/"
+    session_document_get_content "news/"
+    session_document_get_content "index"
+    session_event_msg "docs/base/index"
+    session_event_msg "tutorial/index"
+    session_event_msg "news/index"
+    session_event_msg "index"

@@ -10,19 +10,14 @@
 #
 run =>
 
-  max_open_sessions => 1E3
 
   port u16 := 8080
   # start the server
   res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
     logger.log "started listening on port: $port"
 
-    # global instance of webserver
-    #
-    webserver := webserver (lock_free.Sieve_Cache String Session max_open_sessions) Runner Feeds
-
-    webserver.feeds.init
-
+    g := global
+    g.feeds.init
 
     # start a thread pool
     # NYI: UNDER DEVELOPMENT: thread_pool size should be determined programmatically
@@ -37,16 +32,17 @@ run =>
           _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
             fuzion.runtime.fault
               .try ()->
-                webserver.handle_connection lm conn
+                g ! ()->
+                  webserver.handle_connection lm conn
 
-                # NYI: ugly, since (io.buffered lm).writer is instated
-                # outside of lambda `fuzion.runtime.fault.try ()->`
-                # we need to flush to make sure deinstating writer effect later
-                # does not crash the whole webserver.
-                #
-                match (io.buffered lm).writer.env.flush
-                  e error => logger.log "failed flushing, connection meanwhile closed?\n\n {e}"
-                  unit =>
+                  # NYI: ugly, since (io.buffered lm).writer is instated
+                  # outside of lambda `fuzion.runtime.fault.try ()->`
+                  # we need to flush to make sure deinstating writer effect later
+                  # does not crash the whole webserver.
+                  #
+                  match (io.buffered lm).writer.env.flush
+                    e error => logger.log "failed flushing, connection meanwhile closed?\n\n {e}"
+                    unit =>
 
               .catch  e->
                 logger.log "fault: $e"

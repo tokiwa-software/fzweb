@@ -96,7 +96,7 @@ send_content_and_login_status(s Session) =>
 session(form_data lock_free.Map String String, client net.ip_address) Session =>
   sessid_original := form_data["originalsessionid"]
   sessid := form_data["sessionid"]
-  Session.get sessions feeds sessid_original sessid client
+  Session.get sessid_original sessid client
 
 
 # send robots.txt
@@ -105,7 +105,7 @@ robots_txt =>
   r := content
     .templates_dir
     .resolve "robots.txt"
-  match util.read_file_as_string r
+  match global.env.read_file_as_string r
     str String =>
       send_ok str
     error =>
