@@ -47,7 +47,7 @@ module document is
 
     match page_file
       pf path =>
-        match util.read_file_as_string pf
+        match global.env.read_file_as_string pf
           error =>
             "-- error reading {pf} --"
           str String =>
