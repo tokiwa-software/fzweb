@@ -21,13 +21,3 @@ module url_encoded is
       _ := form_data.put name (nv.count < 2 ? "" : encodings.percent.decode_as_str nv[1] .val)
     form_data
 
-
-  # Strip non-alphanumeric characters from a string
-  #
-  module strip_non_alpha_numeric(s String) String =>
-    String
-      .from <| s
-        .codepoints
-        .map c->
-          if c.is_ascii_alpha_num then c else "_"
-
