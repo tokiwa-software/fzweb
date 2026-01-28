@@ -41,6 +41,8 @@ module parse_multipart_form_data(data, boundary String) lock_free.Map String Str
             do
               new_val := (res.is_empty ? "" : "") + lines[i]
               i <- i + 1
+            else
+              res
           name := cd["name"]
           if name != ""
             form_data.put name value_str
