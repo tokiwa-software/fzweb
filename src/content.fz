@@ -124,9 +124,7 @@ module content is
   # check if a file is known to be preformatted
   #
   module type.is_known_preformatted_file (file_name String) bool =>
-    for sfx in [".c", ".fz", ".fuzion", ".sh", ".txt", ".ebnf"]
-    until file_name.ends_with sfx
-    then true else false
+    [".c", ".fz", ".fuzion", ".sh", ".txt", ".ebnf"] ∃ file_name.ends_with
 
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
@@ -206,8 +204,7 @@ module content is
             access_file := dir.resolve (path.of "access.txt")
             content_path := dir.resolve (file_path path_from_url)
 
-            if (for sfx in [".png", ".svg", ".jpg", ".jpeg", ".pdf"]
-                until path_from_url.ends_with sfx then true else false)
+            if ([".png", ".svg", ".jpg", ".jpeg", ".pdf"] ∃ path_from_url.ends_with)
               if access_permitted s.get_user path_from_url
                 res <- identifier.new content_path path_from_url
             else
