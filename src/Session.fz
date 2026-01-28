@@ -248,12 +248,9 @@ module Session (client net.ip_address,
   #
   module type.get (old_id, id option String,
                    c net.ip_address) Session =>
-    match old_id
-      old String => Session c (get old c)
-      nil =>
-        id
-          .bind (n -> get n c)
-          .or_else (Session c nil)
+    old_id.bind (old -> Session c (get old c))
+          .or_else (id.bind (n -> get n c)
+                      .or_else (Session c nil))
 
 
   # send events along with data on the session's connection
