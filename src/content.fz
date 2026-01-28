@@ -131,13 +131,14 @@ module content is
   #
   module type.get_data_path_unsafe (u option user, simple_path String) option path =>
     pages := pages_dir simple_path
-    html_file := mut simple_path
+    file :=
+      if simple_path.ends_with ".html" || is_known_preformatted_file simple_path
+        simple_path
+      else
+        simple_path + ".html"
 
-    if !(html_file.ends_with ".html") && !(is_known_preformatted_file html_file)
-      html_file <- html_file + ".html"
-
-    r := pages.resolve (file_path html_file)
-    decoded := encodings.percent.decode_as_str_tolerant html_file
+    r := pages.resolve (file_path file)
+    decoded := encodings.percent.decode_as_str_tolerant file
                 .val
                 .replace " " "+"
                 .replace "/.html" "/index.html"
