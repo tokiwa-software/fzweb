@@ -12,25 +12,30 @@ module send_ok_or_reload (s Session) response =>
   send_ok_or_reload s ""
 
 
+# send a text/html response
+#
+html_response(returncode i32, datastr String) =>
+  data := datastr.utf8.as_array
+  header := map_of_strings [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
+  response.new returncode header data
+
+
 # send an HTTP 200 response with the given data if there is a session,
 # and data can be send back over the session, otherwise, return a 500
 # response and ask the client to reload
 #
 module send_ok_or_reload (s Session, datastr String) response =>
-  returncode := s.is_connection_ok ? 200 : 500
-  data := (s.is_connection_ok ? datastr : "must reconnect")
-    .utf8
-    .as_array
-  header := map_of_strings [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
-  response.new returncode header data
+  if s.is_connection_ok
+    html_response 200 datastr
+  else
+    html_response 500 "must reconnect"
 
 
 # send an HTTP 200 response along with the given data
 #
 module send_ok (datastr String) response =>
-  data := datastr.utf8.as_array
-  header := map_of_strings [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
-  response.new 200 header data
+  html_response 200 datastr
+
 
 
 # send an HTTP response indicating that the content requested has not
