@@ -37,7 +37,8 @@ benchmarks =>
       s.set_current where
 
       b ()->
-        _ := s.event_msg
+        msg := s.event_msg
+        say "{msg.byte_length.hex}\r\n{msg}\r\n"
 
     say "Session.event_msg {where} iter/s: {x}"
 
@@ -45,11 +46,11 @@ benchmarks =>
     global
 
   g ! ()->
-    session_document_get_content "docs/base/index"
-    session_document_get_content "tutorial/"
-    session_document_get_content "news/"
-    session_document_get_content "index"
     session_event_msg "docs/base/index"
     session_event_msg "tutorial/index"
     session_event_msg "news/index"
     session_event_msg "index"
+    session_document_get_content "docs/base/index"
+    session_document_get_content "tutorial/"
+    session_document_get_content "news/"
+    session_document_get_content "index"
