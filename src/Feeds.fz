@@ -92,7 +92,7 @@ module Feeds ref is
             .bind es->
               match es
                 edges Sequence =>
-                  new_news := edges.map rss_feed_entry edge->
+                  edges.map rss_feed_entry edge->
                     edge
                       .access [ "node" ]
                       .bind n->
@@ -122,7 +122,6 @@ module Feeds ref is
 
                         rss_feed_entry title url committed_date
                       .or_else (rss_feed_entry "error while parsing" "https://fuzion-lang.dev" "1970-01-01")
-                  new_news.as_list
                 * => Sequence rss_feed_entry .empty
             .or_else (Sequence rss_feed_entry).empty
 
