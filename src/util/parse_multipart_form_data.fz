@@ -11,45 +11,38 @@ module parse_multipart_form_data(data, boundary String) lock_free.Map String Str
 
   # Convert boundary to Fuzion-friendly format
   bndry := "--" + boundary
-  end_bndry := bndry + "--"
   # Initialize form data map
   form_data := (lock_free.Map String String).empty
-  lines := data
-    .split "\r\n"
-    .as_array
-  i := mut 0
-  while i < lines.count do
-    line := lines[i].trim
-    if line = bndry
-      # Start of a new part
+  data
+    .split bndry
+    .filter (l -> !l.starts_with "--") # filter out end boundary
+    .map (.trim)
+    .for_each (part ->
+      part_lines := part.split "\r\n" .as_array
       v := mime_values
-      i <- i + 1
-      if i < lines.count
 
-        # Read headers
-        while i < lines.count && (lines[i].find ":").exists do
-          l := lines[i].trim
-          if l != ""
-            v.add l
-          i <- i+1
-        cd := v.get "Content-Disposition"
+      part_lines_header_count :=
+        for
+          ixxx := 0, ixxx + 1
+          part_line in part_lines
+        while part_line.find ":" .exists
+        do
+          v.add part_line
+        else
+          ixxx
 
-        if i < lines.count
-          value_str :=
-            for res := "", res + new_val
-            while i < lines.count && lines[i] != bndry && lines[i] != end_bndry
-            do
-              new_val := (res.is_empty ? "" : "") + lines[i]
-              i <- i + 1
-            else
-              res
-          name := cd["name"]
-          if name != ""
-            form_data.put name value_str
+      value_str :=
+        for
+          res := "", res + new_val
+          i in part_lines_header_count+1..part_lines.count-1
+        do
+          new_val := (res.is_empty ? "" : "\n") + part_lines[i]
+        else
+          res
 
-    else if line = end_bndry
-      # End of multipart data
-      i <- lines.count
-    else
-      i <- i + 1
+      cd := v.get "Content-Disposition"
+      name := cd["name"]
+      if name != ""
+        form_data.put name value_str
+    )
   form_data
