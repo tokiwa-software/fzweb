@@ -188,16 +188,16 @@ module content is
   # NYI: CLEANUP: reduce code nesting
   #
   module type.get_contents (s Session, path_from_url0 String) access =>
-    path_from_url := mut path_from_url0
+    if path_from_url0.starts_with "/"
+      path_from_url :=
+        if path_from_url0.ends_with ".html"
+          path_from_url0.substring 1 (path_from_url0.find_last ".html").get
+        else
+          path_from_url0.substring 1
 
-    if path_from_url.starts_with "/"
-      path_from_url <- path_from_url.substring 1
       p := path.of path_from_url
 
       if !p.is_absolute && (content_dir.resolve p).starts_with content_dir
-        if path_from_url.ends_with ".html"
-          path_from_url <- path_from_url.substring 0 (path_from_url.find_last ".html").get
-
         match template path_from_url
           missing =>
             dir := base_dir path_from_url
