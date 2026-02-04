@@ -188,7 +188,6 @@ module content is
   # NYI: CLEANUP: reduce code nesting
   #
   module type.get_contents (s Session, path_from_url0 String) access =>
-    res := mut access forbidden
     path_from_url := mut path_from_url0
 
     if path_from_url.starts_with "/"
@@ -207,17 +206,22 @@ module content is
 
             if ([".png", ".svg", ".jpg", ".jpeg", ".pdf"] ∃ path_from_url.ends_with)
               if access_permitted s.get_user path_from_url
-                res <- identifier.new content_path path_from_url
+                identifier.new content_path path_from_url
+              else
+                forbidden
             else
-              res <- missing
               match (config_file.open access_file)["template"]
-                nil => s.log "no template defined in {access_file}"
+                nil =>
+                  s.log "no template defined in {access_file}"
+                  missing
                 t String =>
-                  res <- identifier (dir.resolve t) path_from_url content_path
-          i identifier => res <- i
-          forbidden =>
-
-    res.get
+                  identifier (dir.resolve t) path_from_url content_path
+          i identifier => i
+          forbidden => forbidden
+      else
+        forbidden
+    else
+      forbidden
 
 
   # helper to find a template's identifier
