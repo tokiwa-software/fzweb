@@ -238,7 +238,12 @@ module user (module base_dir path) is
           logger.log "send registration token email to: {email0}"
 
           match send_user_registration_email full_name email0.get token username0.get $client
-            error => "<div class='text-center'>Registration failed. Failed sending mail.</div>"
+            error =>
+              match delete_by_login username0.get
+                e error => logger.log "error deleting failed user registration: {e}"
+                unit => logger.log "deleted user {username0.get} due to unsent registration email"
+ 
+              "<div class='text-center'>Registration failed. Failed sending mail.</div>"
             unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
 
 
@@ -328,7 +333,7 @@ module user (module base_dir path) is
     false
 
 
-  #
+  # delete an account by deletion token
   #
   module type.complete_account_deletion (token String) outcome unit =>
     # simplify by passing username in link
@@ -341,6 +346,30 @@ module user (module base_dir path) is
             .or_else (() -> u.log "failed making dir: {deleted_users_dir}")
 
         io.file.move u.base_dir.as_string "{deleted_users_dir}/{time.now}"
+
+
+  # delete an account by a login name
+  #
+  type.delete_by_login (login String) outcome unit =>
+    match get login
+      error => error "no user found with login: {login}"
+      u user =>
+        # NYI: HACK: replace with recursive deletion
+        f := u.base_dir.resolve user.user_file
+        l := u.base_dir.resolve user.log_file
+
+        user_file_res :=
+          if io.file.exists f.as_string
+            io.file.delete f.as_string
+        log_file_res :=
+          if io.file.exists l.as_string
+            io.file.delete l.as_string
+        user_dir_res :=
+          if io.file.exists u.base_dir.as_string
+            io.file.delete u.base_dir.as_string
+
+        # NYI: CLEANUP: remove explicit types here when possible
+        user_file_res.and (outcome unit) log_file_res .and (outcome unit) user_dir_res
 
 
   # send email with account confirmation link
