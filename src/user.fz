@@ -271,7 +271,19 @@ module user (module base_dir path) is
     if io.file.exists user_text.as_string
       error "*** user already exists: {username}"
     else
-      match io.dir.make user_dir.as_string
+      make_if_exists outcome unit :=
+        if io.file.exists user_dir.as_string
+          match io.file.stat user_dir.as_string true
+            e error => e
+            md io.file.meta_data =>
+              if md.is_dir
+                unit
+              else
+                error "user directory path occupied by non-directory"
+        else
+          io.dir.make user_dir.as_string
+        
+      match make_if_exists
         e error => e
         unit =>
           token := generate_uuid
