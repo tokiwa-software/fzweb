@@ -88,7 +88,7 @@ module session_document (module page String,
   #
   module get_content option (array String) =>
     lm ! ()->
-      res := (mutate.array String).empty lm
+      res := (lm.array String).empty
 
       match data_path
         dp path =>
