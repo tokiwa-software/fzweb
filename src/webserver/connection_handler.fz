@@ -69,7 +69,8 @@ form_data(LM type : mutate, req_context request_context LM) =>
   lm : mutate is
   post_data_raw := lm ! ()->
     (io.buffered lm).reader req_context.request.body ! ()->
-      (io.buffered lm).read_bytes content_length
+      # NYI: UNDER DEVELOPMENT: error handling
+      (io.buffered lm).read_bytes content_length .val
   post_data := String.from post_data_raw
   val := util.mime_value.from_type_string (req_context.request.header["content-type"].val "")
   content_type := val.mime_type
