@@ -389,13 +389,19 @@ module user (module base_dir path) is
   type.send_user_registration_email (name, email, token, username, ip String) outcome unit =>
     # NYI - prevent abuse
     subject := "[fuzion-lang.dev] - Confirm registration"
-    io.file.read (content.templates_dir.resolve "email_registration.txt")
-      .bind (tmplt ->
-              body := tmplt.replace "##NAME##" send_user_registration_email.this.name
-                           .replace "##USERNAME##" username
-                           .replace "##TOKEN##" token
-                           .replace "##IP##" ip
-              email_service.send_text_mail_with_footer noreply_tokiwa_software email subject body)
+    fuzion.runtime.fault
+      .try ()->
+        io.file.read (content.templates_dir.resolve "email_registration.txt")
+          .bind (tmplt ->
+                  body := tmplt.replace "##NAME##" send_user_registration_email.this.name
+                               .replace "##USERNAME##" username
+                               .replace "##TOKEN##" token
+                               .replace "##IP##" ip
+                  email_service.send_text_mail_with_footer noreply_tokiwa_software email subject body)
+      .catch  e->
+        m := "fault while sending registration email: $e"
+        logger.log m
+        error m
 
 
   # constants
