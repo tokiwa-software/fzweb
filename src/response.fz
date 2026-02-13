@@ -38,7 +38,7 @@ module response (returncode i32,
     attributes.put "Server" "Fuzion WebServer v0.0.2"
     if !attributes["Connection"].exists
       attributes.put "Connection" "close"
-    br := io.Read_Handler.from LM data.as_array
+    br := io.Read_Handler.from LM data
     http.response_message
         .new nil 1 1 returncode return_code_string attributes.items.as_array br
         .bytes data.count
