@@ -27,16 +27,16 @@ module identifier (module file_to_send option path,
   # array u8 = success
   # nil = Not Found
   #
-  get_bytes (s Session) choice error nil (array u8) =>
+  get_bytes (s Session) choice error nil (Sequence u8) =>
     match file_to_send
       fts path =>
         match util.read_file fts
-          ba array u8 =>
+          ba Sequence u8 =>
             if is_html_template
               s.set_current (simple_path.val "")
               # NYI : UNDER DEVELOPMENT: ugly that we have to manually retag
               match s.add_session_info_to_html_bytes ba
-                a array u8 => a
+                a Sequence u8 => a
                 nil => nil
             else
               ba
@@ -49,10 +49,10 @@ module identifier (module file_to_send option path,
   module response (s Session) response =>
     # NYI: logging
     match get_bytes s
-      b array u8 =>
+      b Sequence u8 =>
         suffix := file_to_send.get.suffix
         attributes := map_of_strings [
-          ("Content-Length", b.length.as_string),
+          ("Content-Length", b.count.as_string),
           ("Content-Type", mime_types.get_mime_type suffix)
         ]
         response.new 200 attributes b
