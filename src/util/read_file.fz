@@ -18,12 +18,13 @@ module read_file_as_string(c choice String path) outcome String =>
 # read file p file and return
 # its contents as an array of bytes
 #
-module read_file(c choice String path) outcome (array u8) =>
+module read_file(c choice String path) outcome (Sequence u8) =>
   str := match c
     s String => s
     p path => p.as_string
-  # NYI: UNDER DEVELOPMENT cache these reads?
+  # NYI: UNDER DEVELOPMENT return the mapped buffer as an immutable Sequence
+  # instead of copying it to an array once we have resource areneas.
   io.file.use str io.file.mode.append ()->
     sz := (io.file.stat str false).val.size
     io.file.open.mmap 0 sz ()->
-      io.file.mapped_buffer.env.as_array
+      id (Sequence u8) io.file.mapped_buffer.env.as_array

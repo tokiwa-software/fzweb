@@ -329,7 +329,7 @@ module Session (client net.ip_address,
 
   # returns nil on Not Found
   #
-  module add_session_info_to_html_bytes (b array u8) option (array u8) =>
+  module add_session_info_to_html_bytes (b Sequence u8) option (Sequence u8) =>
     activity
     # NYI
     # - ByteArray from flang_dev
@@ -345,7 +345,6 @@ module Session (client net.ip_address,
           .replace "##URL##" "/{cp.page}"
           .replace "##CONTENT##" (String.join a "\n")
           .utf8
-          .as_array
 
 
   # the message to send via an event connection
