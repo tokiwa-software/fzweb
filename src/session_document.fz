@@ -20,7 +20,7 @@ module session_document (module page String,
 
   # the actual file name of the current document
   #
-  file_name := data_path.bind dp->dp.file_name .val "404.html"
+  file_name := data_path.bind dp->dp.base_name .val "404.html"
 
 
   # is the user of the given session allowed to
@@ -121,7 +121,7 @@ module session_document (module page String,
                   res.add <| encodings.html.encode line true
                 res.add "</pre>\n"
               else
-                fname := encodings.html.encode dp.file_name true
+                fname := encodings.html.encode dp.base_name true
                 res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
 
               res.add "</div>"
