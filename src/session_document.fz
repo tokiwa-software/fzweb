@@ -407,7 +407,10 @@ module session_document (module page String,
       #
       for current := temp, "{page_link (template.link ppup "index")} • {current}"
           ppup := pup.bind (.parent), ppup.get.parent
-      while ppup.ok
+      while
+        match ppup
+          p path => !p.is_parent
+          nil => false
       else
         current
 
