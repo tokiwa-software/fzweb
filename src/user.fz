@@ -123,7 +123,7 @@ module user (module base_dir path) is
 
   # get a list of the directory entries
   #
-  type.list_dir (p path) array String =>
+  type.list_dir (p path) Sequence String =>
     res := io.dir.use _ p.as_string ()->
       for
         entries := (container.expanding_array String).empty, entries.add next.get
@@ -133,7 +133,7 @@ module user (module base_dir path) is
 
     match res
       error => []
-      ea container.expanding_array => ea.as_array
+      ea container.expanding_array => ea
 
 
   # given a path of a user directory, check if the given predicate applies
@@ -242,7 +242,7 @@ module user (module base_dir path) is
               match delete_by_login username0.get
                 e error => logger.log "error deleting failed user registration: {e}"
                 unit => logger.log "deleted user {username0.get} due to unsent registration email"
- 
+
               "<div class='text-center'>Registration failed. Failed sending mail.</div>"
             unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
 
@@ -282,7 +282,7 @@ module user (module base_dir path) is
                 error "user directory path occupied by non-directory"
         else
           io.dir.make user_dir.as_string
-        
+
       match make_if_exists
         e error => e
         unit =>
