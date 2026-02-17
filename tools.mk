@@ -28,16 +28,16 @@ bench_root:
 .PHONY: profile
 profile:
 	printf "output will be in out.prof\n"
-	$(FZ) -XjavaProf=out.prof -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
+	$(FZ) -debug=0 -XjavaProf=out.prof -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
 
 .PHONY: flamegraph
 flamegraph:
 	printf "output will be in out.svg\n"
-	$(FZ) -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
+	$(FZ) -debug=0 -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -verbose=2 -modules=$(MODULES) -sourceDirs=src run
 
 .PHONY: run_benchmarks
 run_benchmarks:
-	$(FZ) -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,benchmarks benchmarks
+	$(FZ) -debug=0 -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,benchmarks benchmarks
 
 .PHONY: run_tests
 run_tests:
@@ -45,8 +45,8 @@ run_tests:
 
 .PHONY: flamegraph_benchmarks
 flamegraph_benchmarks:
-	$(FZ) -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,benchmarks benchmarks
+	$(FZ) -debug=0 -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,benchmarks benchmarks
 
 .PHONY: flamegraph_tests
 flamegraph_tests:
-	$(FZ) -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,tests tests
+	$(FZ) -debug=0 -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,tests tests
