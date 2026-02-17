@@ -124,7 +124,7 @@ module user (module base_dir path) is
   # get a list of the directory entries
   #
   type.list_dir (p path) Sequence String =>
-    res := io.dir.use _ p.as_string ()->
+    res := io.dir.use _ p ()->
       for
         entries := (container.expanding_array String).empty, entries.add next.get
         next := io.dir.open.read
@@ -139,7 +139,7 @@ module user (module base_dir path) is
   # given a path of a user directory, check if the given predicate applies
   #
   type.check_user (predicate user->bool, p path) bool =>
-    match io.file.stat p.as_string true
+    match io.file.stat p true
       error => false
       m io.file.meta_data =>
         if m.is_dir
@@ -268,12 +268,12 @@ module user (module base_dir path) is
   type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
     user_dir := user.users_dir.resolve username
     user_text := user_dir.resolve user.user_file
-    if io.file.exists user_text.as_string
+    if io.file.exists user_text
       error "*** user already exists: {username}"
     else
       make_if_exists outcome unit :=
-        if io.file.exists user_dir.as_string
-          match io.file.stat user_dir.as_string true
+        if io.file.exists user_dir
+          match io.file.stat user_dir true
             e error => e
             md io.file.meta_data =>
               if md.is_dir
@@ -281,7 +281,7 @@ module user (module base_dir path) is
               else
                 error "user directory path occupied by non-directory"
         else
-          io.dir.make user_dir.as_string
+          io.dir.make user_dir
 
       match make_if_exists
         e error => e
@@ -352,12 +352,12 @@ module user (module base_dir path) is
     match get_by_deletion_token token
       error => error "no user found with token: {token}"
       u user =>
-        if !(io.file.exists deleted_users_dir.as_string)
+        if !(io.file.exists deleted_users_dir)
           io.dir
-            .make deleted_users_dir.as_string
+            .make deleted_users_dir
             .or_else (() -> u.log "failed making dir: {deleted_users_dir}")
 
-        io.file.move u.base_dir.as_string "{deleted_users_dir}/{time.now}"
+        io.file.move u.base_dir (deleted_users_dir.resolve $time.now)
 
 
   # delete an account by a login name
@@ -371,14 +371,14 @@ module user (module base_dir path) is
         l := u.base_dir.resolve user.log_file
 
         user_file_res :=
-          if io.file.exists f.as_string
-            io.file.delete f.as_string
+          if io.file.exists f
+            io.file.delete f
         log_file_res :=
-          if io.file.exists l.as_string
-            io.file.delete l.as_string
+          if io.file.exists l
+            io.file.delete l
         user_dir_res :=
-          if io.file.exists u.base_dir.as_string
-            io.file.delete u.base_dir.as_string
+          if io.file.exists u.base_dir
+            io.file.delete u.base_dir
 
         # NYI: CLEANUP: remove explicit types here when possible
         user_file_res.and (outcome unit) log_file_res .and (outcome unit) user_dir_res

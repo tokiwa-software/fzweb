@@ -10,21 +10,18 @@
 # read file p file and return
 # its contents as a String
 #
-module read_file_as_string(c choice String path) outcome String =>
-  (read_file c).bind b->
+module read_file_as_string(p path) outcome String =>
+  (read_file p).bind b->
     String.from b
 
 
 # read file p file and return
 # its contents as an array of bytes
 #
-module read_file(c choice String path) outcome (Sequence u8) =>
-  str := match c
-    s String => s
-    p path => p.as_string
+module read_file(p path) outcome (Sequence u8) =>
   # NYI: UNDER DEVELOPMENT return the mapped buffer as an immutable Sequence
   # instead of copying it to an array once we have resource areneas.
-  io.file.use str io.file.mode.append ()->
-    sz := (io.file.stat str false).val.size
+  io.file.use p io.file.mode.append ()->
+    sz := (io.file.stat p false).val.size
     io.file.open.mmap 0 sz ()->
       id (Sequence u8) io.file.mapped_buffer.env.as_array

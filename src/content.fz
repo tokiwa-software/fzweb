@@ -34,7 +34,7 @@ module content is
       base_simple_path := sp.subpath 0 i
       base_dir0 := content_dir.resolve base_simple_path
       access := base_dir0.resolve "access.txt"
-    until io.file.exists access.as_string
+    until io.file.exists access
       base_simple_path
     else
       nil
@@ -79,9 +79,9 @@ module content is
   # file that contains a <browse> tag to browse a directory.
   #
   type.is_browsable (jndex path) option (lock_free.Map String String) =>
-    if io.file.exists jndex.as_string
+    if io.file.exists jndex
       util
-        .read_file_as_string jndex.as_string
+        .read_file_as_string jndex
         .bind str->
           for
             l in str.split "\n"
@@ -143,9 +143,9 @@ module content is
                 .replace " " "+"
                 .replace "/.html" "/index.html"
     r_decoded := pages.resolve (file_path decoded)
-    if !(io.file.exists r.as_string)
+    if !(io.file.exists r)
       # might be docs file?
-      if !(io.file.exists r_decoded.as_string)
+      if !(io.file.exists r_decoded)
         # NYI browsing
         # when index_file has browse tag, consider showing index file
         # (old webserver behavior):
@@ -230,7 +230,7 @@ module content is
     p := templates_dir.resolve path_from_url
     is_valid_file :=
       io.file.stat
-        .stats p.as_string
+        .stats p
         .bind (.is_regular)
         .val false
     if is_valid_file

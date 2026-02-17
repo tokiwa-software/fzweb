@@ -33,7 +33,7 @@ module config_file (values lock_free.Map String String, p path) is
   # its path
   #
   module save =>
-    res := io.file.use unit p.as_string io.file.mode.write ()->
+    res := io.file.use unit p io.file.mode.write ()->
       data := values.items
                     .map (e -> "{e.0}: {e.1}")
                     .as_string "\n"
