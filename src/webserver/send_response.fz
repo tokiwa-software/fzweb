@@ -15,8 +15,9 @@ module send_ok_or_reload (s Session) response =>
 # send a text/html response
 #
 html_response(returncode i32, datastr String) =>
-  data := datastr.utf8.as_array
-  header := map_of_strings [("Content-Length", data.length.as_string), ("Content-Type", "text/html")]
+  data := datastr.utf8
+  check debug : data.is_array_backed
+  header := map_of_strings [("Content-Length", data.count.as_string), ("Content-Type", "text/html")]
   response.new returncode header data
 
 
