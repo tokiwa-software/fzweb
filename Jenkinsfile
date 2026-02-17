@@ -17,6 +17,7 @@ pipeline {
         dir('flang_dev') {
           checkout scmGit(
             branches: [[name: 'main']],
+            extensions: [submodule(parentCredentials: true, recursiveSubmodules: true)],
             userRemoteConfigs: [[credentialsId: '7a3054c1-90e8-4a0c-a4ec-1304a6c2c38f',
               url: 'https://git.tokiwa.software/tokiwa/flang_dev.git']])
 
