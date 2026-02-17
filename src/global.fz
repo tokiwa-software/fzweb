@@ -16,11 +16,8 @@ module global : effect is
   module feeds := Feeds
 
   max_cached_files => 25
-  files := lock_free.Sieve_Cache String (outcome String) max_cached_files
+  files := lock_free.Sieve_Cache path (outcome String) max_cached_files
 
-  module read_file_as_string(c choice String path) =>
-    str := match c
-      s String => s
-      p path => p.as_string
-    files.access str ()->
-      util.read_file_as_string str
+  module read_file_as_string(p path) =>
+    files.access p ()->
+      util.read_file_as_string p

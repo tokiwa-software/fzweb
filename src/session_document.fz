@@ -126,7 +126,7 @@ module session_document (module page String,
 
               res.add "</div>"
 
-              match io.file.stat dp.as_string true
+              match io.file.stat dp true
                 e error =>
                   session.log "error retrieving file metadata in session_document get_content: {e}"
                 metadata io.file.meta_data =>
@@ -189,16 +189,15 @@ module session_document (module page String,
           .parent
           .val
           .resolve m["dir"].get
-          .as_string
 
         io.dir
           .use dir ()->
             for res := container.expanding_array String .empty,
                 {
-                  x := "{dir}/{a.val}"
+                  x := dir.resolve a.val
                   match io.file.stat x false
                     e error => res
-                    md io.file.meta_data => res.add <| append x md
+                    md io.file.meta_data => res.add <| append $x md
                 }
                 a := io.dir.open.read
             while a.ok
@@ -213,7 +212,7 @@ module session_document (module page String,
   runcode_wrapper(m container.Map String String) =>
     id := uuid.create_random.as_string
     code := util
-      .read_file_as_string (data_path.or_panic.parent.val.resolve m["file"].get).as_string
+      .read_file_as_string (data_path.or_panic.parent.val.resolve m["file"].get)
       .val
     """
     <div class="runcode-wrapper">

@@ -50,7 +50,7 @@ module Feeds ref is
     # parse and save github commits using the graphql api
     #
     commits Sequence rss_feed_entry =>
-      token := util.read_file_as_string "./github-graphql-token.txt"
+      token := util.read_file_as_string (path.of "./github-graphql-token.txt")
                    .or_else ""
                    .trim
 
