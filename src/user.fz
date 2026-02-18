@@ -123,10 +123,10 @@ module user (module base_dir path) is
 
   # get a list of the directory entries
   #
-  type.list_dir (p path) Sequence String =>
+  type.list_dir (p path) Sequence path =>
     res := io.dir.use _ p ()->
       for
-        entries := (container.expanding_array String).empty, entries.add next.get
+        entries := (container.expanding_array path).empty, entries.add next.get
         next := io.dir.open.read
       until !next.ok
         entries
