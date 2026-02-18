@@ -394,7 +394,7 @@ module session_document (module page String,
       # we start with a link to the current page
       temp :=
         # we link to the docs if necessary
-        if page.starts_with "docs/"
+        if page.starts_with "docs/" && page != "docs/index"
           template.doc_links fn
         else
           page_link page
