@@ -17,7 +17,7 @@ module url_encoded is
     form_data := lock_free.Map String String .empty
     for p in pairs do
       nv := p.split "="
-      name := encodings.percent.decode_as_str nv[0] .val.trim
-      _ := form_data.put name (nv.count < 2 ? "" : encodings.percent.decode_as_str nv[1] .val)
+      name := encodings.percent.decode_as_str_tolerant nv[0] .val.trim
+      _ := form_data.put name (nv.count < 2 ? "" : encodings.percent.decode_as_str_tolerant nv[1] .val)
     form_data
 
