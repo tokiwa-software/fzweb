@@ -13,6 +13,12 @@
 # make -f tools.mk flamegraph
 #
 
+# to make sure Runtime.freeze does
+# not show up in profiling
+#
+export PRECONDITIONS  := false
+export POSTCONDITIONS := false
+
 include Makefile
 
 .PHONY: bench_tutorial
