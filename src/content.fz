@@ -80,7 +80,7 @@ module content is
   #
   # returns a Map of <browse>-tags attributes and its values.
   #
-  type.browse (jndex path) option (lock_free.Map String String) =>
+  type.parse_browse_tag (jndex path) option (lock_free.Map String String) =>
     if io.file.exists jndex
       util
         .read_file_as_string jndex
@@ -150,7 +150,7 @@ module content is
       if !(io.file.exists r_decoded)
         i := index_file pages
 
-        match browse i
+        match parse_browse_tag i
           m lock_free.Map =>
             match get_dir_from_browse u i m
               dir String => pages.resolve dir .resolve (file_path file)
