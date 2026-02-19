@@ -146,11 +146,14 @@ module content is
     if !(io.file.exists r)
       # might be docs file?
       if !(io.file.exists r_decoded)
-        # NYI browsing
-        # when index_file has browse tag, consider showing index file
-        # (old webserver behavior):
-        # index_file pages
-        nil
+        i := index_file pages
+
+        match is_browsable i
+          m lock_free.Map =>
+            match get_dir_from_browse u i m
+              dir String => pages.resolve dir .resolve (file_path file)
+              nil => nil
+          nil => nil
       else
         r_decoded
     else
