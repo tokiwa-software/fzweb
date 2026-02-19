@@ -87,58 +87,62 @@ module session_document (module page String,
   # get file content as array of strings
   #
   module get_content option (array String) =>
-    lm ! ()->
-      res := (lm.array String).empty
+    fuzion.runtime.fault
+      .try ()->
+        lm ! ()->
+          res := (lm.array String).empty
 
-      match data_path
-        dp path =>
-          match global.env.read_file_as_string dp
-            str String =>
-              nav := permitted ? navigation : ("","")
-              if permitted
-                res.add nav.0
+          match data_path
+            dp path =>
+              match global.env.read_file_as_string dp
+                str String =>
+                  nav := permitted ? navigation : ("","")
+                  if permitted
+                    res.add nav.0
 
-              res.add "<div class='fd-page-content'>"
+                  res.add "<div class='fd-page-content'>"
 
-              if file_name.ends_with ".html"
-                html := add_session_info_to_html str
-                  .replace "##ITEM_RECENT_TOOTS##" (rss_html global.env.feeds.mastodon.read)
-                  .replace "##ITEM_RECENT_COMMITS##" (commits_html global.env.feeds.github.read)
+                  if file_name.ends_with ".html"
+                    html := add_session_info_to_html str
+                      .replace "##ITEM_RECENT_TOOTS##" (rss_html global.env.feeds.mastodon.read)
+                      .replace "##ITEM_RECENT_COMMITS##" (commits_html global.env.feeds.github.read)
 
-                if has_embedded_html html
-                  res.add (embed_html_in_iframe html)
-                else
-                  res.add html
-              else if content.is_known_preformatted_file file_name
+                    if has_embedded_html html
+                      res.add (embed_html_in_iframe html)
+                    else
+                      res.add html
+                  else if content.is_known_preformatted_file file_name
 
-                # NYI: UNDER DEVELOPMENT: pretty printing
+                    # NYI: UNDER DEVELOPMENT: pretty printing
 
-                title := (content.file_path page).as_string
-                res.add "<h1>{encodings.html.encode title.as_string true}</h1>\n"
-                # opacity is reset in main.js:initAnsiUp()
-                res.add "<pre class='code' style='opacity: 0'>\n"
-                str.lines .for_each line->
-                  res.add <| encodings.html.encode line true
-                res.add "</pre>\n"
-              else
-                fname := encodings.html.encode dp.base_name true
-                res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
+                    title := (content.file_path page).as_string
+                    res.add "<h1>{encodings.html.encode title.as_string true}</h1>\n"
+                    # opacity is reset in main.js:initAnsiUp()
+                    res.add "<pre class='code' style='opacity: 0'>\n"
+                    str.lines .for_each line->
+                      res.add <| encodings.html.encode line true
+                    res.add "</pre>\n"
+                  else
+                    fname := encodings.html.encode dp.base_name true
+                    res.add "<p>501: Not Implemented: Unsupported file type in {fname}</p>"
 
-              res.add "</div>"
+                  res.add "</div>"
 
-              match io.file.stat dp true
-                e error =>
-                  session.log "error retrieving file metadata in session_document get_content: {e}"
-                metadata io.file.meta_data =>
-                  ts := time.date_time.from_seconds metadata.mtime.as_u64
-                  ts_formatted := "{ts.year.as_string 4 10}-{ts.month.as_string 2 10}-{ts.day.as_string 2 10}"
-                  res.add "<div class='last-changed'>last changed: {ts_formatted}</div>"
+                  match io.file.stat dp true
+                    e error =>
+                      session.log "error retrieving file metadata in session_document get_content: {e}"
+                    metadata io.file.meta_data =>
+                      ts := time.date_time.from_seconds metadata.mtime.as_u64
+                      ts_formatted := "{ts.year.as_string 4 10}-{ts.month.as_string 2 10}-{ts.day.as_string 2 10}"
+                      res.add "<div class='last-changed'>last changed: {ts_formatted}</div>"
 
-              if permitted
-                res.add nav.1
-              id (option (array String)) res.as_array
-            error => nil
-        nil => nil
+                  if permitted
+                    res.add nav.1
+                  id (option (array String)) res.as_array
+                error => nil
+            nil => nil
+      .catch e->
+        [ "<p>500: Internal Server Error: {e}</p>" ]
 
 
   # add session-specific information to the html
