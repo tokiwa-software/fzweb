@@ -193,14 +193,25 @@ module session_document (module page String,
             """
           else ""
 
+        m_dir :=
+          match m["dir"]
+            d String => path.of d
+            nil =>
+              # no dir, try userdata
+              match session.user.read
+                u user => u.base_dir
+                nil => dp.parent.val # index of current dir
+                
+              
+
         dir :=
-          if m["dir"].get.starts_with ".."
+          if m_dir.starts_with path.parent_dir
             dp
               .parent
               .val
-              .resolve m["dir"].get
+              .resolve m_dir
           else
-            path.of m["dir"].get
+            m_dir
 
         io.dir
           .use dir ()->
