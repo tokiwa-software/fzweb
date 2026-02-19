@@ -13,8 +13,8 @@
 
 benchmarks =>
 
-  duration := time.duration.s 10
-  warmup := time.duration.s 2
+  duration := time.duration.s 5
+  warmup := time.duration.s 1
 
   b(f ()->unit) =>
     bench warmup duration f
@@ -45,12 +45,16 @@ benchmarks =>
   g := io.Out.instate _ io.Out.blackhole ()->
     global
 
+  sites := [
+    "idioms/index",
+    "docs/base/index",
+    "tutorial/index",
+    "news/index",
+    "index"
+  ]
+
   g ! ()->
-    session_event_msg "docs/base/index"
-    session_event_msg "tutorial/index"
-    session_event_msg "news/index"
-    session_event_msg "index"
-    session_document_get_content "docs/base/index"
-    session_document_get_content "tutorial/"
-    session_document_get_content "news/"
-    session_document_get_content "index"
+    for s in sites do
+      session_event_msg s
+    for s in sites do
+      session_document_get_content s
