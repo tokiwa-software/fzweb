@@ -170,34 +170,46 @@ module session_document (module page String,
   # <browse dir="../../link/clang/src/"/>
   #
   browse_tag(m container.Map String String) =>
+    browse_tag m 0
+
+
+  # browse tag replacer, recursive helper for indentation
+  #
+  browse_tag(m container.Map String String, indent i32) =>
 
     match data_path
       dp path =>
-        append(a String, md io.file.meta_data) =>
+        append(a path, md io.file.meta_data) =>
+          nbsp := "&nbsp;"
           if md.is_dir
-            dir_map := container.ordered_map ["dir"] [a]
+            dir_map := container.ordered_map ["dir"] [$a]
             """
-              <div class="mydir" data-dir="{encodings.html.encode a true}">NYI: {browse_tag dir_map}</div>
+              {nbsp}{"│{nbsp}{nbsp}"*indent}├─ <span class="mydir">{encodings.html.encode a.base_name true}</span><br>
+              {browse_tag dir_map indent+1}
             """
           else if md.is_regular
             """
-              <div><a href="{a}">NYI: {encodings.html.encode (String.join ((path.of a).names.drop dp.parent.val.names.count) "/") true}</a></div>
+              {nbsp}{"│{nbsp}{nbsp}"*indent}├─ <a href="$a">{encodings.html.encode a.base_name true}</a><br>
             """
           else ""
 
-        dir := dp
-          .parent
-          .val
-          .resolve m["dir"].get
+        dir :=
+          if m["dir"].get.starts_with ".."
+            dp
+              .parent
+              .val
+              .resolve m["dir"].get
+          else
+            path.of m["dir"].get
 
         io.dir
           .use dir ()->
             for res := container.expanding_array String .empty,
                 {
                   x := dir.resolve a.val
-                  match io.file.stat x false
+                  match io.file.stat x true
                     e error => res
-                    md io.file.meta_data => res.add <| append $x md
+                    md io.file.meta_data => res.add <| append x md
                 }
                 a := io.dir.open.read
             while a.ok
