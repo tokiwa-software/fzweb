@@ -12,10 +12,10 @@ module split_query(query String) lock_free.Map String String =>
   query_pairs := (lock_free.Map String String).empty
   pairs := query.split "&"
   for pair in pairs do
-    idx := pair.find "="
-    if idx.exists
-      k := encodings.percent.decode_as_str (pair.substring 0 idx.get )
-      v := encodings.percent.decode_as_str (pair.substring idx.get+1)
+    ix := pair.find "="
+    if ix.exists
+      k := encodings.percent.decode_as_str (pair.substring 0 ix.get )
+      v := encodings.percent.decode_as_str (pair.substring ix.get+1)
       res := k.bind unit (jkey -> (v.bind unit (jval -> query_pairs.put (id String jkey) (id String jval))))
       if res.is_error then panic "decoding error :"+res.err.msg
     else

@@ -417,7 +417,7 @@ module session_document (module page String,
 
     # get the index in the toc, or nil if none
     #
-    idx =>
+    ix =>
       if is_toc
         nil
       else
@@ -427,7 +427,7 @@ module session_document (module page String,
         else
           j
 
-    prev, next := idx
+    prev, next := ix
       .bind x->
         (if x>0 then toc.nth x-1 else nil, toc.nth x+1)
       # NYI: UNDER DEVELOPMENT: better type inference necessary

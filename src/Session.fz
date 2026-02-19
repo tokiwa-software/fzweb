@@ -292,11 +292,11 @@ module Session (client net.ip_address,
       for cnt  := u32 1,
                   cnt+1
           res  := container.expanding_array (Sequence T) .empty,
-                  res.add (rest.take (if split_after then idx.get + abs.count else idx.get))
+                  res.add (rest.take (if split_after then ix.get + abs.count else ix.get))
           rest := as_array_backed,
-                  rest.drop (idx.get + abs.count)
-          idx  := rest.find abs
-      while idx.ok && (limit.is_empty || limit >=? cnt) do
+                  rest.drop (ix.get + abs.count)
+          ix  := rest.find abs
+      while ix.ok && (limit.is_empty || limit >=? cnt) do
 
       else
         res
