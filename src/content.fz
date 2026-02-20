@@ -126,7 +126,7 @@ module content is
   # check if a file is known to be preformatted
   #
   module type.is_known_preformatted_file (file_name String) bool =>
-    [".c", ".fz", ".fuzion", ".sh", ".txt", ".ebnf"] ∃ file_name.ends_with
+    [".c", ".fz", ".fuzion", ".sh", ".txt", ".ebnf", ".g4" ] ∃ file_name.ends_with
 
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
