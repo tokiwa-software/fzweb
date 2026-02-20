@@ -76,9 +76,11 @@ module content is
 
 
   # Check if the given path points to a directory that contains an index.html
-  # file that contains a <browse> tag to browse a directory.
+  # file that contains a <browse> tag to browse a directory
   #
-  type.is_browsable (jndex path) option (lock_free.Map String String) =>
+  # returns a Map of <browse>-tags attributes and its values.
+  #
+  type.parse_browse_tag (jndex path) option (lock_free.Map String String) =>
     if io.file.exists jndex
       util
         .read_file_as_string jndex
@@ -148,7 +150,7 @@ module content is
       if !(io.file.exists r_decoded)
         i := index_file pages
 
-        match is_browsable i
+        match parse_browse_tag i
           m lock_free.Map =>
             match get_dir_from_browse u i m
               dir String => pages.resolve dir .resolve (file_path file)
