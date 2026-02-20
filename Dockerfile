@@ -58,5 +58,6 @@ COPY --from=builder /fzweb /fzweb
 WORKDIR /fzweb
 RUN ln -sf /fzweb/flang_dev/content
 RUN ln -sf /fzweb/flang_dev/templates
+RUN ln -sf /fzweb/fuzion/build/modules /fzweb/flang_dev/content/api/link
 ENTRYPOINT /fzweb/run
 EXPOSE 8080
