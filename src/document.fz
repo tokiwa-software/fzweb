@@ -73,8 +73,8 @@ module document is
     map := util.url_encoded.parse_urlencoded_map entry
     res := (lock_free.Map String String).empty
     for pair in map.items do
-      if (pair.1.starts_with "\"") && (pair.1.ends_with "\"")
-        v := pair.1.substring 1 pair.1.byte_length
+      if (pair.1.starts_with "\"") && (pair.1.ends_with "\"") && ((pair.1.find "\"") != (pair.1.find_last "\""))
+        v := pair.1.substring 1 pair.1.byte_length-1
         res.put pair.0 v
       else
         res.put pair.0 pair.1
