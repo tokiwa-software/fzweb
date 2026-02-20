@@ -192,8 +192,18 @@ module session_document (module page String,
               {browse_tag dir_map indent+1}
             """
           else if md.is_regular
+            # NYI: HACK: is a better algorithm possible for mangling the path?
+            path_rel := path.of "content/api/link"
+              .relativize a
+            module_path := path_rel.subpath 0 1
+            file_path := path_rel.subpath 2
+            file_link := path.root
+              .resolve "api"
+              .resolve module_path
+              .resolve file_path
+
             """
-              {nbsp}{"│{nbsp}{nbsp}"*indent}├─ <a href="$a">{encodings.html.encode a.base_name true}</a><br>
+              {nbsp}{"│{nbsp}{nbsp}"*indent}├─ <a href="$file_link">{encodings.html.encode a.base_name true}</a><br>
             """
           else ""
 
