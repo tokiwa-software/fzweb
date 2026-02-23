@@ -24,7 +24,7 @@ request_context (LM type : mutate, connection net.connection) is
 
   client :=
     x_forwarded_for
-      .or_else (net.channel.env.get_peer_address.or_else (net.ip_address (u128 0 0)))
+      .or_else (net.channel.env.get_peer_address.or_else (net.ip_address u128.zero))
 
   # send an HTTP response on the current socket
   #
@@ -36,11 +36,11 @@ request_context (LM type : mutate, connection net.connection) is
     match (io.buffered LM)
               .writer.env
               .write (response.bytes LM)
-      e error => logger.log "#### {e}"
+      e error => logger.log e
       unit =>
-        flush_ok := (io.buffered LM).writer.env.flush
-        if flush_ok!!
-          logger.log "#### {flush_ok.err}"
+        match (io.buffered LM).writer.env.flush
+          e error => logger.log e
+          unit    =>
 
 
 # entry point to the handling the request

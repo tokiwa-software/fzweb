@@ -45,7 +45,7 @@ run =>
                     unit =>
 
               .catch  e->
-                logger.log "fault: $e"
+                logger.log $e
                 match conn.close
                   cce error => logger.log "failed closing connection {cce}"
                   unit    =>
@@ -53,4 +53,4 @@ run =>
         accept_res.or_else ()->
           logger.log "failed accepting connection {accept_res}"
 
-  logger.log "some failure occurred: $res"
+  logger.log $res
