@@ -33,7 +33,7 @@ module email_service is
   # an internal mailbox
   #
   module send_text_mail (from, to, subject, body String) =>
-    mail.send host username password from to subject body
+    mail.send host username password from to subject body "admin@flang.dev"
 
 
   # send an email containing a text body
