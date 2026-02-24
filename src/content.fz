@@ -117,7 +117,9 @@ module content is
     if "true" = (map["userdata"].val "false")
       u.bind String u0->
         ud := u0.base_dir
-        ru := data_path.parent.get.relativize ud
+        ru := path.parent_dir
+          .resolve "../.."
+          .resolve ud
         ru.as_string
     else
       map["dir"]
