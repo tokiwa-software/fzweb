@@ -25,9 +25,7 @@ module logger is
   module log(log_path path, msg String) =>
     m := "{time.now.get} {logger.thread_id}: {msg}"
 
-    res := io.file.use unit log_path io.file.mode.append ()->
-        (io.file.writer.write "{m}\n".utf8)
-
-    match res
+    match (io.file.use unit log_path io.file.mode.append ()->
+            (io.file.writer.write "{m}\n".utf8))
       unit => say m # Also log to console
-      e error => say "*** failed to write to log: {e}"
+      e error => say "*** failed writing to log: {e}"
