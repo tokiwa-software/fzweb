@@ -81,20 +81,17 @@ module content is
   # returns a Map of <browse>-tags attributes and its values.
   #
   type.parse_browse_tag (jndex path) option (lock_free.Map String String) =>
-    if io.file.exists jndex
-      util
-        .read_file_as_string jndex
-        .bind str->
-          for
-            l in str.split "\n"
-            m := document.get_tag l "<browse"
-          until m.exists
-            outcome m.get
-          else
-            error "not found"
-        .as_option
-    else
-      nil
+    util
+      .read_file_as_string jndex
+      .bind str->
+        for
+          l in str.split "\n"
+          m := document.get_tag l "<browse"
+        until m.exists
+          outcome m.get
+        else
+          error "not found"
+      .as_option
 
 
   # pages dir for a given path prefix
