@@ -8,22 +8,13 @@
 
 module logger is
 
-  # Atomic integer to maintain a unique thread ID
-  thread_id_count := concur.atomic i32 .new 0
-
-  # Thread local storage for thread IDs
-  thread_id :=
-    for x := thread_id_count.read
-    while !(thread_id_count.compare_and_set x x+1)
-    else x+1
-
   # Logger function that outputs to the console
   module log(c String|error) =>
-    say "{time.now.get} {logger.thread_id}: {c ? s String => s | e error => e.as_string}"
+    say "{time.now.get}: {c ? s String => s | e error => e.as_string}"
 
   # Logger function that writes to a file
   module log(log_path path, msg String) =>
-    m := "{time.now.get} {logger.thread_id}: {msg}"
+    m := "{time.now.get}: {msg}"
 
     match (io.file.use unit log_path io.file.mode.append ()->
             (io.file.writer.write "{m}\n".utf8))
