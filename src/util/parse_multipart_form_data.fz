@@ -6,43 +6,42 @@
 #
 # -----------------------------------------------------------------------
 
-# NYI: current complexity is O(n^2). this should be reduced.
+# extract mime values from a given part of formdata
+#
+# NYI: CLEANUP: this code should be cleanup up further
+#
+extract_mime_values(part String) =>
+  part_lines := part.split "\r\n" .as_array_backed
+  mv := mime_values
+
+  for
+    part_lines_header_count := 0, part_lines_header_count + 1
+    part_line in part_lines
+  while part_line.find ":" .exists
+  do
+    mv.add part_line
+  else
+    for
+      res := "", res + new_val
+      i in part_lines_header_count+1..part_lines.count-1
+    do
+      new_val := (res.is_empty ? "" : "\n") + part_lines[i]
+    else
+      (mv, res)
+
+
+# extract form data
+#
 module parse_multipart_form_data(data, boundary String) lock_free.Map String String =>
 
-  # Convert boundary to Fuzion-friendly format
-  bndry := "--" + boundary
-  # Initialize form data map
-  form_data := (lock_free.Map String String).empty
-  data
-    .split bndry
-    .filter (l -> !l.starts_with "--") # filter out end boundary
-    .map (.trim)
-    .for_each (part ->
-      part_lines := part.split "\r\n" .as_array
-      v := mime_values
+  lock_free.Map String String .from_entries (
+    data
+      .split "--{boundary}"
+      .filter (l -> !l.starts_with "--") # filter out end boundary
+      .map (.trim)
+      .flat_map part->
+        mv, value_str := extract_mime_values part
+        cd := mv.get "Content-Disposition"
+        name := cd["name"]
+        if name != "" then [(name, value_str)] else [])
 
-      part_lines_header_count :=
-        for
-          ixxx := 0, ixxx + 1
-          part_line in part_lines
-        while part_line.find ":" .exists
-        do
-          v.add part_line
-        else
-          ixxx
-
-      value_str :=
-        for
-          res := "", res + new_val
-          i in part_lines_header_count+1..part_lines.count-1
-        do
-          new_val := (res.is_empty ? "" : "\n") + part_lines[i]
-        else
-          res
-
-      cd := v.get "Content-Disposition"
-      name := cd["name"]
-      if name != ""
-        form_data.put name value_str
-    )
-  form_data
