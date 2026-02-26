@@ -21,7 +21,8 @@ module template is
         match template_id.file_to_send
           p path =>
             for
-              res := global.env.read_file_as_string p .val "-- error reading {filename} --", res.replace r.values.0 r.values.1
+              res := global.env.read_file_as_string p .val "-- error reading {filename} --",
+                     res.replace r.values.0 r.values.1
               r in repl
             else
               res
