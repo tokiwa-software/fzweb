@@ -55,11 +55,11 @@ module runner is
            if ec = 0
              lm ! ()->
                p.with_out _ lm ()->
-                 (io.buffered lm).read_string max_output_bytes
+                 String.from ((io.buffered lm).read_bytes max_output_bytes .val)
            else
              lm ! ()->
                p.with_err _ lm ()->
-                 (io.buffered lm).read_string max_output_bytes
+                 String.from ((io.buffered lm).read_bytes max_output_bytes .val)
 
         _ := p.send_signal os.signals.kill
 
