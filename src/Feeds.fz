@@ -26,13 +26,13 @@ module Feeds ref is
   module init =>
     _ := concur.threads.spawn ()->
       do
-        fuzion.runtime.contract_fault
+        fuzion.runtime.fault
           .try ()->
             get_github
           .catch  e->
             logger.log "contract_fault (github feed): $e"
 
-        fuzion.runtime.contract_fault
+        fuzion.runtime.fault
           .try ()->
             get_mastodon
           .catch  e->
