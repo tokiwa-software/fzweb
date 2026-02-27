@@ -258,7 +258,7 @@ module session_document (module page String,
     id := uuid.create_random.as_string
     code := util
       .read_file_as_string (data_path.or_panic.parent.val.resolve m["file"].get)
-      .val
+      .val "# no code is available here"
     """
     <div class="runcode-wrapper">
       <i class="far fa-spinner fa-spin"></i>
