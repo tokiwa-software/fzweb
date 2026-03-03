@@ -53,8 +53,7 @@ module config_file (values lock_free.Map String String, p path) is
   module type.open (p path) config_file =>
     m := (lock_free.Map String String).empty
 
-    util
-      .read_file_as_string p
+    read_file_as_string p
       # ignore any errors here.
       # config file can still be populated and created.
 

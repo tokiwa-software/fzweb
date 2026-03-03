@@ -20,4 +20,4 @@ module global : effect is
 
   module read_file_as_string(p path) =>
     files.access p ()->
-      util.read_file_as_string p
+      universe.read_file_as_string p

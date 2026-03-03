@@ -81,8 +81,7 @@ module content is
   # returns a Map of <browse>-tags attributes and its values.
   #
   type.parse_browse_tag (jndex path) option (lock_free.Map String String) =>
-    util
-      .read_file_as_string jndex
+    read_file_as_string jndex
       .bind str->
         for
           l in str.split "\n"
