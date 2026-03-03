@@ -30,7 +30,7 @@ module identifier (module file_to_send option path,
   get_bytes (s Session) choice error nil (Sequence u8) =>
     match file_to_send
       fts path =>
-        match util.read_file fts
+        match read_file fts
           ba Sequence u8 =>
             if is_html_template
               s.set_current (simple_path.val "")

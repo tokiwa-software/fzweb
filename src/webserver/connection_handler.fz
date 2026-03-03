@@ -72,7 +72,7 @@ form_data(LM type : mutate, req_context request_context LM) =>
       # NYI: UNDER DEVELOPMENT: error handling
       (io.buffered lm).read_bytes content_length .val
   post_data := String.from post_data_raw
-  val := util.mime_value.from_type_string (req_context.request.header["content-type"].val "")
+  val := webserver.mime_value.from_type_string (req_context.request.header["content-type"].val "")
   content_type := val.mime_type
   content_type_boundary := val["boundary"]
   get_form_data post_data req_context.request.method req_context.query_string content_type content_type_boundary
