@@ -287,8 +287,7 @@ module user (module base_dir path) is
         e error => e
         unit =>
           match crypto.password_hash pazzword
-            error =>
-              error "An error occurred when hashing the password"
+            e error => e
             hash String =>
               token := generate_uuid
 
