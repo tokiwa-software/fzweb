@@ -20,7 +20,7 @@ module Session (client net.ip_address,
 
   # login state of the session
   #
-  login := concur.atomic util.login_status .new util.unauthenticated
+  login := concur.atomic login_status .new unauthenticated
 
 
   # activity information
@@ -79,10 +79,10 @@ module Session (client net.ip_address,
 
     match user.get name password
       error =>
-        login.write util.auth_fail
+        login.write auth_fail
       u user =>
         Session.this.user.write u
-        login.write util.authenticated
+        login.write authenticated
 
     send_content
 
@@ -93,14 +93,14 @@ module Session (client net.ip_address,
     activity
 
     user.write nil
-    login.write util.unauthenticated
+    login.write unauthenticated
 
     send_content
 
 
   # login state easy access
   #
-  module get_login_status util.login_status =>
+  module get_login_status login_status =>
     login.read
 
 
@@ -114,7 +114,7 @@ module Session (client net.ip_address,
   #
   module send_login_status unit =>
     match login.read
-      util.authenticated => send_event "isLoggedIn" user.read.get.name
+      authenticated => send_event "isLoggedIn" user.read.get.name
       * => send_event "isNotLoggedIn"
 
 
@@ -122,9 +122,9 @@ module Session (client net.ip_address,
   #
   module status_string =>
     match login.read
-      util.unauthenticated => "not logged in"
-      util.auth_fail => "failed"
-      util.authenticated => "ok: {user.read.get.name}"
+      unauthenticated => "not logged in"
+      auth_fail => "failed"
+      authenticated => "ok: {user.read.get.name}"
 
 
   # send an event on the session's connection
