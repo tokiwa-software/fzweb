@@ -49,17 +49,26 @@ module runner is
         # write code to stdin
         _ := p.write_string code
 
-        x := p.wait max_wait_time
-         .bind ec->
-           lm : mutate is
-           if ec = 0
-             lm ! ()->
-               p.with_out _ lm ()->
-                 String.from ((io.buffered lm).read_bytes max_output_bytes .val)
-           else
-             lm ! ()->
-               p.with_err _ lm ()->
-                 String.from ((io.buffered lm).read_bytes max_output_bytes .val)
+        lm : mutate is
+
+        x := (concur.thread_pool 2 ()->
+          fout := concur.thread_pool.env.submit _ ()->
+            lm ! ()->
+              match p.with_out String lm (()->String.from (io.buffered lm).read_fully)
+                e error => panic "failed reading stdout: $e"
+                out String => out
+          ferr := concur.thread_pool.env.submit _ ()->
+            lm ! ()->
+              match p.with_err String lm (()->String.from (io.buffered lm).read_fully)
+                e error => panic "failed reading stderr: $e"
+                err String => err
+
+          p.wait max_wait_time
+           .bind ec->
+            if ec = 0
+              fout.get
+            else
+              ferr.get).get
 
         _ := p.send_signal os.signals.kill
 
