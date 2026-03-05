@@ -29,36 +29,6 @@ module session_document (module page String,
   permitted := content.access_permitted session.user.read page
 
 
-  # envir vars as key value pairs
-  #
-  # NYI: PERFORMANCE: this could be provided lazily
-  #
-  envir_var_kv :=
-    [ "PATH" ]
-      .map k->
-        envir.vars[k].bind v->
-          (k, v)
-      .filter (.ok)
-      .map (.val)
-      .insert 0 ("dev_flang_util_Terminal_force_ansi_escapes", "true")
-      .as_array
-
-
-  # envir vars as a map
-  #
-  envir_vars :=
-    container.ordered_map
-      (envir_var_kv
-        .map (.0)
-        .as_array)
-      (envir_var_kv
-        .map (.1)
-        .as_array)
-
-
-  max_pretty_time := time.duration.s 2
-
-
   # generate html code to replace ITEM_RECENT_TOOTS
   #
   rss_html(feed Sequence rss_feed_entry) =>
@@ -183,6 +153,34 @@ module session_document (module page String,
   # pretty print code
   #
   pretty_print_code (src path) outcome String =>
+    # envir vars as key value pairs
+    #
+    envir_var_kv :=
+      [ "PATH" ]
+        .map k->
+          envir.vars[k].bind v->
+            (k, v)
+        .filter (.ok)
+        .map (.val)
+        .insert 0 ("dev_flang_util_Terminal_force_ansi_escapes", "true")
+        .as_array
+
+
+    # envir vars as a map
+    #
+    envir_vars :=
+      container.ordered_map
+        (envir_var_kv
+          .map (.0)
+          .as_array)
+        (envir_var_kv
+          .map (.1)
+          .as_array)
+
+
+    max_pretty_time := time.duration.s 2
+
+
     os.process.start "fz" [ "-pretty", src.as_platform_string ] envir_vars
       .bind p->
         prettified_code := p.wait max_pretty_time
