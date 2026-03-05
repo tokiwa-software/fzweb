@@ -89,34 +89,51 @@ module session_document (module page String,
   #
   get_content(dp path, str String) =>
 
-    c =>
-      if file_name.ends_with ".html"
-        html := add_session_info_to_html str
+
+    html_content =>
+      html := add_session_info_to_html str
           .replace "##ITEM_RECENT_TOOTS##" (rss_html global.env.feeds.mastodon.read)
           .replace "##ITEM_RECENT_COMMITS##" (commits_html global.env.feeds.github.read)
 
-        if has_embedded_html html
-          [embed_html_in_iframe html]
-        else
-          [html]
-      else if content.is_known_preformatted_file file_name
-
-        # NYI: UNDER DEVELOPMENT: pretty printing
-
-        title => content.file_path page .as_string
-        [
-          "<h1>{encodings.html.encode title.as_string true}</h1>\n",
-          # opacity is reset in main.js:initAnsiUp()
-          "<pre class='code' style='opacity: 0'>\n"
-        ] ++
-          (str.lines .map line->
-            encodings.html.encode line true) ++
-          [ "</pre>\n" ]
+      if has_embedded_html html
+        [embed_html_in_iframe html]
       else
-        fname := encodings.html.encode dp.base_name true
-        ["<p>501: Not Implemented: Unsupported file type in {fname}</p>"]
+        [html]
 
-    res => ["<div class='fd-page-content'>"] ++ c ++ ["</div>"]
+
+    preformatted_content =>
+      title => content.file_path page .as_string
+      pref =>
+        if file_name.ends_with ".fz"
+          pretty_print_code dp
+            .val "get_content: failed to prettify code"
+            .lines
+            .map line->
+              encodings.html.encode line true
+        else
+          str.lines .map line->
+            encodings.html.encode line true
+      [
+        "<h1>{encodings.html.encode title.as_string true}</h1>\n",
+        # opacity is reset in main.js:initAnsiUp()
+        "<pre class='code' style='opacity: 0'>\n"
+      ] ++ pref ++ [ "</pre>\n" ]
+
+
+    unknown_content =>
+      fname := encodings.html.encode dp.base_name true
+      ["<p>501: Not Implemented: Unsupported file type in {fname}</p>"]
+
+
+    res =>
+      ["<div class='fd-page-content'>"] ++
+       (if file_name.ends_with ".html"
+          html_content
+        else if content.is_known_preformatted_file file_name
+          preformatted_content
+        else
+          unknown_content) ++
+       ["</div>"]
 
     match io.file.stat dp true
       e error =>
@@ -143,6 +160,53 @@ module session_document (module page String,
               get_content dp str
       .catch e->
         [ "<p>500: Internal Server Error: {e}</p>" ]
+
+
+  # pretty print code
+  #
+  pretty_print_code (src path) outcome String =>
+    # envir vars as key value pairs
+    #
+    envir_var_kv :=
+      [ "PATH" ]
+        .map k->
+          envir.vars[k].bind v->
+            (k, v)
+        .filter (.ok)
+        .map (.val)
+        .insert 0 ("dev_flang_util_Terminal_force_ansi_escapes", "true")
+        .as_array
+
+
+    # envir vars as a map
+    #
+    envir_vars :=
+      container.ordered_map
+        (envir_var_kv
+          .map (.0)
+          .as_array)
+        (envir_var_kv
+          .map (.1)
+          .as_array)
+
+
+    max_pretty_time := time.duration.s 2
+
+
+    os.process.start "fz" [ "-pretty", src.as_platform_string ] envir_vars
+      .bind p->
+        prettified_code := p.wait max_pretty_time
+          .bind e->
+            if e = 0
+              lm ! ()->
+                p.with_out _ lm ()->
+                  String.from (io.buffered lm).read_fully
+            else
+              error "exec returned: $e"
+
+        _ := p.send_signal os.signals.kill
+
+        prettified_code
 
 
   # add session-specific information to the html
