@@ -23,13 +23,6 @@ module Session (client net.ip_address,
   login := concur.atomic login_status .new unauthenticated
 
 
-  # activity information
-  # NYI: not thread-safe!
-  #
-  last_activity := concur.atomic (option time.date_time) .new nil
-  count_activities := concur.atomic u64 .new 0
-
-
   # connection tied to this session for sending events to the client
   #
   connection := concur.atomic (option net.connection) .new nil
@@ -65,18 +58,9 @@ module Session (client net.ip_address,
   log "new session {session_id} for {client} user {user.read.bind x->x.login}"
 
 
-  # log session activity
-  #
-  activity =>
-    count_activities.write (count_activities.read + 1)
-    last_activity.write time.now.get
-
-
   # authenticate the session with a user account
   #
   module login (name, password String) =>
-    activity
-
     match user.get name password
       error =>
         login.write auth_fail
@@ -90,8 +74,6 @@ module Session (client net.ip_address,
   # logout the session
   #
   module logout =>
-    activity
-
     user.write nil
     login.write unauthenticated
 
@@ -157,8 +139,6 @@ module Session (client net.ip_address,
     match connection.read
       nil => log "failed to send {msg.lines[0]}, connection is nil"
       c net.connection =>
-        reset_connection_timer
-
         r := lm.instate_self (outcome unit) ()->
           c.with (outcome unit) lm ()->
             final_msg := "{msg.byte_length.hex}\r\n{msg}\r\n"
@@ -172,17 +152,9 @@ module Session (client net.ip_address,
           e error => close_connection e
 
 
-  # resets connection timer
-  #
-  reset_connection_timer =>
-    unit # NYI
-
-
   # associate a session with a connection
   #
   module set_connection (c net.connection) =>
-    reset_connection_timer
-
     match connection.read
       nil =>
         log "Set original connection"
@@ -330,7 +302,6 @@ module Session (client net.ip_address,
   # returns nil on Not Found
   #
   module add_session_info_to_html_bytes(b Sequence u8) option (Sequence u8) =>
-    activity
     # NYI
     # - ByteArray from flang_dev
 

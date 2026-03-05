@@ -195,14 +195,20 @@ module session_document (module page String,
 
     os.process.start "fz" [ "-pretty", src.as_platform_string ] envir_vars
       .bind p->
-        prettified_code := p.wait max_pretty_time
-          .bind e->
-            if e = 0
+        prettified_code := {
+            process_result :=
               lm ! ()->
                 p.with_out _ lm ()->
                   String.from (io.buffered lm).read_fully
-            else
-              error "exec returned: $e"
+
+            match p.wait max_pretty_time
+              e error => e
+              ec u32 =>
+                if ec = 0
+                  process_result
+                else
+                  error "exec returned: $ec"
+          }
 
         _ := p.send_signal os.signals.kill
 
@@ -311,7 +317,7 @@ module session_document (module page String,
                 a := io.dir.open.read
             while a.ok
             else
-              String.join res
+              String.join (res.sort_by s1,s2->s1.lower_case<=s2.lower_case)
           .or_else ""
       nil => ""
 
