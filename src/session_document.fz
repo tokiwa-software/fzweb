@@ -103,7 +103,7 @@ module session_document (module page String,
 
     preformatted_content =>
       title => content.file_path page .as_string
-      pref =>
+      preformatted =>
         if file_name.ends_with ".fz"
           pretty_print_code dp
             .val "get_content: failed to prettify code"
@@ -117,7 +117,7 @@ module session_document (module page String,
         "<h1>{encodings.html.encode title.as_string true}</h1>\n",
         # opacity is reset in main.js:initAnsiUp()
         "<pre class='code' style='opacity: 0'>\n"
-      ] ++ pref ++ [ "</pre>\n" ]
+      ] ++ preformatted ++ [ "</pre>\n" ]
 
 
     unknown_content =>
