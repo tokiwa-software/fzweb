@@ -299,7 +299,7 @@ module session_document (module page String,
                 a := io.dir.open.read
             while a.ok
             else
-              String.join res
+              String.join (res.sort_by s1,s2->s1.lower_case<=s2.lower_case)
           .or_else ""
       nil => ""
 
