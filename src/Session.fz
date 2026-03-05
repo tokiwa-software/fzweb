@@ -292,7 +292,7 @@ module Session (client net.ip_address,
 
   # NYI: comment, revisit (originally intended for StringBuilder)
   #
-  prepend_data(data array String) String =>
+  prepend_data(data Sequence String) String =>
     for res := container.expanding_array String .empty, (line.split2 "\n").reduce res (r,t -> r.add "data: $t")
         line in data
     else
@@ -301,7 +301,7 @@ module Session (client net.ip_address,
 
   # returns nil on Not Found
   #
-  module add_session_info_to_html_bytes (b Sequence u8) option (Sequence u8) =>
+  module add_session_info_to_html_bytes(b Sequence u8) option (Sequence u8) =>
     # NYI
     # - ByteArray from flang_dev
 
@@ -309,7 +309,7 @@ module Session (client net.ip_address,
 
     match cp.get_content
       nil => nil
-      a array String =>
+      a Sequence String =>
         String
           .from b
           .replace "##SESSION_ID##" session_id
@@ -328,7 +328,7 @@ module Session (client net.ip_address,
           event: content
           data: 404 : Not Found\n
         """
-      c array String =>
+      c Sequence String =>
         """
           id: 0
           event: content
