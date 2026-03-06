@@ -196,6 +196,9 @@ module session_document (module page String,
     os.process.start "fz" [ "-pretty", src.as_platform_string ] envir_vars
       .bind p->
         prettified_code := {
+
+            lm : mutate is
+
             process_result :=
               lm ! ()->
                 p.with_out _ lm ()->
@@ -606,7 +609,3 @@ module session_document (module page String,
       error =>
     res.as_array
 
-
-# local mutate effect used in this file
-#
-lm : mutate is
