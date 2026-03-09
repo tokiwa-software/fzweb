@@ -352,6 +352,53 @@ module session_document (module page String,
   """
 
 
+  # extract attribute contents from a String, helper method for recursion
+  # like: <page file="http/index" />
+  #
+  extract_attribute_contents (s String, m container.ordered_map String String) container.ordered_map String String
+  =>
+    st := s.trim_start
+
+    if st.is_empty
+      m
+    else
+      a := st.split_n "=\"" 1
+      match a.first
+        nil =>
+          session.log "invalid attribute string on $page (no attribute found): $st"
+          m
+        k String =>
+          match a.nth 1
+            nil =>
+              session.log "invalid attribute string on $page (no value found): $st"
+              m
+            ppv String =>
+              pv := ppv.split_n "\"" 1
+              match pv.first
+                nil =>
+                  session.log "invalid attribute string on $page (end of value not found): $st"
+                  m
+                v String =>
+                  nm := m.add k v
+                  rest := pv.nth 1 .val ""
+                  extract_attribute_contents rest nm
+
+
+  # extract attribute contents of a String like
+  #
+  #   file="http/index.html"
+  #
+  # or
+  #
+  #   userdata="true"
+  #
+  # and store the attributes in a map
+  #
+  extract_attribute_contents (s String) container.ordered_map String String
+  =>
+    extract_attribute_contents s (container.ordered_map String String .empty)
+
+
   # replace tag `tag` by some custom html
   #
   # e.g. for this String
@@ -367,53 +414,6 @@ module session_document (module page String,
   # the λ would be called with this String: "lock_free/index.html"
   #
   replace_tag(tag String, replacer (container.Map String String)->String, str String) =>
-
-    # extract attribute contents from a String, helper method for recursion
-    # like: <page file="http/index" />
-    #
-    extract_attribute_contents (s String, m container.ordered_map String String) container.ordered_map String String
-    =>
-      st := s.trim_start
-
-      if st.is_empty
-        m
-      else
-        a := st.split_n "=\"" 1
-        match a.first
-          nil =>
-            session.log "invalid attribute string on $page (no attribute found): $st"
-            m
-          k String =>
-            match a.nth 1
-              nil =>
-                session.log "invalid attribute string on $page (no value found): $st"
-                m
-              ppv String =>
-                pv := ppv.split_n "\"" 1
-                match pv.first
-                  nil =>
-                    session.log "invalid attribute string on $page (end of value not found): $st"
-                    m
-                  v String =>
-                    nm := m.add k v
-                    rest := pv.nth 1 .val ""
-                    extract_attribute_contents rest nm
-
-
-    # extract attribute contents of a String like
-    #
-    #   file="http/index.html"
-    #
-    # or
-    #
-    #   userdata="true"
-    #
-    # and store the attributes in a map
-    #
-    extract_attribute_contents (s String) container.ordered_map String String
-    =>
-      extract_attribute_contents s (container.ordered_map String String .empty)
-
     # NYI: PERFORMANCE: find relies on pattern being array backed
     start := String.from "<$tag ".utf8.as_array_backed
     end := "/>"
@@ -591,21 +591,33 @@ module session_document (module page String,
 
     # NYI: CLEANUP: code is a ugly and inefficient
 
-    res := mut ((container.expanding_array String) .empty)
     match global.env.read_file_as_string <| data_path.or_panic.parent.get.resolve "index.html"
       s String =>
-        _:= s
-          |> replace_tag "page" m->
-            if m["file"].ok
-              res <- res.add m["file"].val
-            ""
-        _:= s
-          |> replace_tag "browse" m->
-            if m["dir"].ok
-              res <- res.add m["dir"].val
-            else
-              res <- res.add "--no directory--"
-            ""
-      error =>
-    res.as_array
+        search_tag (key, val String) Sequence String =>
+          start := String.from "<$key ".utf8.as_array_backed
+          end := "/>"
+
+          for res := container.expanding_array String .empty, {
+                e_idx
+                  .bind e->
+                    attr := rest2.substring 0+start.byte_length e # NYI: CLEANUP: why 0+?
+                    c := extract_attribute_contents attr
+                    c[val].bind val_val->
+                      res.add val_val
+                  .or_else (if val = "dir" then res.add "--no directory--" else res)
+                }
+              rest String := s,
+                match e_idx
+                  nil => ""
+                  e i32 =>
+                    rest2.substring e+end.byte_length
+              m_idx := rest.find start
+          while m_idx.ok
+            rest2 := rest.substring m_idx.val
+            e_idx := rest2.find end
+          else
+            res.as_array
+
+        (search_tag "page" "file") ++ (search_tag "browse" "dir")
+      error => (Sequence String).empty
 
