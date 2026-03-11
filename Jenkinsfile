@@ -31,7 +31,6 @@ pipeline {
     }
     stage('Build and deploy Docker image') {
       steps {
-        // deployment missing
         script {
           docker.build("tokiwa-software/fzweb:${env.BRANCH_NAME}")
 
