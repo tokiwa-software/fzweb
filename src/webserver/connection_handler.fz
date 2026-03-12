@@ -10,6 +10,7 @@
 # like header fields, a send feature etc.
 #
 request_context (LM type : mutate, connection net.connection) is
+  timestamp := time.nano.read
   request := (http.read_request LM).get
 
   path => (request.target.split "?").first.get
@@ -80,8 +81,8 @@ form_data(LM type : mutate, req_context request_context LM) =>
 
 # get the response for the current request
 #
-get_response(LM type : mutate, req_context request_context LM) =>
-  match form_data req_context
+get_response(LM type : mutate, req_context request_context LM, fd outcome (lock_free.Map String String)) =>
+  match fd
     x lock_free.Map String String =>
       route_request req_context.path req_context.request.method req_context.client x req_context.query_string
     e error =>
@@ -93,9 +94,11 @@ get_response(LM type : mutate, req_context request_context LM) =>
 #
 process_request(LM type : mutate, req_context request_context LM) =>
 
+  form_data_res := form_data req_context
+
   resp := match req_context.request.method
-    http.get => get_response req_context
-    http.post_r => get_response req_context
+    http.get => get_response req_context form_data_res
+    http.post_r => get_response req_context form_data_res
     * => response.new 500
 
   req_context.send resp
@@ -108,3 +111,16 @@ process_request(LM type : mutate, req_context request_context LM) =>
       check debug : req_context.path = "/events"
       s.set_connection req_context.connection
 
+  request_duration := time.nano.read - req_context.timestamp
+  if req_context.path != "/events" && request_duration ≥ time.duration.ms 750
+    page_if_available := form_data_res
+      .bind fd->
+        fd["page"]
+
+    msg :=
+      if req_context.path = "/goto" && page_if_available.exists
+        "took {request_duration} to process request for {page_if_available.val} (via eventstream)"
+      else
+        "took {request_duration} to process request for {req_context.path}"
+
+    logger.log msg
