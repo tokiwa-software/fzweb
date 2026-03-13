@@ -17,7 +17,7 @@ module content is
   #
   type.base_dir (simple_path String) path =>
     bp := base_simple_path simple_path
-    bp?? ? content_dir.resolve bp.get : content_dir
+    bp?? ? content_dir.resolve bp.or_panic : content_dir
 
 
   # Base directory corresponding to simple_path, or nil
@@ -46,7 +46,7 @@ module content is
   module type.file_path (simple_path String) path =>
     bp := base_simple_path simple_path
     sp := path.of simple_path
-    start i32 := bp!! ? 0 : bp.get.names.count
+    start i32 := bp!! ? 0 : bp.or_panic.names.count
     end i32 := sp.names.count
     start < end ? sp.subpath start end : path.of ""
 
@@ -87,7 +87,7 @@ module content is
           l in str.split "\n"
           m := document.get_tag l "<browse"
         until m.exists
-          outcome m.get
+          outcome m.or_panic
         else
           error "not found"
       .as_option
@@ -110,7 +110,7 @@ module content is
   # "true", the user directory.
   #
   type.get_dir_from_browse (u option user, data_path path, map lock_free.Map String String) option String =>
-    if "true" = (map["userdata"].val "false")
+    if "true" = (map["userdata"].or_default "false")
       u.bind String u0->
         ud := u0.base_dir
         ru := path.parent_dir
@@ -139,7 +139,7 @@ module content is
 
     r := pages.resolve (file_path file)
     decoded := encodings.percent.decode_as_str_tolerant file
-                .val
+                .or_panic
                 .replace " " "+"
                 .replace "/.html" "/index.html"
     r_decoded := pages.resolve (file_path decoded)
@@ -194,7 +194,7 @@ module content is
     if path_from_url0.starts_with "/"
       path_from_url :=
         if path_from_url0.ends_with ".html"
-          path_from_url0.substring 1 (path_from_url0.find_last ".html").get
+          path_from_url0.substring 1 (path_from_url0.find_last ".html").or_panic
         else
           path_from_url0.substring 1
 
@@ -235,7 +235,7 @@ module content is
       io.file.stat
         .stats p
         .bind (.is_regular)
-        .val false
+        .or_default false
     if is_valid_file
       identifier.new p nil
     else

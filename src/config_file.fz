@@ -57,7 +57,7 @@ module config_file (values lock_free.Map String String, p path) is
       # ignore any errors here.
       # config file can still be populated and created.
 
-      .val ""
+      .or_default ""
       .split "\n"
       .for_each line->
         match line.find ":"

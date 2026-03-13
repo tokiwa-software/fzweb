@@ -96,7 +96,7 @@ module Session (client net.ip_address,
   #
   module send_login_status unit =>
     match login.read
-      authenticated => send_event "isLoggedIn" user.read.get.name
+      authenticated => send_event "isLoggedIn" user.read.or_panic.name
       * => send_event "isNotLoggedIn"
 
 
@@ -106,7 +106,7 @@ module Session (client net.ip_address,
     match login.read
       unauthenticated => "not logged in"
       auth_fail => "failed"
-      authenticated => "ok: {user.read.get.name}"
+      authenticated => "ok: {user.read.or_panic.name}"
 
 
   # send an event on the session's connection
@@ -118,7 +118,7 @@ module Session (client net.ip_address,
   # send events along with data on the session's connection
   #
   send_event (event String, html_encoded_data option String) =>
-    data := html_encoded_data.val ""
+    data := html_encoded_data.or_default ""
     send_data "event: {event}\ndata: {data}\n\n"
 
 
@@ -128,7 +128,7 @@ module Session (client net.ip_address,
     last := last_pushed_history.read
     c := current_page.read
 
-    if last.is_nil || c.page != last.val.page
+    if last.is_nil || c.page != last.or_panic.page
       last_pushed_history.write c
       send_event "pushHistory" "/{c.page}"
 
@@ -267,9 +267,9 @@ module Session (client net.ip_address,
       for cnt  := u32 1,
                   cnt+1
           res  := container.expanding_array (Sequence T) .empty,
-                  res.add (rest.take (if split_after then ix.get + abs.count else ix.get))
+                  res.add (rest.take (if split_after then ix.or_panic + abs.count else ix.or_panic))
           rest := as_array_backed,
-                  rest.drop (ix.get + abs.count)
+                  rest.drop (ix.or_panic + abs.count)
           ix  := rest.find abs
       while ix.ok && (limit.is_empty || limit >=? cnt) do
 

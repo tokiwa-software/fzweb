@@ -30,7 +30,7 @@ do_register (client net.ip_address, form_data lock_free.Map String String) Strin
 confirm_registration(s Session, query String) =>
   s_q := webserver.split_query query
   s.log "got confirm_registration"
-  match user.complete_registration (s_q["username"].val "") (s_q["token"].val "")
+  match user.complete_registration (s_q["username"].or_default "") (s_q["token"].or_default "")
     unit =>
       s.log "got confirm_registration send 302 success"
       response.new 302 (map_of_strings [("Location", "/registration_successful")])
@@ -44,7 +44,7 @@ confirm_registration(s Session, query String) =>
 confirm_account_deletion(s Session, query String) =>
   s_q := webserver.split_query query
   s.log "got confirm_account_deletion"
-  match user.complete_account_deletion (s_q["token"].val "")
+  match user.complete_account_deletion (s_q["token"].or_default "")
     unit =>
       s.log "got confirm_account_deletion send 302 success"
       response.new 302 (map_of_strings [("Location", "/account_deletion_successful")])
@@ -120,7 +120,7 @@ get_file_response(s Session, form_data lock_free.Map String String, raw_path Str
   path := encodings
     .percent
     .decode_as_str_tolerant raw_path
-    .val
+    .or_panic
   match content.get_contents s path
     forbidden =>
       s.log "*** forbidding access to absolute or non-normalized path {path}."
@@ -147,7 +147,7 @@ module route_request (raw_path0 String, cmd http.request_method, client net.ip_a
     logger.log "*** unknown request: {cmd}"
     response.new 501
   else if raw_path = "/login"
-    s.login form_data["login"].val form_data["password"].val
+    s.login form_data["login"].or_panic form_data["password"].or_panic
     send_ok_or_reload s s.status_string
   else if raw_path = "/logout"
     s.logout
@@ -191,5 +191,5 @@ perform_direct_login (s Session, form_data lock_free.Map String String) =>
   p := form_data["password"]
 
   if l?? && p??
-    s.log "Direct login: for {l.get}"
-    s.login l.get p.get
+    s.log "Direct login: for {l.or_panic}"
+    s.login l.or_panic p.or_panic

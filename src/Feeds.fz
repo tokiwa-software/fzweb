@@ -86,7 +86,7 @@ module Feeds ref is
       if !token.is_empty
         graphql_request := web.post4 github_graphql_endpoint graphql_query.utf8 request_header
 
-        match nom.parsers.json.call graphql_request.get
+        match nom.parsers.json.call graphql_request.or_panic
           error => Sequence rss_feed_entry .empty
           ns nom.success =>
             ns.out.access [ "data", "repository", "ref", "target", "history", "edges" ]
@@ -165,8 +165,8 @@ module Feeds ref is
 
     mastodon_xml =>
       nom.parsers.xml
-        .call (web.get4 "https://types.pl/@fuzion.rss" .val)
-        .val.out
+        .call (web.get4 "https://types.pl/@fuzion.rss" .or_panic)
+        .or_panic.out
 
 
     m_feed := extract_nodes (mastodon_xml[0].data)
