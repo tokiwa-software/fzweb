@@ -68,7 +68,7 @@ module runner is
             if ec = 0
               fout.get
             else
-              ferr.get).get
+              ferr.get).or_panic
 
         _ := p.send_signal os.signals.kill
 
@@ -80,9 +80,9 @@ module runner is
   # helper feature
   #
   module run(s Session, form_data lock_free.Map String String) unit =>
-    run_code s form_data["code"].val form_data["resultsTo"].val true
+    run_code s form_data["code"].or_panic form_data["resultsTo"].or_panic true
 
   # helper feature
   #
   module runeff(s Session, form_data lock_free.Map String String) unit =>
-    run_code s form_data["code"].val form_data["resultsTo"].val false
+    run_code s form_data["code"].or_panic form_data["resultsTo"].or_panic false

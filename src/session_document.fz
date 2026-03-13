@@ -20,7 +20,7 @@ module session_document (module page String,
 
   # the actual file name of the current document
   #
-  file_name := data_path.bind dp->dp.base_name .val "404.html"
+  file_name := data_path.bind dp->dp.base_name .or_default "404.html"
 
 
   # is the user of the given session allowed to
@@ -106,7 +106,7 @@ module session_document (module page String,
       preformatted =>
         if file_name.ends_with ".fz"
           pretty_print_code dp
-            .val "get_content: failed to prettify code"
+            .or_default "get_content: failed to prettify code"
             .lines
             .map line->
               encodings.html.encode line true
@@ -173,7 +173,7 @@ module session_document (module page String,
           envir.vars[k].bind v->
             (k, v)
         .filter (.ok)
-        .map (.val)
+        .map (.or_panic)
         .insert 0 ("dev_flang_util_Terminal_force_ansi_escapes", "true")
         .as_array
 
@@ -236,8 +236,8 @@ module session_document (module page String,
     path
       .of page
       .parent
-      .val
-      .resolve m["file"].get
+      .or_panic
+      .resolve m["file"].or_panic
       .as_string
       |> page_link
 
@@ -295,7 +295,7 @@ module session_document (module page String,
               # no dir, try userdata
               match session.user.read
                 u user => u.base_dir
-                nil => dp.parent.val # index of current dir
+                nil => dp.parent.or_panic # index of current dir
 
 
 
@@ -303,7 +303,7 @@ module session_document (module page String,
           if m_dir.starts_with path.parent_dir
             dp
               .parent
-              .val
+              .or_panic
               .resolve m_dir
           else
             m_dir
@@ -312,7 +312,7 @@ module session_document (module page String,
           .use dir ()->
             for res := container.expanding_array String .empty,
                 {
-                  x := dir.resolve a.val
+                  x := dir.resolve a.or_panic
                   match io.file.stat x true
                     e error => res
                     md io.file.meta_data => res.add <| append x md
@@ -329,8 +329,8 @@ module session_document (module page String,
   #
   runcode_wrapper(m container.Map String String) =>
     id := uuid.create_random.as_string
-    code := read_file_as_string (data_path.or_panic.parent.val.resolve m["file"].get)
-      .val "# no code is available here"
+    code := read_file_as_string (data_path.or_panic.parent.or_panic.resolve m["file"].or_panic)
+      .or_default "# no code is available here"
     """
     <div class="runcode-wrapper">
       <i class="far fa-spinner fa-spin"></i>
@@ -380,7 +380,7 @@ module session_document (module page String,
                   m
                 v String =>
                   nm := m.add k v
-                  rest := pv.nth 1 .val ""
+                  rest := pv.nth 1 .or_default ""
                   extract_attribute_contents rest nm
 
 
@@ -418,11 +418,11 @@ module session_document (module page String,
     start := String.from "<$tag ".utf8.as_array_backed
     end := "/>"
 
-    for res := "", res + rest.substring 0 m_idx.val + (match e_idx
-                                                        nil => ""
-                                                        e i32 =>
-                                                          attr := rest2.substring 0+start.byte_length e
-                                                          replacer (extract_attribute_contents attr))
+    for res := "", res + rest.substring 0 m_idx.or_panic + (match e_idx
+                                                              nil => ""
+                                                              e i32 =>
+                                                                attr := rest2.substring 0+start.byte_length e
+                                                                replacer (extract_attribute_contents attr))
         rest String := str,
           match e_idx
             nil => ""
@@ -430,7 +430,7 @@ module session_document (module page String,
               rest2.substring e+end.byte_length
         m_idx := rest.find start
     while m_idx.ok
-      rest2 := rest.substring m_idx.val
+      rest2 := rest.substring m_idx.or_panic
       e_idx := rest2.find end
     else
       res + rest
@@ -522,7 +522,7 @@ module session_document (module page String,
       # is the current level in the directory hierarchy
       #
       for current := temp, "{page_link (template.link ppup "index")} • {current}"
-          ppup := pup.bind (.parent), ppup.get.parent
+          ppup := pup.bind (.parent), ppup.or_panic.parent
       while
         match ppup
           p path => !p.is_parent
@@ -591,7 +591,7 @@ module session_document (module page String,
 
     # NYI: CLEANUP: code is a ugly and inefficient
 
-    match global.env.read_file_as_string <| data_path.or_panic.parent.get.resolve "index.html"
+    match global.env.read_file_as_string <| data_path.or_panic.parent.or_panic.resolve "index.html"
       s String =>
         search_tag (key, val String) Sequence String =>
           start := String.from "<$key ".utf8.as_array_backed
@@ -613,7 +613,7 @@ module session_document (module page String,
                     rest2.substring e+end.byte_length
               m_idx := rest.find start
           while m_idx.ok
-            rest2 := rest.substring m_idx.val
+            rest2 := rest.substring m_idx.or_panic
             e_idx := rest2.find end
           else
             res.as_array

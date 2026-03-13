@@ -18,9 +18,9 @@ module email_service is
 
   # authentication details
   #
-  username := secrets["username"] .val
-  password := secrets["password"] .val
-  host     := secrets["host"]     .val
+  username := secrets["username"] .or_panic
+  password := secrets["password"] .or_panic
+  host     := secrets["host"]     .or_panic
 
   # send an email containing a text body
   #

@@ -11,9 +11,9 @@
 #
 request_context (LM type : mutate, connection net.connection) is
   timestamp := time.nano.read
-  request := (http.read_request LM).get
+  request := (http.read_request LM).or_panic
 
-  path => (request.target.split "?").first.get
+  path => (request.target.split "?").first.or_panic
   query_string => ((request.target.split "?").drop 1).first ""
 
   x_forwarded_for := request.header["x-forwarded-for"]
@@ -71,9 +71,9 @@ form_data(LM type : mutate, req_context request_context LM) =>
   post_data_raw := lm ! ()->
     (io.buffered lm).reader req_context.request.body ! ()->
       # NYI: UNDER DEVELOPMENT: error handling
-      (io.buffered lm).read_bytes content_length .val
+      (io.buffered lm).read_bytes content_length .or_panic
   post_data := String.from post_data_raw
-  val := webserver.mime_value.from_type_string (req_context.request.header["content-type"].val "")
+  val := webserver.mime_value.from_type_string (req_context.request.header["content-type"].or_default "")
   content_type := val.mime_type
   content_type_boundary := val["boundary"]
   get_form_data post_data req_context.request.method req_context.query_string content_type content_type_boundary
@@ -119,7 +119,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
 
     msg :=
       if req_context.path = "/goto" && page_if_available.exists
-        "took {request_duration} to process request for {page_if_available.val} (via eventstream)"
+        "took {request_duration} to process request for {page_if_available.or_panic} (via eventstream)"
       else
         "took {request_duration} to process request for {req_context.path}"
 

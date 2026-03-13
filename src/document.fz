@@ -15,7 +15,7 @@ module document is
   #
   module strip_html(page String) String =>
     if page.ends_with ".html" || page.ends_with ".htm"
-      page.substring 0 (page.find ".").get
+      page.substring 0 (page.find ".").or_panic
     else if page = ""
       "index"
     else
@@ -51,14 +51,14 @@ module document is
           error =>
             "-- error reading {pf} --"
           str String =>
-            start_open := (str.find title_start_open).val -1
+            start_open := (str.find title_start_open).or_default -1
             start_close :=
               if start_open >= 0
-                (str.find title_start_close (start_open + title_start_open.byte_length)).val -1
+                (str.find title_start_close (start_open + title_start_open.byte_length)).or_default -1
               else -1
             end :=
               if start_close >= 0
-                (str.find title_end (start_close + title_start_close.byte_length)).val -1
+                (str.find title_end (start_close + title_start_close.byte_length)).or_default -1
               else -1
             if start_close >= 0 && end >= 0
               str.substring (start_close + title_start_close.byte_length) end

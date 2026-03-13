@@ -33,7 +33,7 @@ module identifier (module file_to_send option path,
         match read_file fts
           ba Sequence u8 =>
             if is_html_template
-              s.set_current (simple_path.val "")
+              s.set_current (simple_path.or_default "")
               # NYI : UNDER DEVELOPMENT: ugly that we have to manually retag
               match s.add_session_info_to_html_bytes ba
                 a Sequence u8 => a
@@ -50,7 +50,7 @@ module identifier (module file_to_send option path,
     # NYI: logging
     match get_bytes s
       b Sequence u8 =>
-        suffix := file_to_send.get.suffix
+        suffix := file_to_send.or_panic.suffix
         attributes := map_of_strings [
           ("Content-Length", b.count.as_string),
           ("Content-Type", mime_types.get_mime_type suffix)

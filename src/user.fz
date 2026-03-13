@@ -89,7 +89,7 @@ module user (module base_dir path) is
   # groups_to_check and groups are both separated by " "
   #
   module check_group_access (groups_to_check String) =>
-    groups0 := container.set_of_ordered (groups.val "").split
+    groups0 := container.set_of_ordered (groups.or_default "").split
     checked_groups := container.set_of_ordered groups_to_check.split
     common_groups := groups0 ∩ checked_groups
 
@@ -101,7 +101,7 @@ module user (module base_dir path) is
         else
           check_for_all := checked_groups.contains "all"
           access_to_all := groups0.contains "all"
-          check_for_any := (groups0.size_option.val 0) > 0 && checked_groups.contains "any"
+          check_for_any := (groups0.size_option.or_default 0) > 0 && checked_groups.contains "any"
           check_for_all || check_for_any || access_to_all
 
 
@@ -114,10 +114,10 @@ module user (module base_dir path) is
     subject := "[fuzion-lang.dev] - Confirm account deletion"
     io.file.read (content.templates_dir.resolve "email_account_deletion.txt")
       .bind (tmplt ->
-              body := tmplt.replace "##NAME##" (name.val "fuzion-lang.dev user")
+              body := tmplt.replace "##NAME##" (name.or_default "fuzion-lang.dev user")
                            .replace "##TOKEN##" token
 
-              email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.val "") subject body)
+              email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.or_default "") subject body)
 
 
 
@@ -126,7 +126,7 @@ module user (module base_dir path) is
   type.list_dir (p path) Sequence path =>
     res := io.dir.use _ p ()->
       for
-        entries := (container.expanding_array path).empty, entries.add next.get
+        entries := (container.expanding_array path).empty, entries.add next.or_panic
         next := io.dir.open.read
       until !next.ok
         entries
@@ -209,39 +209,39 @@ module user (module base_dir path) is
         true
 
 
-    first_name := (form_data[form_data_first_name].val "").trim
-    last_name := (form_data[form_data_last_name].val "").trim
-    affiliation := (form_data[form_data_affiliation].val "").trim
+    first_name := (form_data[form_data_first_name].or_default "").trim
+    last_name := (form_data[form_data_last_name].or_default "").trim
+    affiliation := (form_data[form_data_affiliation].or_default "").trim
     username0 := form_data[form_data_username]
     email0 := form_data[form_data_email].bind (.trim)
     password0 := form_data[form_data_password]
-    terms := "on" = form_data[form_data_terms].val "off"
-    newsletter := "off" = form_data[form_data_newsletter].val "off"
+    terms := "on" = form_data[form_data_terms].or_default "off"
+    newsletter := "off" = form_data[form_data_newsletter].or_default "off"
 
     if email0.is_nil || username0.is_nil || password0.is_nil || !terms
       error "Required fields not present: email, username, password, accepting terms."
-    else if email0.get.contains "," || email0.get.contains ";"
+    else if email0.or_panic.contains "," || email0.or_panic.contains ";"
       # NYI: HACK: comma and semicolon actually allowed in local part if quoted
       error "Comma or semicolon in email are not allowed."
-    else if !(validate_mail email0.get)
+    else if !(validate_mail email0.or_panic)
       error "Email address invalid."
-    else if !(username0.get.utf8 ∀ c->(0x30 ≤ c ≤ 0x39 | 0x41 ≤ c ≤ 0x5a | 0x61 ≤ c ≤ 0x7a | c = 0x5f))
+    else if !(username0.or_panic.utf8 ∀ c->(0x30 ≤ c ≤ 0x39 | 0x41 ≤ c ≤ 0x5a | 0x61 ≤ c ≤ 0x7a | c = 0x5f))
       error "Username contains illegal characters. Only A-Z, a-z, 0-9, and _ are allowed."
-    else if !(3 < username0.get.codepoint_length < 100)
+    else if !(3 < username0.or_panic.codepoint_length < 100)
       error "Username must have at least three characters and must not be longer than 100 characters."
     else
-      full_name := full_name first_name last_name email0.get
+      full_name := full_name first_name last_name email0.or_panic
 
-      match create_user_txt first_name last_name full_name affiliation username0.get email0.get password0.get terms newsletter time.now.get.as_string
+      match create_user_txt first_name last_name full_name affiliation username0.or_panic email0.or_panic password0.or_panic terms newsletter time.now.get.as_string
         error => "<div class='text-center'>Registration failed. Already registered?</div>"
         token String =>
           logger.log "send registration token email to: {email0}"
 
-          match send_user_registration_email full_name email0.get token username0.get $client
+          match send_user_registration_email full_name email0.or_panic token username0.or_panic $client
             error =>
-              match delete_by_login username0.get
+              match delete_by_login username0.or_panic
                 e error => logger.log "error deleting failed user registration: {e}"
-                unit => logger.log "deleted user {username0.get} due to unsent registration email"
+                unit => logger.log "deleted user {username0.or_panic} due to unsent registration email"
 
               "<div class='text-center'>Registration failed. Failed sending mail.</div>"
             unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
@@ -258,7 +258,7 @@ module user (module base_dir path) is
                        .resolve user.user_file
       c := config_file.open user_text
 
-      if c["registration_token"].val "" = token
+      if c["registration_token"].or_default "" = token
         _ := c.remove "registration_token"
         c.save
 
