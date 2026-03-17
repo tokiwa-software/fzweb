@@ -52,7 +52,8 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
   libwolfssl42t64 \
   libsodium23 \
   libsodium-dev \
-  openssh-client
+  openssh-client \
+  curl
 RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG=en_US.utf8 PATH="/fzweb/fuzion/build/bin:${PATH}"
 COPY --from=builder /fzweb /fzweb
@@ -62,3 +63,5 @@ RUN ln -sf /fzweb/flang_dev/templates
 RUN ln -sf /fzweb/fuzion/build/modules /fzweb/flang_dev/content/api/link
 ENTRYPOINT /fzweb/run
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD curl -f --retry 6 --max-time 5 --retry-delay 10 --retry-max-time 60 "http://localhost:8080" || bash -c 'kill -s 9 -1'
