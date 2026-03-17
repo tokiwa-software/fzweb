@@ -63,5 +63,5 @@ RUN ln -sf /fzweb/flang_dev/templates
 RUN ln -sf /fzweb/fuzion/build/modules /fzweb/flang_dev/content/api/link
 ENTRYPOINT /fzweb/run
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8080 || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD curl -f --retry 6 --max-time 5 --retry-delay 10 --retry-max-time 60 "http://localhost:8080" || bash -c 'kill -s 9 -1'
