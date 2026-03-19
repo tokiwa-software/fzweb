@@ -58,10 +58,10 @@ benchmarks =>
   g ! ()->
     for s in sites do
       freq := session_event_msg s
-      send "benchmark={s} value={freq.as_hz}"
+      send "fzweb_benchmark,benchmark={s} value={freq.as_hz}"
     for s in sites do
       freq := session_document_get_content s
-      send "benchmark={s} value={freq.as_hz}"
+      send "fzweb_benchmark,benchmark={s} value={freq.as_hz}"
 
   send(str String) =>
     match envir.vars.get "INFLUXDB_TOKEN"
@@ -70,4 +70,4 @@ benchmarks =>
         if token.is_blank
           say "INFLUXDB_TOKEN is blank, not sending to influxdb."
         else
-          say <| tokiwa.post_to_influx "tokiwa" "fzweb_benchmarks" token.trim str
+          say <| tokiwa.post_to_influx "tokiwa" "benchmarks" token.trim str
