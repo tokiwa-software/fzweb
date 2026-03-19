@@ -58,10 +58,10 @@ benchmarks =>
   g ! ()->
     for s in sites do
       freq := session_event_msg s
-      send "fzweb_benchmark,benchmark={s} value={freq.as_hz}"
+      send "fzweb_benchmark,benchmark=event_{s} value={freq.as_hz}"
     for s in sites do
       freq := session_document_get_content s
-      send "fzweb_benchmark,benchmark={s} value={freq.as_hz}"
+      send "fzweb_benchmark,benchmark=get_content_{s} value={freq.as_hz}"
 
   send(str String) =>
     match envir.vars.get "INFLUXDB_TOKEN"
