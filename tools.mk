@@ -43,7 +43,7 @@ flamegraph:
 
 .PHONY: run_benchmarks
 run_benchmarks:
-	$(FZ) -debug=0 -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,benchmarks benchmarks
+	$(FZ) -debug=0 -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES),tokiwa -sourceDirs=src,benchmarks benchmarks
 
 .PHONY: run_tests
 run_tests:
@@ -51,7 +51,7 @@ run_tests:
 
 .PHONY: flamegraph_benchmarks
 flamegraph_benchmarks:
-	$(FZ) -debug=0 -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES) -sourceDirs=src,benchmarks benchmarks
+	$(FZ) -debug=0 -XjavaProf=out.svg -jvm -JLibraries="wolfssl sodium" -modules=$(MODULES),tokiwa -sourceDirs=src,benchmarks benchmarks
 
 .PHONY: flamegraph_tests
 flamegraph_tests:

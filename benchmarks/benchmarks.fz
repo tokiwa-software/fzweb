@@ -29,6 +29,7 @@ benchmarks =>
         _ := sd.get_content
 
     say "session_document.get_content {where} iter/s: {x}"
+    x
 
 
   session_event_msg(where String) =>
@@ -41,6 +42,7 @@ benchmarks =>
         say "{msg.byte_length.hex}\r\n{msg}\r\n"
 
     say "Session.event_msg {where} iter/s: {x}"
+    x
 
   g := io.Out.instate _ io.Out.blackhole ()->
     global
@@ -55,6 +57,17 @@ benchmarks =>
 
   g ! ()->
     for s in sites do
-      session_event_msg s
+      freq := session_event_msg s
+      send "benchmark={s} value={freq.as_hz}"
     for s in sites do
-      session_document_get_content s
+      freq := session_document_get_content s
+      send "benchmark={s} value={freq.as_hz}"
+
+  send(str String) =>
+    match envir.vars.get "INFLUXDB_TOKEN"
+      nil => say "INFLUXDB_TOKEN not set, not sending to influxdb."
+      token String =>
+        if token.is_blank
+          say "INFLUXDB_TOKEN is blank, not sending to influxdb."
+        else
+          say <| tokiwa.post_to_influx "tokiwa" "fzweb_benchmarks" token.trim str
