@@ -22,7 +22,6 @@ pipeline {
     stages {
         stage('Checkout') {
           steps {
-            cleanWs()
             checkout scm
             dir('flang_dev') {
                 checkout scmGit(
@@ -40,6 +39,9 @@ pipeline {
         }
     }
     post {
+        always {
+            cleanWs()
+        }
         failure {
             script {
                 // Send the email using the extracted email
