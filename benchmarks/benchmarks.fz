@@ -64,12 +64,7 @@ benchmarks =>
       send "benchmark={s} value={freq.as_hz}"
 
   send(str String) =>
-    match
-      {
-      envir
-        .vars
-        .get "INFLUXDB_TOKEN"
-      }
+    match envir.vars.get "INFLUXDB_TOKEN"
       nil => say "INFLUXDB_TOKEN not set, not sending to influxdb."
       token String =>
         if token.is_blank
