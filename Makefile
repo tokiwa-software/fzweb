@@ -5,7 +5,7 @@ endif
 
 FZ = $(shell readlink -f $(FUZION_HOME)/bin)/fz
 
-MODULES = http,lock_free,uuid,mail,wolfssl,crypto,sodium,nom,web,tokiwa
+MODULES = http,lock_free,uuid,mail,wolfssl,crypto,sodium,nom,web
 
 .PHONY: run_fz
 run_fz:
