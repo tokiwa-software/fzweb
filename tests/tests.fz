@@ -38,3 +38,4 @@ tests =>
 
   say "Of {results.count} tests, $ok tests passed, $failed failed."
 
+  exit (if failed > 0 then 1 else 0)
