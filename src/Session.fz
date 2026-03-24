@@ -235,68 +235,10 @@ module Session (client net.ip_address,
     send_event event html_encoded_data
 
 
-######################  NYI: CLEANUP: REMOVE THIS CODE START ##############################
-
-
-  # NYI: BUG: this should be in base lib
-
-  # split sequence at s, if there is no limit, otherwise if limit is an integer n,
-  # for at most n occurrences of s
-  #
-  # if split_after is true, all but the last element of the resulting list include
-  # the separator
-  #
-  # helper feature which unifies the code of the different split features in one
-  #
-  Sequence.split2(s Sequence T, limit option u32, split_after bool) container.expanding_array (Sequence T)
-    pre
-      T : property.equatable
-      debug: !s.is_empty
-      debug: match limit
-              nil => true
-              n u32 => n > 0
-
-    post
-      debug: match limit
-              nil => true
-              n u32 => result.count.as_u32 <= n+1
-    =>
-
-      abs := s.as_array_backed
-
-      for cnt  := u32 1,
-                  cnt+1
-          res  := container.expanding_array (Sequence T) .empty,
-                  res.add (rest.take (if split_after then ix.or_panic + abs.count else ix.or_panic))
-          rest := as_array_backed,
-                  rest.drop (ix.or_panic + abs.count)
-          ix  := rest.find abs
-      while ix.ok && (limit.is_empty || limit >=? cnt) do
-
-      else
-        res
-          .add rest
-
-
-  # NYI: BUG: this should be in base lib
-
-  # split string at s
-  #
-  String.split2(s String) Sequence String
-    pre
-      !s.is_empty
-    =>
-      utf8.split2 s.utf8 nil false
-          .map_to_array String.type.from
-
-
-######################  NYI: CLEANUP: REMOVE THIS CODE END ##############################
-
-
-  # NYI: comment, revisit (originally intended for StringBuilder)
+  # prepend "data: " to any line
   #
   prepend_data(data Sequence String) String =>
-    for res := container.expanding_array String .empty, (line.split2 "\n").reduce res (r,t -> r.add "data: $t")
+    for res := container.expanding_array String .empty, (line.split "\n").reduce res (r,t -> r.add "data: $t")
         line in data
     else
       String.join res "\n"
