@@ -1,0 +1,57 @@
+pipeline {
+
+    options {
+        ansiColor('xterm')
+        disableConcurrentBuilds()
+    }
+
+    triggers {
+        cron('H H(19-23) * * 0-5')
+    }
+
+    agent {
+      docker {
+        image 'tokiwa-software/fuzion:main'
+      }
+    }
+
+    stages {
+        stage('Checkout') {
+          steps {
+            checkout scm
+            dir('flang_dev') {
+                checkout scmGit(
+                    branches: [[name: 'main']],
+                    extensions: [submodule(parentCredentials: true, recursiveSubmodules: true)],
+                    userRemoteConfigs: [[credentialsId: '7a3054c1-90e8-4a0c-a4ec-1304a6c2c38f',
+                    url: 'https://git.tokiwa.software/tokiwa/flang_dev.git']])
+            }
+            sh 'ln -sf flang_dev/content'
+            sh 'ln -sf flang_dev/templates'
+          }
+        }
+        stage('Run tests') {
+            steps {
+                sh 'make -f tools.mk run_tests'
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+        failure {
+            script {
+                // Send the email using the extracted email
+                emailext(
+                    subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """
+                        Build failed. Check the console output:
+                        ${env.BUILD_URL}
+                    """,
+                    recipientProviders: [developers(), requestor()],
+                )
+            }
+        }
+    }
+}
