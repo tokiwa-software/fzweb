@@ -145,7 +145,7 @@ module Session (client net.ip_address,
 
           lm ! ()->
             c.with (outcome unit) lm ()->
-              final_msg := "{msg.byte_length.hex}\r\n{msg}\r\n"
+              final_msg := "{msg.byte_count.hex}\r\n{msg}\r\n"
               io.buffered lm
                 .writer.env
                 .write final_msg.utf8

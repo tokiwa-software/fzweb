@@ -227,7 +227,7 @@ module user (module base_dir path) is
       error "Email address invalid."
     else if !(username0.or_panic.utf8 ∀ c->(0x30 ≤ c ≤ 0x39 | 0x41 ≤ c ≤ 0x5a | 0x61 ≤ c ≤ 0x7a | c = 0x5f))
       error "Username contains illegal characters. Only A-Z, a-z, 0-9, and _ are allowed."
-    else if !(3 < username0.or_panic.codepoint_length < 100)
+    else if !(3 < username0.or_panic.codepoint_count < 100)
       error "Username must have at least three characters and must not be longer than 100 characters."
     else
       full_name := full_name first_name last_name email0.or_panic

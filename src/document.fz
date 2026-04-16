@@ -54,14 +54,14 @@ module document is
             start_open := (str.find title_start_open).or_default -1
             start_close :=
               if start_open >= 0
-                (str.find title_start_close (start_open + title_start_open.byte_length)).or_default -1
+                (str.find title_start_close (start_open + title_start_open.byte_count)).or_default -1
               else -1
             end :=
               if start_close >= 0
-                (str.find title_end (start_close + title_start_close.byte_length)).or_default -1
+                (str.find title_end (start_close + title_start_close.byte_count)).or_default -1
               else -1
             if start_close >= 0 && end >= 0
-              str.substring (start_close + title_start_close.byte_length) end
+              str.substring (start_close + title_start_close.byte_count) end
             else
               strip_html (content.file_path link).as_string
       nil => "-- no title found (404) --"
@@ -74,7 +74,7 @@ module document is
     res := (lock_free.Map String String).empty
     for pair in map.items do
       if (pair.1.starts_with "\"") && (pair.1.ends_with "\"") && ((pair.1.find "\"") != (pair.1.find_last "\""))
-        v := pair.1.substring 1 pair.1.byte_length-1
+        v := pair.1.substring 1 pair.1.byte_count-1
         res.put pair.0 v
       else
         res.put pair.0 pair.1
@@ -86,9 +86,9 @@ module document is
   module get_tag (s, tag String) option (lock_free.Map String String) =>
     match s.find tag
       c i32 =>
-        match s.find "/>" c+tag.byte_length
+        match s.find "/>" c+tag.byte_count
           ce i32 =>
-            entry := s.substring c+tag.byte_length ce
+            entry := s.substring c+tag.byte_count ce
             attribute_map entry
           nil => nil
       nil => nil
