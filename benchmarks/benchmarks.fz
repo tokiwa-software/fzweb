@@ -39,7 +39,7 @@ benchmarks =>
 
       b ()->
         msg := s.event_msg
-        say "{msg.byte_length.hex}\r\n{msg}\r\n"
+        say "{msg.byte_count.hex}\r\n{msg}\r\n"
 
     say "Session.event_msg {where} iter/s: {x}"
     x
