@@ -50,7 +50,7 @@ module rss_feed_entry(module title, href, updated String) is
 
   module href_encoded := encodings.html.encode href.trim false
 
-  module updated_encoded := if updated.byte_length < 20 then "" else "{updated.substring 12 16}-{month_to_number (updated.substring 8 11)}-{updated.substring 5 7}"
+  module updated_encoded := if updated.byte_count < 20 then "" else "{updated.substring 12 16}-{month_to_number (updated.substring 8 11)}-{updated.substring 5 7}"
 
 
   public redef as_string String =>

@@ -421,13 +421,13 @@ module session_document (module page String,
     for res := "", res + rest.substring 0 m_idx.or_panic + (match e_idx
                                                               nil => ""
                                                               e i32 =>
-                                                                attr := rest2.substring 0+start.byte_length e
+                                                                attr := rest2.substring 0+start.byte_count e
                                                                 replacer (extract_attribute_contents attr))
         rest String := str,
           match e_idx
             nil => ""
             e i32 =>
-              rest2.substring e+end.byte_length
+              rest2.substring e+end.byte_count
         m_idx := rest.find start
     while m_idx.ok
       rest2 := rest.substring m_idx.or_panic
@@ -600,7 +600,7 @@ module session_document (module page String,
           for res := container.expanding_array String .empty, {
                 e_idx
                   .bind e->
-                    attr := rest2.substring 0+start.byte_length e # NYI: CLEANUP: why 0+?
+                    attr := rest2.substring 0+start.byte_count e # NYI: CLEANUP: why 0+?
                     c := extract_attribute_contents attr
                     c[val].bind val_val->
                       res.add val_val
@@ -610,7 +610,7 @@ module session_document (module page String,
                 match e_idx
                   nil => ""
                   e i32 =>
-                    rest2.substring e+end.byte_length
+                    rest2.substring e+end.byte_count
               m_idx := rest.find start
           while m_idx.ok
             rest2 := rest.substring m_idx.or_panic
