@@ -26,6 +26,7 @@ module mime_types is
       ("js", "application/javascript"),
       ("json", "application/json"),
       ("otf", "font/otf"),
+      ("pdf", "application/pdf"),
       ("png", "image/png"),
       ("svg", "image/svg+xml"),
       ("tiff", "image/tiff"),
