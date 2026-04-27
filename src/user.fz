@@ -127,7 +127,7 @@ module user (module base_dir path) is
     res := io.dir.use _ p ()->
       for
         entries := (container.expanding_array path).empty, entries.add next.or_panic
-        next := io.dir.open.read
+        next := io.dir.open.env.read
       until !next.ok
         entries
 
@@ -232,7 +232,7 @@ module user (module base_dir path) is
     else
       full_name := full_name first_name last_name email0.or_panic
 
-      match create_user_txt first_name last_name full_name affiliation username0.or_panic email0.or_panic password0.or_panic terms newsletter time.now.get.as_string
+      match create_user_txt first_name last_name full_name affiliation username0.or_panic email0.or_panic password0.or_panic terms newsletter time.now.env.get.as_string
         error => "<div class='text-center'>Registration failed. Already registered?</div>"
         token String =>
           logger.log "send registration token email to: {email0}"
@@ -360,7 +360,7 @@ module user (module base_dir path) is
             .make deleted_users_dir
             .or_else (() -> u.log "failed making dir: {deleted_users_dir}")
 
-        io.file.move u.base_dir (deleted_users_dir.resolve $time.now)
+        io.file.move u.base_dir (deleted_users_dir.resolve $time.now.env)
 
 
   # delete an account by a login name

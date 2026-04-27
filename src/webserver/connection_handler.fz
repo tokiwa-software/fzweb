@@ -10,7 +10,7 @@
 # like header fields, a send feature etc.
 #
 request_context (LM type : mutate, connection net.connection) is
-  timestamp := time.nano.read
+  timestamp := time.nano.env.read
   request := (http.read_request LM).or_panic
 
   path => (request.target.split "?").first.or_panic
@@ -111,7 +111,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
       check debug : req_context.path = "/events"
       s.set_connection req_context.connection
 
-  request_duration := time.nano.read - req_context.timestamp
+  request_duration := time.nano.env.read - req_context.timestamp
   if req_context.path != "/events" && request_duration ≥ time.duration.ms 750
     page_if_available := form_data_res
       .bind fd->
