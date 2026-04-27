@@ -170,7 +170,7 @@ module session_document (module page String,
     envir_var_kv :=
       [ "PATH" ]
         .map k->
-          envir.vars[k].bind v->
+          envir.vars.env[k].bind v->
             (k, v)
         .filter (.ok)
         .map (.or_panic)
@@ -317,7 +317,7 @@ module session_document (module page String,
                     e error => res
                     md io.file.meta_data => res.add <| append x md
                 }
-                a := io.dir.open.read
+                a := io.dir.open.env.read
             while a.ok
             else
               String.join (res.sort_by s1,s2->s1.lower_case<=s2.lower_case)

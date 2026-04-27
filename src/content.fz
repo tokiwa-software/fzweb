@@ -232,7 +232,7 @@ module content is
   module type.template (path_from_url String) access =>
     p := templates_dir.resolve path_from_url
     is_valid_file :=
-      io.file.stat
+      io.file.stat.env
         .stats p
         .bind (.is_regular)
         .or_default false
