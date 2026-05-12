@@ -27,20 +27,18 @@ run =>
       do
         accept_res := net.server.env.accept.bind unit conn->
 
-          lm : mutate is
-
-          _ := conn.in_thread_pool unit concur.thread_pool lm lm ()->
+          _ := conn.in_thread_pool unit concur.thread_pool mutate ()->
             fuzion.runtime.fault
               .try ()->
                 g ! ()->
-                  webserver.handle_connection lm conn
+                  webserver.handle_connection mutate conn
 
-                  # NYI: ugly, since (io.buffered lm).writer is instated
+                  # NYI: ugly, since (io.buffered mutate).writer is instated
                   # outside of lambda `fuzion.runtime.fault.try ()->`
                   # we need to flush to make sure deinstating writer effect later
                   # does not crash the whole webserver.
                   #
-                  match (io.buffered lm).writer.env.flush
+                  match (io.buffered mutate).writer.env.flush
                     e error => logger.log "failed flushing, connection meanwhile closed?\n\n {e}"
                     unit =>
 
