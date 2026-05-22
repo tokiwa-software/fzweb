@@ -320,7 +320,7 @@ module session_document (module page String,
                 a := io.dir.open.env.read
             while a.ok
             else
-              String.join (res.sort_by s1,s2->s1.lower_case<=s2.lower_case)
+              String.join (res.sort_by (.lower_case))
           .or_else ""
       nil => ""
 
@@ -620,4 +620,3 @@ module session_document (module page String,
 
         (search_tag "page" "file") ++ (search_tag "browse" "dir")
       error => (Sequence String).empty
-
