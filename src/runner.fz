@@ -56,7 +56,7 @@ module runner is
           res := concur.atomic String .new ""
 
           add_to_res(str String) =>
-            _ := res.update o->"{o}{if o.is_empty then "" else "\n"}{str}"
+            _ := res.update (String->String) o->"{o}{if o.is_empty then "" else "\n"}{str}"
 
 
           fout := concur.thread_pool.env.submit _ ()->
