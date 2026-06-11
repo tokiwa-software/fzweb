@@ -31,9 +31,6 @@ WORKDIR /fzweb
 COPY . .
 WORKDIR /fzweb/fuzion
 RUN make no-java build/fuzion.ebnf
-WORKDIR /fzweb/flang_dev/rrd-antlr4
-RUN sed -i 1,3d src/main/resources/railroad-diagram.css
-RUN mvn clean package
 WORKDIR /fzweb/flang_dev
 RUN make DITAA='java -jar /usr/share/ditaa/ditaa.jar' FZ='/fzweb/fuzion/build/bin/fz' FUZION_HOME='/fzweb/fuzion/build' build
 WORKDIR /fzweb
