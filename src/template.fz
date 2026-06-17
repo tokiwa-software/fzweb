@@ -15,13 +15,13 @@ module template is
   # and applies the replacments given in the list `repl`
   #
   apply (filename String, repl Sequence (String, String)) String =>
-    not_found := "--template {filename} not found--"
+    not_found := "--template $(filename) not found--"
     match content.template filename
       template_id identifier =>
         match template_id.file_to_send
           p path =>
             for
-              res := global.env.read_file_as_string p .or_default "-- error reading {filename} --",
+              res := global.env.read_file_as_string p .or_default "-- error reading $(filename) --",
                      res.replace r.values.0 r.values.1
               r in repl
             else
@@ -43,13 +43,13 @@ module template is
   # apply the given parameters to the `attractivelink.html` template
   #
   module attractive_link (to, title String) String =>
-    apply "attractivelink.html" [("##LINK##" ,"/{to}"), ("##TITLE##", title)]
+    apply "attractivelink.html" [("##LINK##" ,"/$(to)"), ("##TITLE##", title)]
 
 
   # apply the given parameters to the `page.html` template
   #
   module page_link (to, title String) String =>
-    apply "page.html" [("##LINK##", "/{to}"), ("##TITLE##", title)]
+    apply "page.html" [("##LINK##", "/$(to)"), ("##TITLE##", title)]
 
 
   # create a navigation link to the given path and destination
@@ -66,7 +66,7 @@ module template is
           ]
       d String =>
         apply "navigation.html" [
-            ("##LINK##", "/{link p.or_panic d}"),
+            ("##LINK##", "/$(link p.or_panic d)"),
             ("##TITLE##", sym),
             ("##ARIA##", aria_label)
           ]
@@ -82,13 +82,13 @@ module template is
 
     for res Sequence String := [],
                res ++ ["""
-                        <a class="shylink shylinkfix" href="/docs/{String.join (parts.take i+1) "/"}/">
-                          {encodings.percent
-                            .decode_as_str_tolerant (parts[i])
-                            .or_panic
-                            .split "("
-                            .first
-                            .or_panic}
+                        <a class="shylink shylinkfix" href="/docs/$(String.join (parts.take i+1) "/")/">
+                          $(encodings.percent
+                             .decode_as_str_tolerant (parts[i])
+                             .or_panic
+                             .split "("
+                             .first
+                             .or_panic)
                         </a>
                        """]
         i in parts.indices

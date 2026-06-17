@@ -36,7 +36,7 @@ module parse_multipart_form_data(data, boundary String) lock_free.Map String Str
 
   lock_free.Map String String .from_entries (
     data
-      .split "--{boundary}"
+      .split "--$(boundary)"
       .filter (l -> !l.starts_with "--") # filter out end boundary
       .map (.trim)
       .flat_map part->

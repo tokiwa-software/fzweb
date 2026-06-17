@@ -10,13 +10,13 @@ module logger is
 
   # Logger function that outputs to the console
   module log(c String|error) =>
-    say "{time.now.env.get}: {c ? s String => s | e error => e.as_string}"
+    say "$(time.now.env.get): $(c ? s String => s | e error => e.as_string)"
 
   # Logger function that writes to a file
   module log(log_path path, msg String) =>
-    m := "{time.now.env.get}: {msg}"
+    m := "$(time.now.env.get): $(msg)"
 
     match (io.file.use unit log_path io.file.mode.append ()->
-            (io.file.writer.write "{m}\n".utf8))
+            (io.file.writer.write "$(m)\n".utf8))
       unit => say m # Also log to console
-      e error => say "*** failed writing to log: {e}"
+      e error => say "*** failed writing to log: $(e)"

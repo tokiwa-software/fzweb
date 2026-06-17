@@ -191,19 +191,19 @@ module user (module base_dir path) is
   #
   module type.register (client net.ip_address, form_data lock_free.Map String String) outcome String =>
     full_name (first, last, email String) =>
-      full0 := "{first} {last}".trim
+      full0 := "$(first) $(last)".trim
       full0.is_empty ? email : full0
 
     validate_mail(str String) =>
       s := str.split "@" .as_array
       if s.count != 2
-        logger.log "illegal mail address: {str}"
+        logger.log "illegal mail address: $(str)"
         false
       # NYI: UNDER DEVELOPMENT: allow non ASCII mail addresses?
       else if !(str.utf8 ∀ b->
           # ASCII but no space and no control character
           0x21 <= b <= 0x7E)
-        logger.log "illegal mail address: >{str}<"
+        logger.log "illegal mail address: >$(str)<"
         false
       else
         true
@@ -235,13 +235,13 @@ module user (module base_dir path) is
       match create_user_txt first_name last_name full_name affiliation username0.or_panic email0.or_panic password0.or_panic terms newsletter time.now.env.get.as_string
         error => "<div class='text-center'>Registration failed. Already registered?</div>"
         token String =>
-          logger.log "send registration token email to: {email0}"
+          logger.log "send registration token email to: $(email0)"
 
           match send_user_registration_email full_name email0.or_panic token username0.or_panic $client
             error =>
               match delete_by_login username0.or_panic
-                e error => logger.log "error deleting failed user registration: {e}"
-                unit => logger.log "deleted user {username0.or_panic} due to unsent registration email"
+                e error => logger.log "error deleting failed user registration: $(e)"
+                unit => logger.log "deleted user $(username0.or_panic) due to unsent registration email"
 
               "<div class='text-center'>Registration failed. Failed sending mail.</div>"
             unit => "<div class='text-center'>Registration successful. Please check your mail and confirm the registration.</div>"
@@ -269,7 +269,7 @@ module user (module base_dir path) is
     user_dir := user.users_dir.resolve username
     user_text := user_dir.resolve user.user_file
     if io.file.exists user_text
-      error "*** user already exists: {username}"
+      error "*** user already exists: $(username)"
     else
       make_if_exists outcome unit :=
         if io.file.exists user_dir
@@ -331,7 +331,7 @@ module user (module base_dir path) is
           match get username_or_email
             error => standard_text
             u user =>
-              logger.log "User requested deletion: {u.email}."
+              logger.log "User requested deletion: $(u.email)."
               match u.trigger_deletion
                 e error =>
                   logger.log "user.delete_account not successful."
@@ -353,12 +353,12 @@ module user (module base_dir path) is
   module type.complete_account_deletion (token String) outcome unit =>
     # simplify by passing username in link
     match get_by_deletion_token token
-      error => error "no user found with token: {token}"
+      error => error "no user found with token: $(token)"
       u user =>
         if !(io.file.exists deleted_users_dir)
           io.dir
             .make deleted_users_dir
-            .or_else (() -> u.log "failed making dir: {deleted_users_dir}")
+            .or_else (() -> u.log "failed making dir: $(deleted_users_dir)")
 
         io.file.move u.base_dir (deleted_users_dir.resolve $time.now.env)
 
@@ -367,7 +367,7 @@ module user (module base_dir path) is
   #
   type.delete_by_login (login String) outcome unit =>
     match get login
-      error => error "no user found with login: {login}"
+      error => error "no user found with login: $(login)"
       u user =>
         # NYI: HACK: replace with recursive deletion
         f := u.base_dir.resolve user.user_file

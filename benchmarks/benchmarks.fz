@@ -28,7 +28,7 @@ benchmarks =>
       b ()->
         _ := sd.get_content
 
-    say "session_document.get_content {where} iter/s: {x}"
+    say "session_document.get_content $(where) iter/s: $(x)"
     x
 
 
@@ -39,9 +39,9 @@ benchmarks =>
 
       b ()->
         msg := s.event_msg
-        say "{msg.byte_count.hex}\r\n{msg}\r\n"
+        say "$(msg.byte_count.hex)\r\n$(msg)\r\n"
 
-    say "Session.event_msg {where} iter/s: {x}"
+    say "Session.event_msg $(where) iter/s: $(x)"
     x
 
   g := io.Out.instate _ io.Out.blackhole ()->
@@ -58,10 +58,10 @@ benchmarks =>
   g ! ()->
     for s in sites do
       freq := session_event_msg s
-      send "fzweb_benchmark,benchmark=event_{s} value={freq.as_hz}"
+      send "fzweb_benchmark,benchmark=event_$(s) value=$(freq.as_hz)"
     for s in sites do
       freq := session_document_get_content s
-      send "fzweb_benchmark,benchmark=get_content_{s} value={freq.as_hz}"
+      send "fzweb_benchmark,benchmark=get_content_$(s) value=$(freq.as_hz)"
 
   send(str String) =>
     match envir.vars.env.get "INFLUXDB_TOKEN"

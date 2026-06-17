@@ -22,7 +22,7 @@ do_register (client net.ip_address, form_data lock_free.Map String String) Strin
     # NYI: UNDER DEVELOPMENT: registration rate limit, add logging.
     match user.register client form_data
       rr String => rr
-      e error => "<div class='text-center'>*** Registration failed: {e}</div>"
+      e error => "<div class='text-center'>*** Registration failed: $(e)</div>"
 
 
 # construct a response for account registration
@@ -62,17 +62,17 @@ goto(s Session, form_data lock_free.Map String String) =>
   match form_data["page"]
     page String =>
       match content.get_contents s page
-        forbidden => s.log "*** forbidding access to absolute or non-normalized page {page}."
-        missing => s.log "error: requested file {page} does not exist"
+        forbidden => s.log "*** forbidding access to absolute or non-normalized page $(page)."
+        missing => s.log "error: requested file $(page) does not exist"
         i identifier =>
           match i.simple_path
             sp String =>
               s.set_current sp
               s.send_content
             nil =>
-              s.log "error: identifier, no simple_path: {i}"
+              s.log "error: identifier, no simple_path: $(i)"
     nil =>
-      s.log "error: page not found in form_data: {form_data}"
+      s.log "error: page not found in form_data: $(form_data)"
 
 
 # open the event sourcing connection
@@ -123,10 +123,10 @@ get_file_response(s Session, form_data lock_free.Map String String, raw_path Str
     .or_panic
   match content.get_contents s path
     forbidden =>
-      s.log "*** forbidding access to absolute or non-normalized path {path}."
+      s.log "*** forbidding access to absolute or non-normalized path $(path)."
       response.new 403
     missing =>
-      s.log "*** error: requested file {path} does not exist"
+      s.log "*** error: requested file $(path) does not exist"
       response.new 404
     i identifier => i.response s
 
@@ -144,7 +144,7 @@ module route_request (raw_path0 String, cmd http.request_method, client net.ip_a
   # NYI: PERFORMANCE: order ifs by most used / accessed
 
   if cmd != http.get && cmd != http.head && cmd != http.post_r
-    logger.log "*** unknown request: {cmd}"
+    logger.log "*** unknown request: $(cmd)"
     response.new 501
   else if raw_path = "/login"
     s.login form_data["login"].or_panic form_data["password"].or_panic
@@ -191,5 +191,5 @@ perform_direct_login (s Session, form_data lock_free.Map String String) =>
   p := form_data["password"]
 
   if l?? && p??
-    s.log "Direct login: for {l.or_panic}"
+    s.log "Direct login: for $(l.or_panic)"
     s.login l.or_panic p.or_panic
