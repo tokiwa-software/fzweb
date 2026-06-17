@@ -58,20 +58,20 @@ module Feeds ref is
         .empty
         .add "Content-Type" "application/json"
         .add "User-Agent" "fzweb (+https://github.com/tokiwa-software/fzweb)"
-        .add "Authorization" "Bearer {token}"
+        .add "Authorization" "Bearer $(token)"
 
       github_graphql_endpoint := "https://api.github.com/graphql"
 
       graphql_query := """
-        \{
-          "query": "query \{ \
-            repository(owner: \\"tokiwa-software\\", name: \\"fuzion\\") \{ \
-              ref(qualifiedName: \\"main\\") \{ \
-                target \{ \
-                  ... on Commit \{ \
-                    history(first: 10) \{ \
-                      edges \{ \
-                        node \{ \
+        {
+          "query": "query { \
+            repository(owner: \\"tokiwa-software\\", name: \\"fuzion\\") { \
+              ref(qualifiedName: \\"main\\") { \
+                target { \
+                  ... on Commit { \
+                    history(first: 10) { \
+                      edges { \
+                        node { \
                           message committedDate url \
                         } \
                       } \

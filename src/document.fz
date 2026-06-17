@@ -49,7 +49,7 @@ module document is
       pf path =>
         match global.env.read_file_as_string pf
           error =>
-            "-- error reading {pf} --"
+            "-- error reading $(pf) --"
           str String =>
             start_open := (str.find title_start_open).or_default -1
             start_close :=

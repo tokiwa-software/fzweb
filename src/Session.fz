@@ -55,7 +55,7 @@ module Session (client net.ip_address,
 
   # and log session creation
   #
-  log "new session {session_id} for {client} user {user.read.bind x->x.login}"
+  log "new session $(session_id) for $(client) user $(user.read.bind x->x.login)"
 
 
   # authenticate the session with a user account
@@ -106,7 +106,7 @@ module Session (client net.ip_address,
     match login.read
       unauthenticated => "not logged in"
       auth_fail => "failed"
-      authenticated => "ok: {user.read.or_panic.name}"
+      authenticated => "ok: $(user.read.or_panic.name)"
 
 
   # send an event on the session's connection
@@ -119,7 +119,7 @@ module Session (client net.ip_address,
   #
   send_event (event String, html_encoded_data option String) =>
     data := html_encoded_data.or_default ""
-    send_data "event: {event}\ndata: {data}\n\n"
+    send_data "event: $(event)\ndata: $(data)\n\n"
 
 
   # send history information about session's visited pages
@@ -130,14 +130,14 @@ module Session (client net.ip_address,
 
     if last.is_nil || c.page != last.or_panic.page
       last_pushed_history.write c
-      send_event "pushHistory" "/{c.page}"
+      send_event "pushHistory" "/$(c.page)"
 
 
   # send data on the session's connection
   #
   module send_data (msg String) =>
     match connection.read
-      nil => log "failed to send {msg.lines[0]}, connection is nil"
+      nil => log "failed to send $(msg.lines[0]), connection is nil"
       c net.connection =>
 
         match {
@@ -145,7 +145,7 @@ module Session (client net.ip_address,
 
           lm ! ()->
             c.with (outcome unit) lm ()->
-              final_msg := "{msg.byte_count.hex}\r\n{msg}\r\n"
+              final_msg := "$(msg.byte_count.hex)\r\n$(msg)\r\n"
               io.buffered lm
                 .writer.env
                 .write final_msg.utf8
@@ -175,16 +175,16 @@ module Session (client net.ip_address,
   #
   close_connection (o outcome unit) =>
     match o
-      e error => log "exception when sending content: {e}"
+      e error => log "exception when sending content: $(e)"
       unit =>
 
     match connection.read
       nil => unit
       c net.connection =>
-        log "closing connection of session: {session_id}"
+        log "closing connection of session: $(session_id)"
         match c.close
           unit =>
-          e error => log "error closing connection: {e}"
+          e error => log "error closing connection: $(e)"
         _ := connection.write nil
 
 
@@ -208,13 +208,13 @@ module Session (client net.ip_address,
   module type.get (id String, c net.ip_address) option Session =>
     match global.env.sessions.get id
       nil =>
-        logger.log "No session found in map for id: {id}"
+        logger.log "No session found in map for id: $(id)"
         nil
       s Session =>
         if s.client = c
           s
         else
-          logger.log "Mismatch of clients for session with id: {id}"
+          logger.log "Mismatch of clients for session with id: $(id)"
           nil
 
 
@@ -231,7 +231,7 @@ module Session (client net.ip_address,
   # send events along with data on the session's connection
   #
   module send_event(event, field_name, field_data String) =>
-    html_encoded_data := encodings.html.encode "{field_name}\n{prepend_data (field_data.split "\n").as_array}" true
+    html_encoded_data := encodings.html.encode "$(field_name)\n$(prepend_data (field_data.split "\n").as_array)" true
     send_event event html_encoded_data
 
 
@@ -258,7 +258,7 @@ module Session (client net.ip_address,
         String
           .from b
           .replace "##SESSION_ID##" session_id
-          .replace "##URL##" "/{cp.page}"
+          .replace "##URL##" "/$(cp.page)"
           .replace "##CONTENT##" (String.join a "\n")
           .utf8
 
@@ -277,7 +277,7 @@ module Session (client net.ip_address,
         """
           id: 0
           event: content
-          {prepend_data c}\n
+          $(prepend_data c)\n
         """
 
   # send current page content to the client

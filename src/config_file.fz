@@ -35,13 +35,13 @@ module config_file (values lock_free.Map String String, p path) is
   module save =>
     res := io.file.use unit p io.file.mode.write ()->
       data := values.items
-                    .map (e -> "{e.0}: {e.1}")
+                    .map (e -> "$(e.0): $(e.1)")
                     .as_string "\n"
       (io.file.writer.write data.utf8)
 
     match res
       unit => unit
-      e error => logger.log "Writing to config file {p} failed: {e}."
+      e error => logger.log "Writing to config file $(p) failed: $(e)."
 
 
   # open the config file located at the given path p

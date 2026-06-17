@@ -56,7 +56,7 @@ module runner is
           res := concur.atomic String .new ""
 
           add_to_res(str String) =>
-            _ := res.update (String->String) o->"{o}{if o.is_empty then "" else "\n"}{str}"
+            _ := res.update (String->String) o->"$(o)$(if o.is_empty then "" else "\n")$(str)"
 
 
           fout := concur.thread_pool.env.submit _ ()->
@@ -71,7 +71,7 @@ module runner is
               p.with_err unit lm ()->
                 while match io.buffered lm .read_line
                   io.end_of_file => false
-                  l String => add_to_res "stderr: {l}"; true
+                  l String => add_to_res "stderr: $(l)"; true
 
           p.wait max_wait_time
            .bind _->

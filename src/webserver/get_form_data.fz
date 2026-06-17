@@ -17,6 +17,6 @@ module get_form_data(post_data String, cmd http.request_method, raw_query, conte
       else if content_type = "multipart/form-data"
         parse_multipart_form_data post_data content_type_boundary
       else
-        error "Wrong / unsupported content type in request: {content_type}"
+        error "Wrong / unsupported content type in request: $(content_type)"
     * =>
       parse_urlencoded_map raw_query

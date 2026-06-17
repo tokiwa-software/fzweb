@@ -37,15 +37,15 @@ module session_document (module page String,
       .map f->
          """
           <div>
-            <a class="text-overflow-ellipsis" title="{f.title_encoded}" href="{f.href_encoded}" target="_blank">
-              <small>{f.updated_encoded}</small>
-              <strong>{f.title_encoded}</strong>
+            <a class="text-overflow-ellipsis" title="$(f.title_encoded)" href="$(f.href_encoded)" target="_blank">
+              <small>$(f.updated_encoded)</small>
+              <strong>$(f.title_encoded)</strong>
             </a>
           </div>
          """
 
     """
-      {String.join res}
+      $(String.join res)
       <div>
         <a class="d-flex justify-content-end text-overflow-ellipsis" href="https://types.pl/@fuzion" target="_blank">
           more...
@@ -62,9 +62,9 @@ module session_document (module page String,
       .map f->
          """
           <div>
-            <a class="text-overflow-ellipsis" title="{f.title_encoded}" href="{f.href_encoded}" target="_blank">
-              <small>{f.updated}</small>
-              <strong>{f.title_encoded}</strong>
+            <a class="text-overflow-ellipsis" title="$(f.title_encoded)" href="$(f.href_encoded)" target="_blank">
+              <small>$(f.updated)</small>
+              <strong>$(f.title_encoded)</strong>
             </a>
           </div>
          """
@@ -73,7 +73,7 @@ module session_document (module page String,
       <div class = "item white">
         <div class="itemhead"><div class="itemtitle">Recent commits</div><div class="itemicon">🌳</div></div>
         <div class="itembody">
-          {String.join res}
+          $(String.join res)
           <div>
             <a class="d-flex justify-content-end text-overflow-ellipsis" href="https://github.com/tokiwa-software/fuzion/commits/main" target="_blank" aria-label="Read longer list of recent commits">
               <span aria-hidden="true">more...</span>
@@ -114,7 +114,7 @@ module session_document (module page String,
           str.lines .map line->
             encodings.html.encode line true
       [
-        "<h1>{encodings.html.encode title.as_string true}</h1>\n",
+        "<h1>$(encodings.html.encode title.as_string true)</h1>\n",
         # opacity is reset in main.js:initAnsiUp()
         "<pre class='code' style='opacity: 0'>\n"
       ] ++ preformatted ++ [ "</pre>\n" ]
@@ -122,7 +122,7 @@ module session_document (module page String,
 
     unknown_content =>
       fname := encodings.html.encode dp.base_name true
-      ["<p>501: Not Implemented: Unsupported file type in {fname}</p>"]
+      ["<p>501: Not Implemented: Unsupported file type in $(fname)</p>"]
 
 
     res =>
@@ -137,12 +137,12 @@ module session_document (module page String,
 
     match io.file.stat dp true
       e error =>
-        session.log "error retrieving file metadata in session_document get_content: {e}"
+        session.log "error retrieving file metadata in session_document get_content: $(e)"
         res
       metadata io.file.meta_data =>
         ts := time.date_time.from_seconds metadata.mtime.as_u64
-        ts_formatted := "{ts.year.as_string 4 10}-{ts.month.as_string 2 10}-{ts.day.as_string 2 10}"
-        res ++ ["<div class='last-changed'>last changed: {ts_formatted}</div>"]
+        ts_formatted := "$(ts.year.as_string 4 10)-$(ts.month.as_string 2 10)-$(ts.day.as_string 2 10)"
+        res ++ ["<div class='last-changed'>last changed: $(ts_formatted)</div>"]
 
 
 
@@ -159,7 +159,7 @@ module session_document (module page String,
             else
               get_content dp str
       .catch e->
-        [ "<p>500: Internal Server Error: {e}</p>" ]
+        [ "<p>500: Internal Server Error: $(e)</p>" ]
 
 
   # pretty print code
@@ -261,8 +261,8 @@ module session_document (module page String,
           if md.is_dir
             dir_map := container.ordered_map ["dir"] [$a]
             """
-              {nbsp}{"│{nbsp}{nbsp}"*indent}├─ <span class="mydir">{encodings.html.encode a.base_name true}</span><br>
-              {browse_tag dir_map indent+1}
+              $(nbsp)$("│$(nbsp)$(nbsp)"*indent)├─ <span class="mydir">$(encodings.html.encode a.base_name true)</span><br>
+              $(browse_tag dir_map indent+1)
             """
           else if md.is_regular
             # NYI: HACK: is a better algorithm possible for mangling the path?
@@ -284,7 +284,7 @@ module session_document (module page String,
                 a
 
             """
-              {nbsp}{"│{nbsp}{nbsp}"*indent}├─ <a href="$file_link">{encodings.html.encode a.base_name true}</a><br>
+              $(nbsp)$("│$(nbsp)$(nbsp)"*indent)├─ <a href="$file_link">$(encodings.html.encode a.base_name true)</a><br>
             """
           else ""
 
@@ -336,17 +336,17 @@ module session_document (module page String,
       <i class="far fa-spinner fa-spin"></i>
       <div class="mb-15 runcode" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,40ch), min(100%, 80ch))); max-width: 102rem; opacity: 0;">
         <div class="position-relative">
-          <form id="{id}">
-            <label for="{id}.code" class="visually-hidden">Code input</label>
-            <textarea class="codeinput" required="required" maxlength="4096" id="{id}.code" name="code" rows="{max 3 code.lines.count}" spellcheck="false">{code}</textarea>
+          <form id="$(id)">
+            <label for="$(id).code" class="visually-hidden">Code input</label>
+            <textarea class="codeinput" required="required" maxlength="4096" id="$(id).code" name="code" rows="$(max 3 code.lines.count)" spellcheck="false">$(code)</textarea>
             <div class="position-absolute runbuttons">
-              <input type="button" onclick="runit('{id}')"    class="runbutton" value="Run!" />
-              <input type="button" onclick="runiteff('{id}')" class="runbutton" value="Effects!" />
+              <input type="button" onclick="runit('$(id)')"    class="runbutton" value="Run!" />
+              <input type="button" onclick="runiteff('$(id)')" class="runbutton" value="Effects!" />
               <a href="/tutorial/effects.html"><i>What are effects?</i></a>
             </div>
           </form>
         </div>
-        <div class="computeroutput" id="{id}.result"></div>
+        <div class="computeroutput" id="$(id).result"></div>
       </div>
     </div>
   """
@@ -452,7 +452,7 @@ module session_document (module page String,
             embedded_html := html.substring c c2+7
             html.replace embedded_html """
               <div class="responsive-container aspect-16-by-9">
-                <iframe class="responsive-iframe" sandbox="allow-same-origin allow-scripts" id='iframe-embedded-content' data-src-doc-content="{(embedded_html.replace "&quot;" "REPLACEDHTMLQUOTE").replace "" "REPLACEDDOUBLEQUOTE"}">
+                <iframe class="responsive-iframe" sandbox="allow-same-origin allow-scripts" id='iframe-embedded-content' data-src-doc-content="$((embedded_html.replace "&quot;" "REPLACEDHTMLQUOTE").replace "" "REPLACEDDOUBLEQUOTE")">
                 </iframe>
               </div>
               """
@@ -521,7 +521,7 @@ module session_document (module page String,
       # the current state of the title bar is stored as `current`, and `ppup`
       # is the current level in the directory hierarchy
       #
-      for current := temp, "{page_link (template.link ppup "index")} • {current}"
+      for current := temp, "$(page_link (template.link ppup "index")) • $(current)"
           ppup := pup.bind (.parent), ppup.or_panic.parent
       while
         match ppup
@@ -571,11 +571,11 @@ module session_document (module page String,
     n(top bool) =>
       """
         <div class='d-flex justify-content-between'>
-          {top ? "<div class='navtitle'>{generate_title_bar}</div>" : attractive_next.or_else ""}
-          <div class='d-flex justify-content-between w-75 {top ? "nav_top" : "nav_bot"}'>
-            <div class='nav_left'>{template.nav_link pp prev (arrow_link "left")  "aria-label='previous item'"}</div>
-            <div class='nav_up'>{up_link pup}</div>
-            <div class='nav_right'>{template.nav_link pp next (arrow_link "right") "aria-label='next item'"}</div>
+          $(top ? "<div class='navtitle'>$(generate_title_bar)</div>" : attractive_next.or_else "")
+          <div class='d-flex justify-content-between w-75 $(top ? "nav_top" : "nav_bot")'>
+            <div class='nav_left'>$(template.nav_link pp prev (arrow_link "left")  "aria-label='previous item'")</div>
+            <div class='nav_up'>$(up_link pup)</div>
+            <div class='nav_right'>$(template.nav_link pp next (arrow_link "right") "aria-label='next item'")</div>
           </div>
         </div>
       """

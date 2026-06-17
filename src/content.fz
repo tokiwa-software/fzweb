@@ -215,7 +215,7 @@ module content is
             else
               match (config_file.open access_file)["template"]
                 nil =>
-                  s.log "no template defined in {access_file}"
+                  s.log "no template defined in $(access_file)"
                   missing
                 t String =>
                   identifier (dir.resolve t) path_from_url content_path

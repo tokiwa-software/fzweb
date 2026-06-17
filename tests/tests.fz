@@ -36,6 +36,6 @@ tests =>
       else
         (r.0, r.1+1)
 
-  say "Of {results.count} tests, $ok tests passed, $failed failed."
+  say "Of $(results.count) tests, $ok tests passed, $failed failed."
 
   exit (if failed > 0 then 1 else 0)

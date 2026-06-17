@@ -48,7 +48,7 @@ request_context (LM type : mutate, connection net.connection) is
 #
 module handle_connection (LM type : mutate, conn net.connection) unit =>
   req_context := request_context LM conn
-  logger.log "{req_context.request.method} {req_context.request.target}"
+  logger.log "$(req_context.request.method) $(req_context.request.target)"
 
   process_request LM req_context
 
@@ -105,7 +105,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
   match resp.session
     nil =>
       match req_context.connection.close
-        e error => logger.log "failed closing connection {e}"
+        e error => logger.log "failed closing connection $(e)"
         unit    =>
     s Session =>
       check debug : req_context.path = "/events"
@@ -119,8 +119,8 @@ process_request(LM type : mutate, req_context request_context LM) =>
 
     msg :=
       if req_context.path = "/goto" && page_if_available.exists
-        "took {request_duration} to process request for {page_if_available.or_panic} (via eventstream)"
+        "took $(request_duration) to process request for $(page_if_available.or_panic) (via eventstream)"
       else
-        "took {request_duration} to process request for {req_context.path}"
+        "took $(request_duration) to process request for $(req_context.path)"
 
     logger.log msg

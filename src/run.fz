@@ -39,16 +39,16 @@ run =>
                   # does not crash the whole webserver.
                   #
                   match (io.buffered mutate).writer.env.flush
-                    e error => logger.log "failed flushing, connection meanwhile closed?\n\n {e}"
+                    e error => logger.log "failed flushing, connection meanwhile closed?\n\n $(e)"
                     unit =>
 
               .catch  e->
                 logger.log $e
                 match conn.close
-                  cce error => logger.log "failed closing connection {cce}"
+                  cce error => logger.log "failed closing connection $(cce)"
                   unit    =>
 
         accept_res.or_else ()->
-          logger.log "failed accepting connection {accept_res}"
+          logger.log "failed accepting connection $(accept_res)"
 
   logger.log $res

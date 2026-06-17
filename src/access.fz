@@ -69,10 +69,10 @@ module identifier (module file_to_send option path,
           ("Content-Length", data.count.as_string),
           ("Content-Type", "text/html")
         ]
-        s.log "*** 404 : Not Found {s.current_page.read.page}"
+        s.log "*** 404 : Not Found $(s.current_page.read.page)"
         response.new 404 attributes data
       e error =>
-        s.log "*** error sending content: {e}"
+        s.log "*** error sending content: $(e)"
         response.new 500
 
 
