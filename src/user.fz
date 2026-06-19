@@ -95,7 +95,7 @@ module user (module base_dir path) is
 
     match common_groups.size_option
       nil => false
-      size i32 =>
+      size i64 =>
         if size > 0
           true
         else
