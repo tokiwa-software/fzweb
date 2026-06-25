@@ -43,47 +43,51 @@ module runner is
 
     s.send_event "pushElementContents" results_to "starting job ..."
 
-    r := os.process.start "ssh" args
+    (os.process.start "ssh" args
       .bind p->
 
         # write code to stdin
-        _ := p.write_string code
+        _ := p.write_string code .or_panic
 
         lm : mutate is
 
-        x := (concur.thread_pool 2 ()->
+        _ := (concur.thread_pool 2 ()->
 
           res := concur.atomic String .new ""
 
           add_to_res(str String) =>
             _ := res.update (String->String) o->"$(o)$(if o.is_empty then "" else "\n")$(str)"
+            s.send_event "pushElementContents" results_to res.read
 
 
           fout := concur.thread_pool.env.submit _ ()->
-            lm ! ()->
-              p.with_out unit lm ()->
-                while match io.buffered lm .read_line
-                  io.end_of_file => false
-                  l String => add_to_res l; true
+            fuzion.runtime.fault
+              .try ()->
+                lm ! ()->
+                  p.with_out unit lm ()->
+                    while match io.buffered lm .read_line
+                      io.end_of_file => false
+                      l String => add_to_res l; true
+              .catch e->
+                logger.log $e
 
           ferr := concur.thread_pool.env.submit _ ()->
-            lm ! ()->
-              p.with_err unit lm ()->
-                while match io.buffered lm .read_line
-                  io.end_of_file => false
-                  l String => add_to_res "stderr: $(l)"; true
+            fuzion.runtime.fault
+              .try ()->
+                lm ! ()->
+                  p.with_err unit lm ()->
+                    while match io.buffered lm .read_line
+                      io.end_of_file => false
+                      l String => add_to_res "stderr: $(l)"; true
+              .catch e->
+                logger.log $e
 
           p.wait max_wait_time
            .bind _->
             _ := fout.get
-            _ := ferr.get
-            res.read).or_panic
+            _ := ferr.get).or_panic
 
-        _ := p.send_signal os.signals.kill
-
-        x
-
-    s.send_event "pushElementContents" results_to r.as_string
+        _ := p.send_signal os.signals.kill).or_panic
 
 
   # helper feature

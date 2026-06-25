@@ -42,7 +42,7 @@ run =>
                     e error => logger.log "failed flushing, connection meanwhile closed?\n\n $(e)"
                     unit =>
 
-              .catch  e->
+              .catch e->
                 logger.log $e
                 match conn.close
                   cce error => logger.log "failed closing connection $(cce)"
