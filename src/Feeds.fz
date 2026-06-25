@@ -29,13 +29,13 @@ module Feeds ref is
         fuzion.runtime.fault
           .try ()->
             get_github
-          .catch  e->
+          .catch e->
             logger.log "contract_fault (github feed): $e"
 
         fuzion.runtime.fault
           .try ()->
             get_mastodon
-          .catch  e->
+          .catch e->
             logger.log "contract_fault (mastodon feed): $e"
 
         time.nano.env.sleep update_interval

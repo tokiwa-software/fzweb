@@ -401,7 +401,7 @@ module user (module base_dir path) is
                                .replace "##TOKEN##" token
                                .replace "##IP##" ip
                   email_service.send_text_mail_with_footer noreply_tokiwa_software email subject body)
-      .catch  e->
+      .catch e->
         m := "fault while sending registration email: $e"
         logger.log m
         error m
