@@ -18,6 +18,11 @@ module Session (client net.ip_address,
   module user := concur.atomic (option user) .new nil
 
 
+  # when was the session last accessed?
+  #
+  module last_accessed := concur.atomic (time.date_time) .new time.now.env.get
+
+
   # login state of the session
   #
   login := concur.atomic login_status .new unauthenticated
@@ -50,7 +55,11 @@ module Session (client net.ip_address,
 
   # put session in global session list
   #
-  _ := global.env.sessions.access session_id ()->Session.this
+  _ := {
+    last_accessed.write time.now.env.get
+    global.env.sessions.put session_id Session.this
+    global.env.evict_sessions
+  }
 
 
   # and log session creation

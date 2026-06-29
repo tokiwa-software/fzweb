@@ -11,7 +11,24 @@
 module global : effect is
 
   max_open_sessions => 1E3
-  module sessions := lock_free.Sieve_Cache String Session max_open_sessions
+  evicition_count => 1E2
+  module sessions := lock_free.Map String Session .empty
+
+  # evict `evicition_count` sessions once
+  # `max_open_sessions` limit is reached
+  module evict_sessions =>
+    _ := concur.threads.env.spawn ()->
+      fuzion.runtime.fault
+        .try ()->
+          if sessions.size > max_open_sessions
+            sessions
+              .items
+              .sort_by (.1.last_accessed.read)
+              .take evicition_count
+              .for_each item->
+                _ := sessions.remove item.0
+        .catch e->
+          logger.log $e
 
   module feeds := Feeds
 
