@@ -11,24 +11,52 @@
 module global : effect is
 
   max_open_sessions => 1E3
-  evicition_count => 1E2
-  module sessions := lock_free.Map String Session .empty
+  eviction_count => 1E2
+  evicition_counter := concur.atomic i32 .new 0
+  sessions := lock_free.Map String Session .empty
 
-  # evict `evicition_count` sessions once
-  # `max_open_sessions` limit is reached
+  /*
+
+  NYI: UNDER DEVELOPMENT:
+
+  @fridi writes:
+  Starting a new thread for this every time a new session is added seems a bit overkill. It would IMHO be better to have only one thread that is running in an endless loop waiting for the session count to become too high. But this change should best be done when blocking_mutate (or some future atomic_mutate) is used for the sesssions.
+
+  Eventually, I think it would be good to have a use blocking_mutate or a future atomic_mutate to implement the data structure used for sessions and then use exclusive_when ()_>sessions.size>max_open_session in an endless loop in the eviction thread.
+
+  */
+
+  # store a session
+  module sessions_put(id String, s Session) =>
+    sessions.put id s
+    evict_sessions
+
+
+  module sessions_get(id String) option Session =>
+    match sessions.get id
+      nil => nil
+      s Session =>
+        s.last_accessed.write time.now.env.get
+        s
+
+
+  # evict `eviction_count` sessions
+  #
   module evict_sessions =>
-    _ := concur.threads.env.spawn ()->
-      fuzion.runtime.fault
-        .try ()->
-          if sessions.size > max_open_sessions
-            sessions
+    _ := evicition_counter.incr
+    if evicition_counter.read % eviction_count = 0
+      _ := concur.threads.env.spawn ()->
+        fuzion.runtime.fault
+          .try ()->
+            sa := sessions
               .items
               .sort_by (.1.last_accessed.read)
-              .take evicition_count
+            sa
+              .take sa.count-max_open_sessions
               .for_each item->
                 _ := sessions.remove item.0
-        .catch e->
-          logger.log $e
+          .catch e->
+            logger.log $e
 
   module feeds := Feeds
 

@@ -55,11 +55,7 @@ module Session (client net.ip_address,
 
   # put session in global session list
   #
-  _ := {
-    last_accessed.write time.now.env.get
-    global.env.sessions.put session_id Session.this
-    global.env.evict_sessions
-  }
+  _ := global.env.sessions_put session_id Session.this
 
 
   # and log session creation
@@ -215,7 +211,7 @@ module Session (client net.ip_address,
   # find a session by id and client
   #
   module type.get (id String, c net.ip_address) option Session =>
-    match global.env.sessions.get id
+    match global.env.sessions_get id
       nil =>
         logger.log "No session found in map for id: $(id)"
         nil
