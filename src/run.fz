@@ -17,7 +17,6 @@ run =>
     logger.log "started listening on port: $port"
 
     g := global
-    g.feeds.init
 
     # start a thread pool
     # NYI: UNDER DEVELOPMENT: thread_pool size should be determined programmatically

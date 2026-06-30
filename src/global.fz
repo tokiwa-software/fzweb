@@ -66,3 +66,6 @@ module global : effect is
   module read_file_as_string(p path) =>
     files.access p ()->
       universe.read_file_as_string p
+
+
+  feeds.init
