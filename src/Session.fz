@@ -18,6 +18,11 @@ module Session (client net.ip_address,
   module user := concur.atomic (option user) .new nil
 
 
+  # when was the session last accessed?
+  #
+  module last_accessed := concur.atomic (time.date_time) .new time.now.env.get
+
+
   # login state of the session
   #
   login := concur.atomic login_status .new unauthenticated
@@ -50,7 +55,7 @@ module Session (client net.ip_address,
 
   # put session in global session list
   #
-  _ := global.env.sessions.access session_id ()->Session.this
+  _ := global.env.sessions_put session_id Session.this
 
 
   # and log session creation
@@ -206,7 +211,7 @@ module Session (client net.ip_address,
   # find a session by id and client
   #
   module type.get (id String, c net.ip_address) option Session =>
-    match global.env.sessions.get id
+    match global.env.sessions_get id
       nil =>
         logger.log "No session found in map for id: $(id)"
         nil
