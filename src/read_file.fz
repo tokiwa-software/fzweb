@@ -23,8 +23,8 @@ module read_file(p path) outcome (Sequence u8) =>
   # instead of copying it to an array once we have resource areneas.
   (io.file.stat p true).bind md->
     io.file.use p io.file.mode.append ()->
-      if md.size != 0
-        io.file.open.mmap 0 md.size ()->
+      if md.size != units.data_size.zero
+        io.file.open.mmap 0 md.size.bytes.as_i64 ()->
           id (Sequence u8) io.file.mapped_buffer.env.as_array
       else
         (Sequence u8).empty
