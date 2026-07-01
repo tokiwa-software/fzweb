@@ -72,7 +72,7 @@ module session_document (module page String,
     """
       <div class = "item white">
         <div class="itemhead"><div class="itemtitle">Recent commits</div><div class="itemicon">🌳</div></div>
-        <div class="itembody">
+        <div class="d-grid itembody">
           $(String.join res)
           <div>
             <a class="d-flex justify-content-end text-overflow-ellipsis" href="https://github.com/tokiwa-software/fuzion/commits/main" target="_blank" aria-label="Read longer list of recent commits">
@@ -404,8 +404,8 @@ module session_document (module page String,
   # e.g. for this String
   #
   # """
-  #  <div class="itembody">
-  #    <page file="lock_free/index.html" /><br>
+  #  <div class="d-grid itembody">
+  #    <page file="lock_free/index.html" />
   #  </div>
   # """
   #
