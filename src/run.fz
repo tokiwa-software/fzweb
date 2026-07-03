@@ -16,7 +16,7 @@ run =>
   res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
     logger.log "started listening on port: $port"
 
-    g := global
+    g := global true
 
     # start a thread pool
     # NYI: UNDER DEVELOPMENT: thread_pool size should be determined programmatically

@@ -45,7 +45,7 @@ benchmarks =>
     x
 
   g := io.Out.instate _ io.Out.blackhole ()->
-    global
+    global false
 
   sites := [
     "idioms/index",
