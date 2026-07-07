@@ -8,7 +8,7 @@
 
 # effect for holding global state in the webserver
 #
-module global : effect is
+module global(init_feeds bool) : effect is
 
   max_open_sessions => 1E3
   eviction_count => 1E2
@@ -68,4 +68,5 @@ module global : effect is
       universe.read_file_as_string p
 
 
-  feeds.init
+  if init_feeds
+    feeds.init
