@@ -38,7 +38,7 @@ module Feeds ref is
           .catch e->
             logger.log "contract_fault (mastodon feed): $e"
 
-        time.nano.env.sleep update_interval
+        time.Nano.env.sleep update_interval
 
 
   # download, parse and store the github rss-feed
