@@ -170,7 +170,7 @@ module session_document (module page String,
     envir_var_kv :=
       [ "PATH" ]
         .map k->
-          envir.vars.env[k].bind v->
+          envir.Vars.env[k].bind v->
             (k, v)
         .filter (.ok)
         .map (.or_panic)
