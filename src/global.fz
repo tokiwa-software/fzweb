@@ -45,7 +45,7 @@ module global(init_feeds bool) : effect is
   module evict_sessions =>
     _ := evicition_counter.incr
     if evicition_counter.read % eviction_count = 0
-      _ := concur.threads.env.spawn ()->
+      _ := concur.Threads.env.spawn ()->
         fuzion.runtime.fault
           .try ()->
             sa := sessions
