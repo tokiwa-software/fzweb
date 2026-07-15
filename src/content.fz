@@ -232,7 +232,7 @@ module content is
   module type.template (path_from_url String) access =>
     p := templates_dir.resolve path_from_url
     is_valid_file :=
-      io.file.stat.env
+      io.file.Stat.env
         .stats p
         .bind (.is_regular)
         .or_default false
@@ -247,4 +247,3 @@ module content is
   type.content_dir path => (path.of "./content")
   type.pages_dir_relative path => path.of "pages"
   module type.templates_dir path => (path.of "./templates")
-
