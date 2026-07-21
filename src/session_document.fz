@@ -87,7 +87,7 @@ module session_document (module page String,
 
   # get file content as Sequence of strings
   #
-  get_content(dp path, str String) =>
+  get_content(dp io.path, str String) =>
 
 
     html_content =>
@@ -164,7 +164,7 @@ module session_document (module page String,
 
   # pretty print code
   #
-  pretty_print_code (src path) outcome String =>
+  pretty_print_code (src io.path) outcome String =>
     # envir vars as key value pairs
     #
     envir_var_kv :=
@@ -233,7 +233,7 @@ module session_document (module page String,
   # <page file="sqlite/index" />
   #
   page_tag(m container.Map String String) =>
-    path
+    io.path
       .of page
       .parent
       .or_panic
@@ -255,8 +255,8 @@ module session_document (module page String,
   browse_tag(m container.Map String String, indent i32) =>
 
     match data_path
-      dp path =>
-        append(a path, md io.file.meta_data) =>
+      dp io.path =>
+        append(a io.path, md io.file.meta_data) =>
           nbsp := "&nbsp;"
           if md.is_dir
             dir_map := container.ordered_map ["dir"] [$a]
@@ -267,17 +267,17 @@ module session_document (module page String,
           else if md.is_regular
             # NYI: HACK: is a better algorithm possible for mangling the path?
             file_link :=
-              if a.starts_with (path.of "content")
-                path_rel := path.of "content/api/link"
+              if a.starts_with (io.path.of "content")
+                path_rel := io.path.of "content/api/link"
                   .relativize a
                 module_path := path_rel.subpath 0 1
                 file_path := path_rel.subpath 2
-                path.root
+                io.path.root
                   .resolve "api"
                   .resolve module_path
                   .resolve file_path
-              else if a.starts_with (path.of "users")
-                path.root
+              else if a.starts_with (io.path.of "users")
+                io.path.root
                   .resolve "userdata"
                   .resolve (a.subpath 2)
               else
@@ -290,7 +290,7 @@ module session_document (module page String,
 
         m_dir :=
           match m["dir"]
-            d String => path.of d
+            d String => io.path.of d
             nil =>
               # no dir, try userdata
               match session.user.read
@@ -300,7 +300,7 @@ module session_document (module page String,
 
 
         dir :=
-          if m_dir.starts_with path.parent_dir
+          if m_dir.starts_with io.path.parent_dir
             dp
               .parent
               .or_panic
@@ -317,7 +317,7 @@ module session_document (module page String,
                     e error => res
                     md io.file.meta_data => res.add <| append x md
                 }
-                a := io.dir.open.env.read
+                a := io.dir.Read.env.next
             while a.ok
             else
               String.join (res.sort_by (.lower_case))
@@ -493,13 +493,13 @@ module session_document (module page String,
     fn := (content.file_path page).as_string
     pp := content.base_simple_path page
     is_toc := fn = "index"
-    pup option path :=
+    pup option io.path :=
       if is_toc
         pp
       else
         match pp
-          nil => path.of "index"
-          p path => p.resolve "index"
+          nil => io.path.of "index"
+          p io.path => p.resolve "index"
 
     # generate a title bar (also called `navtitle`) in the form of
     #
@@ -525,7 +525,7 @@ module session_document (module page String,
           ppup := pup.bind (.parent), ppup.or_panic.parent
       while
         match ppup
-          p path => !p.is_parent
+          p io.path => !p.is_parent
           nil => false
       else
         current
@@ -563,7 +563,7 @@ module session_document (module page String,
     # generate the link to navigate upwards
     # with respect to a given path
     #
-    up_link (p option path) String =>
+    up_link (p option io.path) String =>
       p.bind x->
         template.nav_link x.parent "index" (arrow_link "up") "aria-label='up a level'"
        .or_else (template.nav_link nil nil (arrow_link "up") "aria-label='up a level'")

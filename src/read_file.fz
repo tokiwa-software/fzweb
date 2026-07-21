@@ -10,7 +10,7 @@
 # read file p file and return
 # its contents as a String
 #
-module read_file_as_string(p path) outcome String =>
+module read_file_as_string(p io.path) outcome String =>
   (read_file p).bind b->
     String.from b
 
@@ -18,7 +18,7 @@ module read_file_as_string(p path) outcome String =>
 # read file p file and return
 # its contents as an array of bytes
 #
-module read_file(p path) outcome (Sequence u8) =>
+module read_file(p io.path) outcome (Sequence u8) =>
   # NYI: UNDER DEVELOPMENT return the mapped buffer as an immutable Sequence
   # instead of copying it to an array once we have resource areneas.
   (io.file.stat p true).bind md->

@@ -9,14 +9,14 @@
 
 # identifies a page alongside a template to send to the user
 #
-module identifier (module file_to_send option path,
+module identifier (module file_to_send option io.path,
                    module simple_path option String,
-                   content_path option path) is
+                   content_path option io.path) is
 
   is_html_template := content_path.exists
 
 
-  module type.new (file_to_send option path,
+  module type.new (file_to_send option io.path,
                    simple_path option String) identifier =>
     identifier file_to_send simple_path nil
 
@@ -29,7 +29,7 @@ module identifier (module file_to_send option path,
   #
   get_bytes (s Session) choice error nil (Sequence u8) =>
     match file_to_send
-      fts path =>
+      fts io.path =>
         match read_file fts
           ba Sequence u8 =>
             if is_html_template

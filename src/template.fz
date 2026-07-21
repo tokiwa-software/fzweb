@@ -19,7 +19,7 @@ module template is
     match content.template filename
       template_id identifier =>
         match template_id.file_to_send
-          p path =>
+          p io.path =>
             for
               res := global.env.read_file_as_string p .or_default "-- error reading $(filename) --",
                      res.replace r.values.0 r.values.1
@@ -35,7 +35,7 @@ module template is
   #
   # if there is no path, just link to the destination as is
   #
-  module link (p option path, dest String) String =>
+  module link (p option io.path, dest String) String =>
     p.bind (.resolve dest .as_string)
      .or_else dest
 
@@ -54,7 +54,7 @@ module template is
 
   # create a navigation link to the given path and destination
   #
-  module nav_link (p option path,
+  module nav_link (p option io.path,
                    dest option String,
                    sym, aria_label String) String =>
     match dest

@@ -9,7 +9,7 @@
 # user -- facilities providing the user management for the Fuzion
 # webserver
 #
-module user (module base_dir path) is
+module user (module base_dir io.path) is
 
   config := config_file.open (base_dir.resolve user.user_file)
   log_path := base_dir.resolve user.log_file
@@ -123,11 +123,11 @@ module user (module base_dir path) is
 
   # get a list of the directory entries
   #
-  type.list_dir (p path) Sequence path =>
+  type.list_dir (p io.path) Sequence io.path =>
     res := io.dir.use _ p ()->
       for
-        entries := (container.expanding_array path).empty, entries.add next.or_panic
-        next := io.dir.open.env.read
+        entries := (container.expanding_array io.path).empty, entries.add next.or_panic
+        next := io.dir.Read.env.next
       until !next.ok
         entries
 
@@ -138,7 +138,7 @@ module user (module base_dir path) is
 
   # given a path of a user directory, check if the given predicate applies
   #
-  type.check_user (predicate user->bool, p path) bool =>
+  type.check_user (predicate user->bool, p io.path) bool =>
     match io.file.stat p true
       error => false
       m io.file.meta_data =>
@@ -411,8 +411,8 @@ module user (module base_dir path) is
   #
   type.noreply_tokiwa_software => "noreply@tokiwa.software"
 
-  type.users_dir => path.of "./users"
-  type.deleted_users_dir => path.of "./users_deleted"
+  type.users_dir => io.path.of "./users"
+  type.deleted_users_dir => io.path.of "./users_deleted"
   type.user_file => "user.txt"
   type.log_file => "log.txt"
   type.run_dir => "runDir"
