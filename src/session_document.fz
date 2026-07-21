@@ -317,7 +317,7 @@ module session_document (module page String,
                     e error => res
                     md io.file.meta_data => res.add <| append x md
                 }
-                a := io.dir.open.env.read
+                a := io.dir.Read.env.next
             while a.ok
             else
               String.join (res.sort_by (.lower_case))

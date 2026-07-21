@@ -127,7 +127,7 @@ module user (module base_dir path) is
     res := io.dir.use _ p ()->
       for
         entries := (container.expanding_array path).empty, entries.add next.or_panic
-        next := io.dir.open.env.read
+        next := io.dir.Read.env.next
       until !next.ok
         entries
 
