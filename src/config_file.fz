@@ -9,7 +9,7 @@
 # config_file -- handle config files read and written by the Fuzion
 # webserver
 #
-module config_file (values lock_free.Map String String, p path) is
+module config_file (values lock_free.Map String String, p io.path) is
 
   # get the value corresponding to the given key in this config
   #
@@ -50,7 +50,7 @@ module config_file (values lock_free.Map String String, p path) is
   # no error is raised and an internal representation of an
   # empty config is created
   #
-  module type.open (p path) config_file =>
+  module type.open (p io.path) config_file =>
     m := (lock_free.Map String String).empty
 
     read_file_as_string p

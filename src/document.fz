@@ -40,13 +40,13 @@ module document is
   # if this fails, return the file name as given by `link`, without an `html`
   # suffix, as the title.
   #
-  module get_title (link String, page_file option path) String =>
+  module get_title (link String, page_file option io.path) String =>
     title_start_open := "<h1"
     title_start_close := ">"
     title_end := "</h1>"
 
     match page_file
-      pf path =>
+      pf io.path =>
         match global.env.read_file_as_string pf
           error =>
             "-- error reading $(pf) --"

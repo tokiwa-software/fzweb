@@ -15,7 +15,7 @@ module content is
   # This base directory will contain the pages subdirectory
   # and the access.txt file.
   #
-  type.base_dir (simple_path String) path =>
+  type.base_dir (simple_path String) io.path =>
     bp := base_simple_path simple_path
     bp?? ? content_dir.resolve bp.or_panic : content_dir
 
@@ -26,8 +26,8 @@ module content is
   # This base directory will contain the pages subdirectory
   # and the access.txt file.
   #
-  module type.base_simple_path (simple_path String) option path =>
-    sp := path.of simple_path
+  module type.base_simple_path (simple_path String) option io.path =>
+    sp := io.path.of simple_path
 
     for i := sp.names.count, i-1
     while i > 0
@@ -43,12 +43,12 @@ module content is
 
   # The file part of a simple_path.
   #
-  module type.file_path (simple_path String) path =>
+  module type.file_path (simple_path String) io.path =>
     bp := base_simple_path simple_path
-    sp := path.of simple_path
+    sp := io.path.of simple_path
     start i32 := bp!! ? 0 : bp.or_panic.names.count
     end i32 := sp.names.count
-    start < end ? sp.subpath start end : path.of ""
+    start < end ? sp.subpath start end : io.path.of ""
 
 
   # look the given attribute in the access.txt file
@@ -80,7 +80,7 @@ module content is
   #
   # returns a Map of <browse>-tags attributes and its values.
   #
-  type.parse_browse_tag (jndex path) option (lock_free.Map String String) =>
+  type.parse_browse_tag (jndex io.path) option (lock_free.Map String String) =>
     read_file_as_string jndex
       .bind str->
         for
@@ -95,13 +95,13 @@ module content is
 
   # pages dir for a given path prefix
   #
-  type.pages_dir (simple_path String) path =>
+  type.pages_dir (simple_path String) io.path =>
     (base_dir simple_path).resolve pages_dir_relative
 
 
   # index file for a given directory containing pages
   #
-  type.index_file (pages path) path =>
+  type.index_file (pages io.path) io.path =>
     pages.resolve "index.html"
 
 
@@ -109,11 +109,11 @@ module content is
   # the value of the attribute "dir" or, if attribute "userdata" is
   # "true", the user directory.
   #
-  type.get_dir_from_browse (u option user, data_path path, map lock_free.Map String String) option String =>
+  type.get_dir_from_browse (u option user, data_path io.path, map lock_free.Map String String) option String =>
     if "true" = (map["userdata"].or_default "false")
       u.bind String u0->
         ud := u0.base_dir
-        ru := path.parent_dir
+        ru := io.path.parent_dir
           .resolve "../.."
           .resolve ud
         ru.as_string
@@ -129,7 +129,7 @@ module content is
   # Get the data path to the contents of the given simple URL path after it had
   # been checked that we have permission to access it.
   #
-  module type.get_data_path_unsafe (u option user, simple_path String) option path =>
+  module type.get_data_path_unsafe (u option user, simple_path String) option io.path =>
     pages := pages_dir simple_path
     file :=
       if simple_path.ends_with ".html" || is_known_preformatted_file simple_path
@@ -160,7 +160,7 @@ module content is
       r
 
 
-  type.path_from_access (simple_path, attribute, default String) path =>
+  type.path_from_access (simple_path, attribute, default String) io.path =>
     val := access_attr simple_path attribute default
     bd := base_dir simple_path
     bd.resolve val
@@ -169,7 +169,7 @@ module content is
   # Get the data path to the contents of the given simple URL path and check if
   # the given user (or nil if none) is allowed to access it.
   #
-  module type.get_data_path (u option user, simple_path String) option path =>
+  module type.get_data_path (u option user, simple_path String) option io.path =>
     if access_permitted u simple_path
       get_data_path_unsafe u simple_path
     else
@@ -181,7 +181,7 @@ module content is
 
   # Determine the index.html file located in simple_path's base dir.
   #
-  type.index_path (simple_path String) path =>
+  type.index_path (simple_path String) io.path =>
     index_file (pages_dir simple_path)
 
 
@@ -198,13 +198,13 @@ module content is
         else
           path_from_url0.substring 1
 
-      p := path.of path_from_url
+      p := io.path.of path_from_url
 
       if !p.is_absolute && (content_dir.resolve p).starts_with content_dir
         match template path_from_url
           missing =>
             dir := base_dir path_from_url
-            access_file := dir.resolve (path.of "access.txt")
+            access_file := dir.resolve (io.path.of "access.txt")
             content_path := dir.resolve (file_path path_from_url)
 
             if ([".png", ".svg", ".jpg", ".jpeg", ".pdf"] ∃ path_from_url.ends_with)
@@ -244,6 +244,6 @@ module content is
 
   # constants
   #
-  type.content_dir path => (path.of "./content")
-  type.pages_dir_relative path => path.of "pages"
-  module type.templates_dir path => (path.of "./templates")
+  type.content_dir io.path => (io.path.of "./content")
+  type.pages_dir_relative io.path => io.path.of "pages"
+  module type.templates_dir io.path => (io.path.of "./templates")

@@ -13,7 +13,7 @@ module logger is
     say "$(time.now.env.get): $(c ? s String => s | e error => e.as_string)"
 
   # Logger function that writes to a file
-  module log(log_path path, msg String) =>
+  module log(log_path io.path, msg String) =>
     m := "$(time.now.env.get): $(msg)"
 
     match (io.file.use unit log_path io.file.mode.append ()->
