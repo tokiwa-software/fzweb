@@ -152,9 +152,9 @@ module Session (client net.ip_address,
             c.with (outcome unit) lm ()->
               final_msg := "$(msg.byte_count.hex)\r\n$(msg)\r\n"
               io.buffered lm
-                .writer.env
+                .Writer.env
                 .write final_msg.utf8
-                .and_then _->(io.buffered lm).writer.env.flush
+                .and_then _->(io.buffered lm).Writer.env.flush
           }
           unit => unit
           e error => close_connection e
