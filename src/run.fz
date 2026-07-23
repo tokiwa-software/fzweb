@@ -37,7 +37,7 @@ run =>
                   # we need to flush to make sure deinstating writer effect later
                   # does not crash the whole webserver.
                   #
-                  match (io.buffered mutate).writer.env.flush
+                  match (io.buffered mutate).Writer.env.flush
                     e error => logger.log "failed flushing, connection meanwhile closed?\n\n $(e)"
                     unit =>
 

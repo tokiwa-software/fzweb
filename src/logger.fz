@@ -17,6 +17,6 @@ module logger is
     m := "$(time.now.env.get): $(msg)"
 
     match (io.file.use unit log_path io.file.mode.append ()->
-            ((io.buffered io.file.file_mutate).writer.env.write "$(m)\n".utf8))
+            ((io.buffered io.file.file_mutate).Writer.env.write "$(m)\n".utf8))
       unit => say m # Also log to console
       e error => say "*** failed writing to log: $(e)"
