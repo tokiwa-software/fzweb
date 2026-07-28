@@ -16,7 +16,7 @@ run_fz:
 # NYI: UNDER DEVELOPMENT: Check if mail sending and hashing for login works
 # (requires wolfssl and sodium, resp.).
 #
-.PHONY: run_fzjar
+.PHONY: run_jar
 run_jar: build/fzweb_jar
 	$^ run
 
