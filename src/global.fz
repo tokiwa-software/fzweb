@@ -61,7 +61,7 @@ module global(init_feeds bool) : effect is
   module feeds := Feeds
 
   max_cached_files => 25
-  files := lock_free.Sieve_Cache io.path (outcome String) max_cached_files
+  files := lock_free.Sieve_Cache io.path (outcome String) (lock_free.Map io.path (lock_free.Node io.path (outcome String))) max_cached_files
 
   module read_file_as_string(p io.path) =>
     files.access p ()->
