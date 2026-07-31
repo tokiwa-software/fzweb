@@ -82,6 +82,7 @@ module runner is
               .catch e->
                 logger.log $e
 
+          p.close_in.or_panic
           p.wait max_wait_time
            .bind _->
             _ := fout.get
