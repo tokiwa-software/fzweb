@@ -25,7 +25,7 @@ request_context (LM type : mutate, connection net.connection) is
 
   client :=
     x_forwarded_for
-      .or_else (net.channel.env.get_peer_address.or_else (net.ip_address u128.zero))
+      .or_else (net.endpoint.env.get_peer_address.or_else (net.ip_address u128.zero))
 
   # send an HTTP response on the current socket
   #
@@ -69,7 +69,15 @@ form_data(LM type : mutate, req_context request_context LM) =>
 
   lm : mutate is
   post_data_raw := lm ! ()->
-    (io.buffered lm).reader req_context.request.body ! ()->
+
+    # NYI: CLEANUP: http.Message should have a method
+    # to create such a Reader
+
+    r : io.buffered lm .Reader is
+      public redef read (max_count i32) choice (Sequence u8) io.end_of_file error =>
+        req_context.request.body max_count
+
+    (io.buffered lm).Reader.instate r ()->
       # NYI: UNDER DEVELOPMENT: error handling
       (io.buffered lm).read_bytes content_length .or_panic
   post_data := String.from post_data_raw
