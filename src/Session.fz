@@ -55,7 +55,7 @@ module Session (client net.ip_address,
 
   # put session in global session list
   #
-  _ := global.env.sessions_put session_id Session.this
+  global.env.sessions_put session_id Session.this
 
 
   # and log session creation
@@ -190,7 +190,7 @@ module Session (client net.ip_address,
         match c.close
           unit =>
           e error => log "error closing connection: $(e)"
-        _ := connection.write nil
+        connection.write nil
 
 
   # does this session have a connection associated?

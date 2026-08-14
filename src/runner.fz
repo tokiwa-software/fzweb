@@ -46,10 +46,12 @@ module runner is
     (os.process.start "ssh" args
       .bind p->
 
-        # write code to stdin
-        _ := p.write_string code .or_panic
-
         lm : mutate is
+
+        # write code to stdin
+        lm ! ()->
+          _ := p.with_in unit lm ()->
+            (io.buffered lm).Writer.env.write code .or_panic
 
         _ := (concur.thread_pool 2 ()->
 
