@@ -16,8 +16,8 @@ module mime_value (
   # return the value of a given key in the parameters,
   # or an empty string if the given key is not in that map
   #
-  module index [ ] (param String) String =>
-    parameters[param].or_default ""
+  module index [ ] (param String) option String =>
+    parameters[param]
 
 
   # NYI: BUG: documentation missing

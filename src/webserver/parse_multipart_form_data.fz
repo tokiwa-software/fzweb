@@ -8,18 +8,14 @@
 
 # extract mime values from a given part of formdata
 #
-# NYI: CLEANUP: this code should be cleanup up further
-#
 extract_mime_values(part String) =>
   part_lines := part.split "\r\n" .as_array_backed
-  mv := mime_values
 
   for
+    mime_values Sequence String := [], mime_values ++ [part_line]
     part_lines_header_count := 0, part_lines_header_count + 1
     part_line in part_lines
   while part_line.find ":" .exists
-  do
-    mv.add part_line
   else
     for
       res := "", res + new_val
@@ -27,6 +23,14 @@ extract_mime_values(part String) =>
     do
       new_val := (res.is_empty ? "" : "\n") + part_lines[i]
     else
+      mv :=
+        container.map_of (mime_values.flat_map line->
+          pairs := line.split ":"
+          if pairs.count=2
+            [(pairs[0].trim, pairs[1].trim)]
+          else
+            []
+          )
       (mv, res)
 
 
@@ -41,7 +45,6 @@ module parse_multipart_form_data(data, boundary String) lock_free.Map String Str
       .map (.trim)
       .flat_map part->
         mv, value_str := extract_mime_values part
-        cd := mv.get "Content-Disposition"
-        name := cd["name"]
-        if name != "" then [(name, value_str)] else [])
-
+        mv["Content-Disposition"].bind cd->
+          (mime_value.from_type_string cd)["name"].bind name->
+            (name, value_str))
