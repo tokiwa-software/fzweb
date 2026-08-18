@@ -81,10 +81,13 @@ form_data(LM type : mutate, req_context request_context LM) =>
       # NYI: UNDER DEVELOPMENT: error handling
       (io.buffered lm).read_bytes content_length .or_panic
   post_data := String.from post_data_raw
-  val := webserver.mime_value.from_type_string (req_context.request.header["content-type"].or_default "")
-  content_type := val.mime_type
-  content_type_boundary := val["boundary"]
-  get_form_data post_data req_context.request.method req_context.query_string content_type content_type_boundary
+  req_context.request.header["content-type"]
+    .bind ct->
+      val := webserver.mime_value.from_type_string ct
+      content_type := val.mime_type
+      content_type_boundary := val["boundary"].or_default ""
+      get_form_data post_data req_context.request.method req_context.query_string content_type content_type_boundary
+    .or_else (get_form_data post_data req_context.request.method req_context.query_string "" "")
 
 
 # get the response for the current request
