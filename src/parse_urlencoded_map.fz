@@ -8,13 +8,12 @@
 
 # Parse URL-encoded form data into a map
 #
-module parse_urlencoded_map(data String) lock_free.Map String String =>
+module parse_urlencoded_map(data String) container.Map String String =>
 
   pairs := data.split "&"
-  form_data := lock_free.Map String String .empty
-  for p in pairs do
+  container.map_of (pairs.map p->
     nv := p.split "="
     name := encodings.percent.decode_as_str_tolerant nv[0] .or_panic.trim
-    form_data.put name (nv.count < 2 ? "" : encodings.percent.decode_as_str_tolerant nv[1] .or_panic)
-  form_data
+    (name, (nv.count < 2 ? "" : encodings.percent.decode_as_str_tolerant nv[1] .or_panic)))
+
 

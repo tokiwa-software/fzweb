@@ -36,9 +36,9 @@ extract_mime_values(part String) =>
 
 # extract form data
 #
-module parse_multipart_form_data(data, boundary String) lock_free.Map String String =>
+module parse_multipart_form_data(data, boundary String) container.Map String String =>
 
-  lock_free.Map String String .from_entries (
+  container.map_of (
     data
       .split "--$(boundary)"
       .filter (l -> !l.starts_with "--") # filter out end boundary
