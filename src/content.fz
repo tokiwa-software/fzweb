@@ -80,7 +80,7 @@ module content is
   #
   # returns a Map of <browse>-tags attributes and its values.
   #
-  type.parse_browse_tag (jndex io.path) option (lock_free.Map String String) =>
+  type.parse_browse_tag (jndex io.path) option (container.Map String String) =>
     read_file_as_string jndex
       .bind str->
         for
@@ -109,7 +109,7 @@ module content is
   # the value of the attribute "dir" or, if attribute "userdata" is
   # "true", the user directory.
   #
-  type.get_dir_from_browse (u option user, data_path io.path, map lock_free.Map String String) option String =>
+  type.get_dir_from_browse (u option user, data_path io.path, map container.Map String String) option String =>
     if "true" = (map["userdata"].or_default "false")
       u.bind String u0->
         ud := u0.base_dir
@@ -149,7 +149,7 @@ module content is
         i := index_file pages
 
         match parse_browse_tag i
-          m lock_free.Map =>
+          m container.Map =>
             match get_dir_from_browse u i m
               dir String => pages.resolve dir .resolve (file_path file)
               nil => nil

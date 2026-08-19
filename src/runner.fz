@@ -95,10 +95,10 @@ module runner is
 
   # helper feature
   #
-  module run(s Session, form_data lock_free.Map String String) unit =>
+  module run(s Session, form_data container.Map String String) unit =>
     run_code s form_data["code"].or_panic form_data["resultsTo"].or_panic true
 
   # helper feature
   #
-  module runeff(s Session, form_data lock_free.Map String String) unit =>
+  module runeff(s Session, form_data container.Map String String) unit =>
     run_code s form_data["code"].or_panic form_data["resultsTo"].or_panic false

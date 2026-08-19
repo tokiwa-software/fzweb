@@ -189,7 +189,7 @@ module user (module base_dir io.path) is
 
   # register a using the data submitted by the form
   #
-  module type.register (client net.ip_address, form_data lock_free.Map String String) outcome String =>
+  module type.register (client net.ip_address, form_data container.Map String String) outcome String =>
     full_name (first, last, email String) =>
       full0 := "$(first) $(last)".trim
       full0.is_empty ? email : full0
@@ -320,7 +320,7 @@ module user (module base_dir io.path) is
     uuid.create_random.as_string
 
 
-  module type.trigger_account_deletion (client net.ip_address, form_data lock_free.Map String String) String =>
+  module type.trigger_account_deletion (client net.ip_address, form_data container.Map String String) String =>
     if has_triggered_account_deletion_recently client
       "<div class='text-center'>Only one deletion request per IP possible within 10 minutes.</div>"
     else

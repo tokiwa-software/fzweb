@@ -92,9 +92,9 @@ form_data(LM type : mutate, req_context request_context LM) =>
 
 # get the response for the current request
 #
-get_response(LM type : mutate, req_context request_context LM, fd outcome (lock_free.Map String String)) =>
+get_response(LM type : mutate, req_context request_context LM, fd outcome (container.Map String String)) =>
   match fd
-    x lock_free.Map String String =>
+    x container.Map String String =>
       route_request req_context.path req_context.request.method req_context.client x req_context.query_string
     e error =>
       logger.log e
