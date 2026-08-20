@@ -238,7 +238,8 @@ module user (module base_dir io.path) is
           logger.log "send registration token email to: $(email0)"
 
           match send_user_registration_email full_name email0.or_panic token username0.or_panic $client
-            error =>
+            e error =>
+              logger.log "error while registering, deleting bad user $(username0.or_panic): $(e)"
               match delete_by_login username0.or_panic
                 e error => logger.log "error deleting failed user registration: $(e)"
                 unit => logger.log "deleted user $(username0.or_panic) due to unsent registration email"
