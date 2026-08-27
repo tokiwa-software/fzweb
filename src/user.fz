@@ -111,13 +111,16 @@ module user (module base_dir io.path) is
     token := user.generate_uuid
     config.set0 "deletion_token" token
     config.save
-    subject := "[fuzion-lang.dev] - Confirm account deletion"
-    io.file.read (content.templates_dir.resolve "email_account_deletion.txt")
-      .bind (tmplt ->
-              body := tmplt.replace "##NAME##" (name.or_default "fuzion-lang.dev user")
-                           .replace "##TOKEN##" token
+    if has_registration_token
+      user.complete_account_deletion token
+    else
+      subject := "[fuzion-lang.dev] - Confirm account deletion"
+      io.file.read (content.templates_dir.resolve "email_account_deletion.txt")
+        .bind (tmplt ->
+                body := tmplt.replace "##NAME##" (name.or_default "fuzion-lang.dev user")
+                             .replace "##TOKEN##" token
 
-              email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.or_default "") subject body)
+                email_service.send_text_mail_with_footer user.noreply_tokiwa_software (email.or_default "") subject body)
 
 
 
