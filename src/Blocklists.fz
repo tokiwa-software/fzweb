@@ -6,6 +6,11 @@
 #
 # -----------------------------------------------------------------------
 
+# Blocklists feature to periodically update blocklists from files and store the
+# results in fields
+#
+# NYI: ENHANCEMENT: also fetch blocklists from the web
+# NYI: ENHANCEMENT: allow blocklists to contain ranges of IP addresses
 #
 module Blocklists ref is
 
