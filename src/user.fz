@@ -229,6 +229,8 @@ module user (module base_dir io.path) is
       error "Username contains illegal characters. Only A-Z, a-z, 0-9, and _ are allowed."
     else if !(3 < username0.or_panic.codepoint_count < 100)
       error "Username must have at least three characters and must not be longer than 100 characters."
+    else if global.env.blocklists.from_file.read.contains client
+      error "Must not sign up from this IP address."
     else
       full_name := full_name first_name last_name email0.or_panic
 

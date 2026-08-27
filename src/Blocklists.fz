@@ -1,0 +1,54 @@
+# -----------------------------------------------------------------------
+#
+#  Tokiwa Software GmbH, Germany
+#
+#  Source code of Fuzion webserver feature Blocklists
+#
+# -----------------------------------------------------------------------
+
+# Blocklists feature to periodically update blocklists from files and store the
+# results in fields
+#
+# NYI: ENHANCEMENT: also fetch blocklists from the web
+# NYI: ENHANCEMENT: allow blocklists to contain ranges of IP addresses
+#
+module Blocklists ref is
+
+  # the update interval for the feeds
+  #
+  update_interval := time.duration.minutes 120
+
+  module from_file := concur.atomic (container.Set net.ip_address) .new (container.ps_set net.ip_address).empty
+
+
+  # init background thread to periodically update
+  # the rss feeds
+  #
+  module init =>
+    _ := concur.Threads.env.spawn ()->
+      do
+        fuzion.runtime.fault
+          .try ()->
+            get_from_file
+          .catch e->
+            logger.log "runtime_fault (blocklist from file): $e"
+
+        time.Nano.env.sleep update_interval
+
+
+  # download, parse and store the github rss-feed
+  #
+  module get_from_file =>
+
+    blocklist := read_file_as_string (io.path.of "./blocklist-file.txt")
+                   .or_else ""
+                   .trim
+
+    addrs :=
+      blocklist.lines
+               .map (a -> net.ip_address.from_string a)
+               .filter (.ok)
+               .map (.or_panic)
+
+    c := container.set_of_ordered addrs
+    from_file.write c

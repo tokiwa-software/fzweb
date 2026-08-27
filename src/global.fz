@@ -8,7 +8,7 @@
 
 # effect for holding global state in the webserver
 #
-module global(init_feeds bool) : effect is
+module global(init_background_tasks bool) : effect is
 
   max_open_sessions => 1E3
   eviction_count => 1E2
@@ -60,6 +60,8 @@ module global(init_feeds bool) : effect is
 
   module feeds := Feeds
 
+  module blocklists := Blocklists
+
   max_cached_files => 25
   files := lock_free.Sieve_Cache io.path (outcome String) (lock_free.Map io.path (lock_free.Node io.path (outcome String))) max_cached_files
 
@@ -68,5 +70,7 @@ module global(init_feeds bool) : effect is
       universe.read_file_as_string p
 
 
-  if init_feeds
+  if init_background_tasks
     feeds.init
+
+    blocklists.init
