@@ -153,7 +153,10 @@ module route_request (raw_path0 String, cmd http.request_method, client net.ip_a
     s.logout
     send_ok_or_reload s s.status_string
   else if cmd = http.post_r && raw_path = "/register"
-    send_ok (do_register client form_data)
+    if global.env.blocklists.from_file.read.contains client
+      send_nyi
+    else
+      send_ok (do_register client form_data)
   else if cmd = http.post_r && raw_path = "/delete_account"
     send_ok (user.trigger_account_deletion client form_data)
   else if raw_path = "/confirm_account_deletion"
