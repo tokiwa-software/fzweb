@@ -22,7 +22,7 @@ module Blocklists ref is
 
 
   # init background thread to periodically update
-  # the rss feeds
+  # the blocklists
   #
   module init =>
     _ := concur.Threads.env.spawn ()->
