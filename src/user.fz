@@ -234,6 +234,8 @@ module user (module base_dir io.path) is
       error "Username must have at least three characters and must not be longer than 100 characters."
     else if global.env.blocklists.from_file.read.contains client
       error "Must not sign up from this IP address."
+    else if global.env.blocklists.tor_exits.read.contains client
+      error "Tor exits are banned from registering due to abuse."
     else
       full_name := full_name first_name last_name email0.or_panic
 
