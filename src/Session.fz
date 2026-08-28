@@ -219,7 +219,7 @@ module Session (client net.ip_address,
         if s.client = c
           s
         else
-          logger.log "Mismatch of clients for session with id: $(id)"
+          logger.log "Mismatch of clients for session with id=$(id): expected $(s.client) got $(c)"
           nil
 
 
