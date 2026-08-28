@@ -9,7 +9,6 @@
 # Blocklists feature to periodically update blocklists from files and store the
 # results in fields
 #
-# NYI: ENHANCEMENT: also fetch blocklists from the web
 # NYI: ENHANCEMENT: allow blocklists to contain ranges of IP addresses
 #
 module Blocklists ref is
@@ -19,6 +18,8 @@ module Blocklists ref is
   update_interval := time.duration.minutes 120
 
   module from_file := concur.atomic (container.Set net.ip_address) .new (container.ps_set net.ip_address).empty
+
+  module tor_exits := concur.atomic (container.Set net.ip_address) .new (container.ps_set net.ip_address).empty
 
 
   # init background thread to periodically update
@@ -33,10 +34,16 @@ module Blocklists ref is
           .catch e->
             logger.log "runtime_fault (blocklist from file): $e"
 
+        fuzion.runtime.fault
+          .try ()->
+            get_tor_exits
+          .catch e->
+            logger.log "runtime_fault (blocklist from file): $e"
+
         time.Nano.env.sleep update_interval
 
 
-  # download, parse and store the github rss-feed
+  # parse and store the blocklist from the file system
   #
   module get_from_file =>
 
@@ -52,3 +59,19 @@ module Blocklists ref is
 
     c := container.set_of_ordered addrs
     from_file.write c
+
+
+  # download, parse and store the tor project's exit list
+  #
+  module get_tor_exits =>
+
+    addrs := web.get4 "https://check.torproject.org/torbulkexitlist"
+                .or_panic
+                .trim
+                .lines
+                .map (a -> net.ip_address.from_string a)
+                .filter (.ok)
+                .map (.or_panic)
+
+    c := container.set_of_ordered addrs
+    tor_exits.write c
