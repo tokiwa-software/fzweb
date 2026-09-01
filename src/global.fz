@@ -12,7 +12,7 @@ module global(init_background_tasks bool) : effect is
 
   max_open_sessions => 1E3
   eviction_count => 1E2
-  evicition_counter := concur.atomic i32 .new 0
+  evicition_counter := concur.atomic i64 .new 0
   sessions := lock_free.Map String Session .empty
 
   /*
