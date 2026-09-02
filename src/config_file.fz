@@ -61,7 +61,7 @@ module config_file (values lock_free.Map String String, p io.path) is
       .split "\n"
       .for_each line->
         match line.find ":"
-          colon i32 =>
+          colon i64 =>
             key := (line.substring 0 colon).trim
             val := (line.substring (colon + 1)).trim
             m.put key val

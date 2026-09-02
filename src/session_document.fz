@@ -252,7 +252,7 @@ module session_document (module page String,
 
   # browse tag replacer, recursive helper for indentation
   #
-  browse_tag(m container.Map String String, indent i32) =>
+  browse_tag(m container.Map String String, indent i64) =>
 
     match data_path
       dp io.path =>
@@ -420,13 +420,13 @@ module session_document (module page String,
 
     for res := "", res + rest.substring 0 m_idx.or_panic + (match e_idx
                                                               nil => ""
-                                                              e i32 =>
+                                                              e i64 =>
                                                                 attr := rest2.substring 0+start.byte_count e
                                                                 replacer (extract_attribute_contents attr))
         rest String := str,
           match e_idx
             nil => ""
-            e i32 =>
+            e i64 =>
               rest2.substring e+end.byte_count
         m_idx := rest.find start
     while m_idx.ok
@@ -446,9 +446,9 @@ module session_document (module page String,
   #
   embed_html_in_iframe(html String) String =>
     match html.find "<!DOCTYPE html>"
-      c i32 =>
+      c i64 =>
         match html.find "</html>"
-          c2 i32 =>
+          c2 i64 =>
             embedded_html := html.substring c c2+7
             html.replace embedded_html """
               <div class="responsive-container aspect-16-by-9">
@@ -609,7 +609,7 @@ module session_document (module page String,
               rest String := s,
                 match e_idx
                   nil => ""
-                  e i32 =>
+                  e i64 =>
                     rest2.substring e+end.byte_count
               m_idx := rest.find start
           while m_idx.ok

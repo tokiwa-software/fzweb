@@ -64,7 +64,7 @@ form_data(LM type : mutate, req_context request_context LM) =>
       .request
       .header["content-length"]
       .or_else "0"
-      .parse_i32
+      .parse_i64
       .or_else 0
 
   lm : mutate is
@@ -74,7 +74,7 @@ form_data(LM type : mutate, req_context request_context LM) =>
     # to create such a Reader
 
     r : io.buffered lm .Reader is
-      public redef read (max_count i32) choice (Sequence u8) io.end_of_file error =>
+      public redef read (max_count i64) choice (Sequence u8) io.end_of_file error =>
         req_context.request.body max_count
 
     (io.buffered lm).Reader.instate r ()->

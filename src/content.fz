@@ -46,8 +46,8 @@ module content is
   module type.file_path (simple_path String) io.path =>
     bp := base_simple_path simple_path
     sp := io.path.of simple_path
-    start i32 := !bp ? 0 : bp.or_panic.names.count
-    end i32 := sp.names.count
+    start := !bp ? 0 : bp.or_panic.names.count
+    end := sp.names.count
     start < end ? sp.subpath start end : io.path.of ""
 
 

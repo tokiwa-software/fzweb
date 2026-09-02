@@ -83,9 +83,9 @@ module document is
   #
   module get_tag (s, tag String) option (container.Map String String) =>
     match s.find tag
-      c i32 =>
+      c i64 =>
         match s.find "/>" c+tag.byte_count
-          ce i32 =>
+          ce i64 =>
             entry := s.substring c+tag.byte_count ce
             attribute_map entry
           nil => nil

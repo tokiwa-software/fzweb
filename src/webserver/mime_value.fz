@@ -28,7 +28,7 @@ module mime_value (
     parse_pairs(type0 String, params lock_free.Map String String) container.Map String String =>
       match type0.find "="
         nil => params.as_map
-        eq i32 =>
+        eq i64 =>
           key := (type0.substring 0 eq).trim
           rest := (type0.substring (eq + 1)).trim
 
@@ -37,7 +37,7 @@ module mime_value (
             rest_trimmed := rest.substring 1
 
             match rest_trimmed.find "\""
-              quote i32 =>
+              quote i64 =>
                 value0 := rest_trimmed.substring 0 quote
                 next := (rest_trimmed.substring (quote + 1)).trim
                 params.put key value0
@@ -50,7 +50,7 @@ module mime_value (
               nil =>
                 params.put key rest
                 parse_pairs "" params
-              space i32 =>
+              space i64 =>
                 value0 := rest.substring 0 space
                 next := (rest.substring (space + 1)).trim
                 params.put key value0
@@ -60,7 +60,7 @@ module mime_value (
     match type_string.find ";"
       nil =>
         webserver.mime_value "" (container.ps_map String String).empty
-      semicolon i32 =>
+      semicolon i64 =>
         type1 := (type_string.substring 0 semicolon).trim
         next := (type_string.substring (semicolon + 1)).trim
         params := parse_pairs next (lock_free.Map String String).empty
