@@ -202,7 +202,7 @@ module session_document (module page String,
             process_result :=
               lm ! ()->
                 p.with_out _ lm ()->
-                  String.from (io.buffered lm).read_fully
+                  String.from (io.buffered lm).read_fully.or_panic
 
             match p.wait max_pretty_time
               e error => e
