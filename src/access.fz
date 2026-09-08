@@ -13,7 +13,7 @@ module identifier (module file_to_send option io.path,
                    module simple_path option String,
                    content_path option io.path) is
 
-  is_html_template := content_path.exists
+  is_html_template := content_path.ok
 
 
   module type.new (file_to_send option io.path,

@@ -129,7 +129,7 @@ process_request(LM type : mutate, req_context request_context LM) =>
         fd["page"]
 
     msg :=
-      if req_context.path = "/goto" && page_if_available.exists
+      if req_context.path = "/goto" && page_if_available.ok
         "took $(request_duration) to process request for $(page_if_available.or_panic) (via eventstream)"
       else
         "took $(request_duration) to process request for $(req_context.path)"

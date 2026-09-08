@@ -86,7 +86,7 @@ module content is
         for
           l in str.split "\n"
           m := document.get_tag l "<browse"
-        until m.exists
+        until m.ok
           outcome m.or_panic
         else
           error "not found"
