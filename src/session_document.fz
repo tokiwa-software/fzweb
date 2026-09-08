@@ -314,7 +314,7 @@ module session_document (module page String,
                 {
                   x := dir.resolve a.or_panic
                   match io.file.stat x true
-                    e error => res
+                    error => res
                     md io.file.meta_data => res.add <| append x md
                 }
                 a := io.dir.Read.env.next
