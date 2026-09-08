@@ -36,7 +36,7 @@ module response (returncode i64,
   #
   module bytes(LM type : mutate) =>
     attributes.put "Server" "Fuzion WebServer v0.0.2"
-    if !attributes["Connection"].exists
+    if !attributes["Connection"].ok
       attributes.put "Connection" "close"
     br := io.buffered LM .Reader.from data
     http.response_message

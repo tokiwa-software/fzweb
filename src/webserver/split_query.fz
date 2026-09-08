@@ -13,7 +13,7 @@ module type.split_query(query String) container.Map String String =>
   pairs := query.split "&"
   for pair in pairs do
     ix := pair.find "="
-    if ix.exists
+    if ix.ok
       k := encodings.percent.decode_as_str (pair.substring 0 ix.or_panic )
       v := encodings.percent.decode_as_str (pair.substring ix.or_panic+1)
       res := k.bind unit (jkey -> (v.bind unit (jval -> query_pairs.put (id String jkey) (id String jval))))

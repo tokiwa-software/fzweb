@@ -69,7 +69,7 @@ module user (module base_dir io.path) is
   # does the user have a registration token?
   #
   module has_registration_token =>
-    config["registration_token"].exists
+    config["registration_token"].ok
 
 
   # groups of the user

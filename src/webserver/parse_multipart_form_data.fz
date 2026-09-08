@@ -15,7 +15,7 @@ extract_mime_values(part String) =>
     mime_values Sequence String := [], mime_values ++ [part_line]
     part_lines_header_count := 0, part_lines_header_count + 1
     part_line in part_lines
-  while part_line.find ":" .exists
+  while part_line.find ":" .ok
   else
     for
       res := "", res + new_val
