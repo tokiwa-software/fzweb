@@ -57,7 +57,7 @@ module Blocklists ref is
                .filter (.ok)
                .map (.or_panic)
 
-    c := container.set_of_ordered addrs
+    c := container.ps_set net.ip_address .new addrs
     from_file.write c
 
 
@@ -73,5 +73,5 @@ module Blocklists ref is
                 .filter (.ok)
                 .map (.or_panic)
 
-    c := container.set_of_ordered addrs
+    c := container.ps_set net.ip_address .new addrs
     tor_exits.write c
