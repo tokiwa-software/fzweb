@@ -181,7 +181,7 @@ module session_document (module page String,
     # envir vars as a map
     #
     envir_vars :=
-      container.ordered_map
+      container.ordered_map String String .of
         (envir_var_kv
           .map (.0)
           .as_array)
@@ -259,7 +259,7 @@ module session_document (module page String,
         append(a io.path, md io.file.meta_data) =>
           nbsp := "&nbsp;"
           if md.is_dir
-            dir_map := container.ordered_map ["dir"] [$a]
+            dir_map := container.ordered_map String String .of ["dir"] [$a]
             """
               $(nbsp)$("│$(nbsp)$(nbsp)"*indent)├─ <span class="mydir">$(encodings.html.encode a.base_name true)</span><br>
               $(browse_tag dir_map indent+1)

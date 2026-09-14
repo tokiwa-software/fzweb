@@ -89,8 +89,8 @@ module user (module base_dir io.path) is
   # groups_to_check and groups are both separated by " "
   #
   module check_group_access (groups_to_check String) =>
-    groups0 := container.set_of_ordered (groups.or_default "").split
-    checked_groups := container.set_of_ordered groups_to_check.split
+    groups0 := container.ps_set String .new (groups.or_default "").split
+    checked_groups := container.ps_set String .new groups_to_check.split
     common_groups := groups0 ∩ checked_groups
 
     match common_groups.size_option

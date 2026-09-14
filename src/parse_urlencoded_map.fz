@@ -11,7 +11,7 @@
 module parse_urlencoded_map(data String) container.Map String String =>
 
   pairs := data.split "&"
-  container.map_of (pairs.map p->
+  container.ps_map String String .of (pairs.map p->
     nv := p.split "="
     name := encodings.percent.decode_as_str_tolerant nv[0] .or_panic.trim
     (name, (nv.count < 2 ? "" : encodings.percent.decode_as_str_tolerant nv[1] .or_panic)))
