@@ -12,7 +12,7 @@ module global(init_background_tasks bool) : effect is
 
   max_open_sessions => 1E3
   eviction_count => 1E2
-  evicition_counter := concur.atomic i64 .new 0
+  eviction_counter := concur.atomic i64 .new 0
   sessions := lock_free.Map String Session .empty
 
   /*
@@ -43,8 +43,8 @@ module global(init_background_tasks bool) : effect is
   # evict `eviction_count` sessions
   #
   module evict_sessions =>
-    _ := evicition_counter.incr
-    if evicition_counter.read % eviction_count = 0
+    _ := eviction_counter.incr
+    if eviction_counter.read % eviction_count = 0
       _ := concur.Threads.env.spawn ()->
         fuzion.runtime.fault
           .try ()->
