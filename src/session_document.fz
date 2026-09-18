@@ -312,13 +312,15 @@ module session_document (module page String,
           .use dir ()->
             for res := container.expanding_array String .empty,
                 {
-                  x := dir.resolve a.or_panic
-                  match io.file.stat x true
-                    error => res
-                    md io.file.meta_data => res.add <| append x md
+                  match a
+                    x io.path =>
+                      match io.file.stat x true
+                        error => res
+                        md io.file.meta_data => res.add <| append x md
+                    * => panic "incomplete case"
                 }
                 a := io.dir.Read.env.next
-            while a.ok
+            while a ? io.path => true | * => false
             else
               String.join (res.sort_by (.lower_case))
           .or_else ""
