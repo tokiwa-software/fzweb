@@ -129,9 +129,9 @@ module user (module base_dir io.path) is
   type.list_dir (p io.path) Sequence io.path =>
     res := io.dir.use _ p ()->
       for
-        entries := (container.expanding_array io.path).empty, entries.add next.or_panic
+        entries := (container.expanding_array io.path).empty, entries.add (next ? p2 io.path => p2 | * => panic "incomplete case")
         next := io.dir.Read.env.next
-      until !next.ok
+      until next ? io.path => false | * => true
         entries
 
     match res
