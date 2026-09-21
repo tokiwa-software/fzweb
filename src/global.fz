@@ -36,7 +36,9 @@ module global(init_background_tasks bool) : effect is
     match sessions.get id
       nil => nil
       s Session =>
-        s.last_accessed.write time.now.env.get
+        concur.blocking_mutate.env.exclusive ()->
+          s.last_accessed <- time.now.env.get
+
         s
 
 
@@ -48,9 +50,10 @@ module global(init_background_tasks bool) : effect is
       _ := concur.Threads.env.spawn ()->
         fuzion.runtime.fault
           .try ()->
-            sa := sessions
-              .items
-              .sort_by (.1.last_accessed.read)
+            sa := concur.blocking_mutate.env.exclusive ()->
+              sessions
+                .items
+                .sort_by (.1.last_accessed.get)
             sa
               .take sa.count-max_open_sessions
               .for_each item->

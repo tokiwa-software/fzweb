@@ -16,38 +16,39 @@ run =>
   res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
     logger.log "started listening on port: $port"
 
-    g := global true
+    concur.blocking_mutate ! ()->
+      g := global true
 
-    # start a thread pool
-    # NYI: UNDER DEVELOPMENT: thread_pool size should be determined programmatically
-    concur.thread_pool 4 ()->
+      # start a thread pool
+      # NYI: UNDER DEVELOPMENT: thread_pool size should be determined programmatically
+      concur.thread_pool 4 ()->
 
-      # the request accept loop
-      do
-        accept_res := net.server.env.accept.bind unit conn->
+        # the request accept loop
+        do
+          accept_res := net.server.env.accept.bind unit conn->
 
-          _ := conn.in_thread_pool unit concur.thread_pool mutate ()->
-            fuzion.runtime.fault
-              .try ()->
-                g ! ()->
-                  webserver.handle_connection mutate conn
+            _ := conn.in_thread_pool unit concur.thread_pool mutate ()->
+              fuzion.runtime.fault
+                .try ()->
+                  g ! ()->
+                    webserver.handle_connection mutate conn
 
-                  # NYI: ugly, since (io.buffered mutate).writer is instated
-                  # outside of lambda `fuzion.runtime.fault.try ()->`
-                  # we need to flush to make sure deinstating writer effect later
-                  # does not crash the whole webserver.
-                  #
-                  match (io.buffered mutate).Writer.env.flush
-                    e error => logger.log "failed flushing, connection meanwhile closed?\n\n $(e)"
-                    unit =>
+                    # NYI: ugly, since (io.buffered mutate).writer is instated
+                    # outside of lambda `fuzion.runtime.fault.try ()->`
+                    # we need to flush to make sure deinstating writer effect later
+                    # does not crash the whole webserver.
+                    #
+                    match (io.buffered mutate).Writer.env.flush
+                      e error => logger.log "failed flushing, connection meanwhile closed?\n\n $(e)"
+                      unit =>
 
-              .catch e->
-                logger.log $e
-                match conn.close
-                  cce error => logger.log "failed closing connection $(cce)"
-                  unit    =>
+                .catch e->
+                  logger.log $e
+                  match conn.close
+                    cce error => logger.log "failed closing connection $(cce)"
+                    unit    =>
 
-        accept_res.or_else ()->
-          logger.log "failed accepting connection $(accept_res)"
+          accept_res.or_else ()->
+            logger.log "failed accepting connection $(accept_res)"
 
   logger.log $res
