@@ -133,7 +133,7 @@ module Session (client net.ip_address,
     last := last_pushed_history.read
     c := current_page.read
 
-    if last.is_nil || c.page != last.or_panic.page
+    if last=nil || c.page != last.or_panic.page
       last_pushed_history.write c
       send_event "pushHistory" "/$(c.page)"
 
