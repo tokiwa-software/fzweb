@@ -221,7 +221,7 @@ module user (module base_dir io.path) is
     terms := "on" = form_data[form_data_terms].or_default "off"
     newsletter := "off" = form_data[form_data_newsletter].or_default "off"
 
-    if email0.is_nil || username0.is_nil || password0.is_nil || !terms
+    if email0=nil || username0=nil || password0=nil || !terms
       error "Required fields not present: email, username, password, accepting terms."
     else if email0.or_panic.contains "," || email0.or_panic.contains ";"
       # NYI: HACK: comma and semicolon actually allowed in local part if quoted
