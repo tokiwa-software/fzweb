@@ -71,8 +71,8 @@ module session_document (module page String,
 
     """
       <div class = "item white">
-        <div class="itemhead"><div class="itemtitle">Recent commits</div><div class="itemicon">🌳</div></div>
-        <div class="d-grid itembody">
+        <div class="item-head"><div class="item-title">Recent commits</div><div class="item-icon">🌳</div></div>
+        <div class="d-grid item-body">
           $(String.join res)
           <div>
             <a class="d-flex justify-content-end text-overflow-ellipsis" href="https://github.com/tokiwa-software/fuzion/commits/main" target="_blank" aria-label="Read longer list of recent commits">
@@ -261,7 +261,7 @@ module session_document (module page String,
           if md.is_dir
             dir_map := container.ordered_map String String .of ["dir"] [$a]
             """
-              $(nbsp)$("│$(nbsp)$(nbsp)"*indent)├─ <span class="mydir">$(encodings.html.encode a.base_name true)</span><br>
+              $(nbsp)$("│$(nbsp)$(nbsp)"*indent)├─ <span class="my-dir">$(encodings.html.encode a.base_name true)</span><br>
               $(browse_tag dir_map indent+1)
             """
           else if md.is_regular
@@ -340,15 +340,15 @@ module session_document (module page String,
         <div class="position-relative">
           <form id="$(id)">
             <label for="$(id).code" class="visually-hidden">Code input</label>
-            <textarea class="codeinput" required="required" maxlength="4096" id="$(id).code" name="code" rows="$(max 3 code.lines.count)" spellcheck="false">$(code)</textarea>
-            <div class="position-absolute runbuttons">
-              <input type="button" onclick="runit('$(id)')"    class="runbutton" value="Run!" />
-              <input type="button" onclick="runiteff('$(id)')" class="runbutton" value="Effects!" />
+            <textarea class="code-input" required="required" maxlength="4096" id="$(id).code" name="code" rows="$(max 3 code.lines.count)" spellcheck="false">$(code)</textarea>
+            <div class="position-absolute run-buttons">
+              <input type="button" onclick="runit('$(id)')"    class="run-button" value="Run!" />
+              <input type="button" onclick="runiteff('$(id)')" class="run-button" value="Effects!" />
               <a href="/tutorial/effects.html"><i>What are effects?</i></a>
             </div>
           </form>
         </div>
-        <div class="computeroutput" id="$(id).result"></div>
+        <div class="computer-output" id="$(id).result"></div>
       </div>
     </div>
   """
@@ -406,7 +406,7 @@ module session_document (module page String,
   # e.g. for this String
   #
   # """
-  #  <div class="d-grid itembody">
+  #  <div class="d-grid item-body">
   #    <page file="lock_free/index.html" />
   #  </div>
   # """
@@ -482,7 +482,7 @@ module session_document (module page String,
   # the menu consists of these things:
   #
   # - a title bar with clickable links at the top of the page (also
-  #   called the `navtitle` in HTML)
+  #   called the `nav-title` in HTML)
   # - three arrows at the top and the bottom of the page to navigate
   #   the pages
   # - a so called "attractive link", which is a large button at the
@@ -503,7 +503,7 @@ module session_document (module page String,
           nil => io.path.of "index"
           p io.path => p.resolve "index"
 
-    # generate a title bar (also called `navtitle`) in the form of
+    # generate a title bar (also called `nav-title`) in the form of
     #
     #   main • dir1 • dir2 • file
     #
@@ -573,11 +573,11 @@ module session_document (module page String,
     n(top bool) =>
       """
         <div class='d-flex justify-content-between'>
-          $(top ? "<div class='navtitle'>$(generate_title_bar)</div>" : attractive_next.or_else "")
-          <div class='d-flex justify-content-between w-75 $(top ? "nav_top" : "nav_bot")'>
-            <div class='nav_left'>$(template.nav_link pp prev (arrow_link "left")  "aria-label='previous item'")</div>
-            <div class='nav_up'>$(up_link pup)</div>
-            <div class='nav_right'>$(template.nav_link pp next (arrow_link "right") "aria-label='next item'")</div>
+          $(top ? "<div class='nav-title'>$(generate_title_bar)</div>" : attractive_next.or_else "")
+          <div class='d-flex justify-content-between w-75 $(top ? "nav-top" : "nav-bot")'>
+            <div class='nav-left'>$(template.nav_link pp prev (arrow_link "left")  "aria-label='previous item'")</div>
+            <div class='nav-up'>$(up_link pup)</div>
+            <div class='nav-right'>$(template.nav_link pp next (arrow_link "right") "aria-label='next item'")</div>
           </div>
         </div>
       """
