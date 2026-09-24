@@ -20,7 +20,7 @@ module Session (client net.ip_address,
 
   # when was the session last accessed?
   #
-  module last_accessed := concur.blocking_mutate.env.var time.now.env.get
+  module last_accessed := session_last_accessed_bm.env.var time.now.env.get
 
 
   # login state of the session

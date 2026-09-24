@@ -16,7 +16,7 @@ run =>
   res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
     logger.log "started listening on port: $port"
 
-    concur.blocking_mutate ! ()->
+    session_last_accessed_bm ! ()->
       g := global true
 
       # start a thread pool
@@ -52,3 +52,5 @@ run =>
             logger.log "failed accepting connection $(accept_res)"
 
   logger.log $res
+
+module session_last_accessed_bm : concur.blocking_mutate is
