@@ -188,43 +188,43 @@ module content is
   # From a URL path, find the corresponding content identifier, or FORBIDDEN /
   # MISSING in case this does not exist.
   #
-  # NYI: CLEANUP: reduce code nesting
-  #
   module type.get_contents (s Session, path_from_url0 String) access =>
-    if path_from_url0.starts_with "/"
-      path_from_url :=
-        if path_from_url0.ends_with ".html"
-          path_from_url0.substring 1 (path_from_url0.find_last ".html").or_panic
-        else
-          path_from_url0.substring 1
+    path_from_url :=
+      if path_from_url0.ends_with ".html"
+        path_from_url0.substring 1 (path_from_url0.find_last ".html").or_panic
+      else
+        path_from_url0.substring 1
 
-      p := io.path.of path_from_url
+    p := io.path.of path_from_url
 
-      if !p.is_absolute && (content_dir.resolve p).starts_with content_dir
-        match template path_from_url
-          missing =>
-            dir := base_dir path_from_url
-            access_file := dir.resolve (io.path.of "access.txt")
-            content_path := dir.resolve (file_path path_from_url)
+    if p.is_absolute || !(content_dir.resolve p).starts_with content_dir
+      forbidden
+    else
+      match template path_from_url
+        missing => get_contents_missing s path_from_url
+        i identifier => i
+        forbidden => forbidden
 
-            if ([".png", ".svg", ".jpg", ".jpeg", ".pdf"] ∃ path_from_url.ends_with)
-              if access_permitted s.get_user path_from_url
-                identifier.new content_path path_from_url
-              else
-                forbidden
-            else
-              match (config_file.open access_file)["template"]
-                nil =>
-                  s.log "no template defined in $(access_file)"
-                  missing
-                t String =>
-                  identifier (dir.resolve t) path_from_url content_path
-          i identifier => i
-          forbidden => forbidden
+
+  # Handle the case that no template was found for the given URL path.
+  #
+  type.get_contents_missing (s Session, path_from_url String) access =>
+    dir := base_dir path_from_url
+    access_file := dir.resolve (io.path.of "access.txt")
+    content_path := dir.resolve (file_path path_from_url)
+
+    if ([".png", ".svg", ".jpg", ".jpeg", ".pdf"] ∃ path_from_url.ends_with)
+      if access_permitted s.get_user path_from_url
+        identifier.new content_path path_from_url
       else
         forbidden
     else
-      forbidden
+      match (config_file.open access_file)["template"]
+        nil =>
+          s.log "no template defined in $(access_file)"
+          missing
+        t String =>
+          identifier (dir.resolve t) path_from_url content_path
 
 
   # helper to find a template's identifier
