@@ -56,7 +56,7 @@ benchmarks =>
   ]
 
   g ! ()->
-    concur.blocking_mutate ! ()->
+    session_last_accessed_bm ! ()->
       for s in sites do
         freq := session_event_msg s
         send "fzweb_benchmark,benchmark=event_$(s) value=$(freq.as_hz)"
