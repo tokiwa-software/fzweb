@@ -9,7 +9,7 @@
 # response -- represents an http response from the webserver
 #
 module response (returncode i64,
-                 attributes lock_free.Map String String,
+                 attributes container.Mutable_Map String String,
                  data Sequence u8,
                  module session option Session) is
 
@@ -47,7 +47,7 @@ module response (returncode i64,
   # short-hand for creating a response with an empty session field
   #
   module type.new(returncode i64,
-                  attributes lock_free.Map String String,
+                  attributes container.Mutable_Map String String,
                   data Sequence u8) response =>
     response returncode attributes data nil
 
@@ -55,7 +55,7 @@ module response (returncode i64,
   # short-hand for creating a response with an empty session field and no data
   #
   module type.new(returncode i64,
-                  attributes lock_free.Map String String) response =>
+                  attributes container.Mutable_Map String String) response =>
     response returncode attributes [] nil
 
 
