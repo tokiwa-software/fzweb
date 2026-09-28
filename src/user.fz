@@ -109,7 +109,7 @@ module user (module base_dir io.path) is
   #
   trigger_deletion outcome unit =>
     token := user.generate_uuid
-    config.set0 "deletion_token" token
+    config["deletion_token"] := token
     config.save
     if has_registration_token
       user.complete_account_deletion token

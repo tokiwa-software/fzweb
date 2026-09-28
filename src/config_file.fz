@@ -9,7 +9,7 @@
 # config_file -- handle config files read and written by the Fuzion
 # webserver
 #
-module config_file (values lock_free.Map String String, p io.path) is
+module config_file (values container.Mutable_Map String String, p io.path) is
 
   # get the value corresponding to the given key in this config
   #
@@ -19,7 +19,7 @@ module config_file (values lock_free.Map String String, p io.path) is
 
   # update or create a new key in the config file
   #
-  module set0 (key, val String) =>
+  module set [] (key, val String) =>
     values.put key val
 
 
