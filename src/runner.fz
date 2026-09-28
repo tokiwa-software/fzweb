@@ -28,7 +28,6 @@ module runner is
     # true execute, false analyze for effects
     normal bool) =>
 
-    # NYI read_lines, send intermediate results
     args :=
       if normal
         ["-oLogLevel=FATAL", "flang@192.168.67.6", "timeout", "--preserve-status", "--signal=15",
