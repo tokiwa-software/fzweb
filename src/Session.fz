@@ -252,8 +252,6 @@ module Session (client net.ip_address,
   # returns nil on Not Found
   #
   module add_session_info_to_html_bytes(b Sequence u8) option (Sequence u8) =>
-    # NYI
-    # - ByteArray from flang_dev
 
     cp := current_page.read
 
