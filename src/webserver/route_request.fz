@@ -141,11 +141,17 @@ module route_request (raw_path0 String, cmd http.request_method, client net.ip_a
 
   raw_path := if raw_path0.ends_with "/" then raw_path0 + "index.html" else raw_path0
 
-  # NYI: PERFORMANCE: order ifs by most used / accessed
-
   if cmd != http.get && cmd != http.head && cmd != http.post_r
     logger.log "*** unknown request: $(cmd)"
     response.new 501
+  else if raw_path = "/goto"
+    goto s form_data
+    send_ok_or_reload s
+  else if raw_path = "/contents"
+    send_content_and_login_status s
+    send_ok_or_reload s
+  else if raw_path = "/events"
+    events s
   else if raw_path = "/login"
     s.login form_data["login"].or_panic form_data["password"].or_panic
     send_ok_or_reload s s.status_string
@@ -162,9 +168,6 @@ module route_request (raw_path0 String, cmd http.request_method, client net.ip_a
     confirm_registration s query
   else if raw_path = "/robots.txt"
     robots_txt
-  else if raw_path = "/goto"
-    goto s form_data
-    send_ok_or_reload s
   else if raw_path = "/run"
     runner.run s form_data
     send_ok_or_reload s
@@ -173,11 +176,6 @@ module route_request (raw_path0 String, cmd http.request_method, client net.ip_a
     send_ok_or_reload s
   else if raw_path = "/playground"
     send_nyi
-  else if raw_path = "/events"
-    events s
-  else if raw_path = "/contents"
-    send_content_and_login_status s
-    send_ok_or_reload s
   else if raw_path = "/api/benchmark/logs"
     send_nyi
   else
