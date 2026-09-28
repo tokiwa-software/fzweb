@@ -47,7 +47,6 @@ module identifier (module file_to_send option io.path,
   # get response
   #
   module response (s Session) response =>
-    # NYI: logging
     match get_bytes s
       b Sequence u8 =>
         suffix := file_to_send.or_panic.suffix
