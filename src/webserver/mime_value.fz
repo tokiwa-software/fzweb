@@ -20,7 +20,11 @@ module mime_value (
     parameters[param]
 
 
-  # NYI: BUG: documentation missing
+  # parse a Content-Type header value, splitting it into the main
+  # MIME type and its parameters
+  #
+  # For `text/html; charset=UTF-8`, the result has `mime_type` set to
+  # `text/html` and a parameter `charset` with value `UTF-8`.
   #
   module type.from_type_string(type_string String) webserver.mime_value =>
     # Recursive function to parse the key-value pairs in the string
