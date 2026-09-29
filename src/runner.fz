@@ -61,7 +61,7 @@ module runner is
             res := bm.env.var String ""
 
             add_to_res(str String) =>
-              bm.exclusive ()->
+              bm.env.exclusive ()->
                 cur := res.get
                 new :=
                   if cur.is_empty
