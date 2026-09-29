@@ -54,40 +54,51 @@ module runner is
 
         _ := (concur.thread_pool 2 ()->
 
-          res := concur.atomic String .new ""
+          bm : concur.blocking_mutate is
 
-          add_to_res(str String) =>
-            _ := res.update (String->String) o->"$(o)$(if o.is_empty then "" else "\n")$(str)"
-            s.send_event "pushElementContents" results_to res.read
+          bm ! ()->
+
+            res := bm.env.var String ""
+
+            add_to_res(str String) =>
+              bm.exclusive ()->
+                cur := res.get
+                new :=
+                  if cur.is_empty
+                    str
+                  else
+                    "$(cur)\n$(str)"
+                res <- new
+                s.send_event "pushElementContents" results_to res
 
 
-          fout := concur.thread_pool.env.submit _ ()->
-            fuzion.runtime.fault
-              .try ()->
-                lm ! ()->
-                  p.with_out unit lm ()->
-                    while match io.buffered lm .read_line
-                      io.end_of_file => false
-                      l String => add_to_res l; true
-              .catch e->
-                logger.log $e
+            fout := concur.thread_pool.env.submit _ ()->
+              fuzion.runtime.fault
+                .try ()->
+                  lm ! ()->
+                    p.with_out unit lm ()->
+                      while match io.buffered lm .read_line
+                        io.end_of_file => false
+                        l String => add_to_res l; true
+                .catch e->
+                  logger.log $e
 
-          ferr := concur.thread_pool.env.submit _ ()->
-            fuzion.runtime.fault
-              .try ()->
-                lm ! ()->
-                  p.with_err unit lm ()->
-                    while match io.buffered lm .read_line
-                      io.end_of_file => false
-                      l String => add_to_res "stderr: $(l)"; true
-              .catch e->
-                logger.log $e
+            ferr := concur.thread_pool.env.submit _ ()->
+              fuzion.runtime.fault
+                .try ()->
+                  lm ! ()->
+                    p.with_err unit lm ()->
+                      while match io.buffered lm .read_line
+                        io.end_of_file => false
+                        l String => add_to_res "stderr: $(l)"; true
+                .catch e->
+                  logger.log $e
 
-          p.close_in.or_panic
-          p.wait max_wait_time
-           .bind _->
-            _ := fout.get
-            _ := ferr.get).or_panic
+            p.close_in.or_panic
+            p.wait max_wait_time
+             .bind _->
+              _ := fout.get
+              _ := ferr.get).or_panic
 
         _ := p.send_signal os.signals.kill).or_panic
 
