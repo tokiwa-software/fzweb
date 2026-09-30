@@ -46,17 +46,16 @@ module runner is
       .bind p->
 
         lm : mutate is
+        bm : concur.blocking_mutate is
 
         # write code to stdin
         lm ! ()->
           _ := p.with_in unit lm ()->
             (io.buffered lm).Writer.env.write code .or_panic
 
-        _ := (concur.thread_pool 2 ()->
+        bm ! ()->
 
-          bm : concur.blocking_mutate is
-
-          bm ! ()->
+          _ := (concur.thread_pool 2 ()->
 
             res := bm.env.var String ""
 
