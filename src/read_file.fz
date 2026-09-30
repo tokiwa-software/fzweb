@@ -24,7 +24,7 @@ module read_file(p io.path) outcome (Sequence u8) =>
   (io.file.stat p true).bind md->
     io.file.use p io.file.mode.append ()->
       if md.size != units.data_size.zero
-        io.file.open.mmap 0 md.size.bytes.as_i64 ()->
+        io.file.open.env.mmap 0 md.size.bytes.as_i64 ()->
           id (Sequence u8) io.file.mapped_buffer.env.as_array
       else
         (Sequence u8).empty
