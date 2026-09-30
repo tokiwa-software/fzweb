@@ -30,7 +30,7 @@ module Session (client net.ip_address,
 
   # connection tied to this session for sending events to the client
   #
-  connection := concur.atomic (option net.connection) .new nil
+  connection := session_connection_bm.env.var (option net.connection) nil
 
 
   # session history information
@@ -141,39 +141,41 @@ module Session (client net.ip_address,
   # send data on the session's connection
   #
   module send_data (msg String) =>
-    match connection.read
-      nil => log "failed to send $(msg.lines[0]), connection is nil"
-      c net.connection =>
+    session_connection_bm.env.exclusive ()->
+      match connection
+        nil => log "failed to send $(msg.lines[0]), connection is nil"
+        c net.connection =>
 
-        match {
-          lm : mutate is
+          match {
+            lm : mutate is
 
-          lm ! ()->
-            c.with (outcome unit) lm ()->
-              final_msg := "$(msg.byte_count.hex)\r\n$(msg)\r\n"
-              io.buffered lm
-                .Writer.env
-                .write final_msg.utf8
-                .and_then _->(io.buffered lm).Writer.env.flush
-          }
-          unit => unit
-          e error => close_connection e
+            lm ! ()->
+              c.with (outcome unit) lm ()->
+                final_msg := "$(msg.byte_count.hex)\r\n$(msg)\r\n"
+                io.buffered lm
+                  .Writer.env
+                  .write final_msg.utf8
+                  .and_then _->(io.buffered lm).Writer.env.flush
+            }
+            unit => unit
+            e error => close_connection e
 
 
   # associate a session with a connection
   #
   module set_connection (c net.connection) =>
-    match connection.read
-      nil =>
-        log "Set original connection"
-        connection.write c
-        send_login_status
-      net.connection =>
-        log "Set new connection"
-        close_connection unit
-        connection.write c
-        send_content
-        send_login_status
+    session_connection_bm.env.exclusive ()->
+      match connection
+        nil =>
+          log "Set original connection"
+          connection <- c
+          send_login_status
+        net.connection =>
+          log "Set new connection"
+          close_connection unit
+          connection <- c
+          send_content
+          send_login_status
 
 
   # close session connection
@@ -183,20 +185,20 @@ module Session (client net.ip_address,
       e error => log "exception when sending content: $(e)"
       unit =>
 
-    match connection.read
+    match connection
       nil => unit
       c net.connection =>
         log "closing connection of session: $(session_id)"
         match c.close
           unit =>
           e error => log "error closing connection: $(e)"
-        connection.write nil
+        connection <- nil
 
 
   # does this session have a connection associated?
   #
   module is_connection_ok =>
-    connection.read.ok
+    session_connection_bm.env.exclusive ()->connection.get .ok
 
 
   # log a message for this session, either to the general log if
