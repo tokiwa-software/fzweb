@@ -18,6 +18,7 @@ run =>
 
     session_connection_bm
       .and (outcome void) _ session_last_accessed_bm
+      .and session_login_bm
       .call ()->
         g := global true
 
@@ -57,3 +58,4 @@ run =>
 
 module session_connection_bm : concur.blocking_mutate is
 module session_last_accessed_bm : concur.blocking_mutate is
+module session_login_bm : concur.blocking_mutate is

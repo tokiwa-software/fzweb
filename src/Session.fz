@@ -15,7 +15,7 @@ module Session (client net.ip_address,
 
   # session belongs to which user, if at all?
   #
-  module user := concur.atomic (option user) .new nil
+  module user := session_login_bm.env.var (option user) nil
 
 
   # when was the session last accessed?
@@ -25,7 +25,7 @@ module Session (client net.ip_address,
 
   # login state of the session
   #
-  login := concur.atomic login_status .new unauthenticated
+  login := session_login_bm.env.var login_status unauthenticated
 
 
   # connection tied to this session for sending events to the client
@@ -44,8 +44,9 @@ module Session (client net.ip_address,
   match old_session
     nil => unit
     old_s Session =>
-      Session.this.user.write old_s.user.read
-      login.write old_s.login.read
+      session_login_bm.env.exclusive ()->
+        Session.this.user <- old_s.user.get
+        login <- old_s.login.get
 
 
   # session id
@@ -60,18 +61,19 @@ module Session (client net.ip_address,
 
   # and log session creation
   #
-  log "new session $(session_id) for $(client) user $(user.read.bind x->x.login)"
+  log "new session $(session_id) for $(client) user $(session_login_bm.env.exclusive ()->user.get .bind x->x.login)"
 
 
   # authenticate the session with a user account
   #
   module login (name, password String) =>
-    match user.get name password
-      error =>
-        login.write auth_fail
-      u user =>
-        Session.this.user.write u
-        login.write authenticated
+    session_login_bm.env.exclusive ()->
+      match user.get name password
+        error =>
+          login <- auth_fail
+        u user =>
+          Session.this.user <- u
+          login <- authenticated
 
     send_content
 
@@ -79,8 +81,9 @@ module Session (client net.ip_address,
   # logout the session
   #
   module logout =>
-    user.write nil
-    login.write unauthenticated
+    session_login_bm.env.exclusive ()->
+      user <- nil
+      login <- unauthenticated
 
     send_content
 
@@ -88,30 +91,34 @@ module Session (client net.ip_address,
   # login state easy access
   #
   module get_login_status login_status =>
-    login.read
+    session_login_bm.env.exclusive ()->
+      login.get
 
 
   # access to session user
   #
   module get_user option user =>
-    Session.this.user.read
+    session_login_bm.env.exclusive ()->
+      Session.this.user.get
 
 
   # send login status to client
   #
   module send_login_status unit =>
-    match login.read
-      authenticated => send_event "isLoggedIn" user.read.or_panic.name
-      * => send_event "isNotLoggedIn"
+    session_login_bm.env.exclusive ()->
+      match login
+        authenticated => send_event "isLoggedIn" user.or_panic.name
+        * => send_event "isNotLoggedIn"
 
 
   # session status string
   #
   module status_string =>
-    match login.read
-      unauthenticated => "not logged in"
-      auth_fail => "failed"
-      authenticated => "ok: $(user.read.or_panic.name)"
+    session_login_bm.env.exclusive ()->
+      match login
+        unauthenticated => "not logged in"
+        auth_fail => "failed"
+        authenticated => "ok: $(user.or_panic.name)"
 
 
   # send an event on the session's connection
@@ -205,7 +212,7 @@ module Session (client net.ip_address,
   # the session is not authenticated, or to the users' individual log
   #
   module log (msg String) =>
-    match Session.this.user.read
+    match (session_login_bm.env.exclusive ()->Session.this.user.get)
       nil => logger.log msg
       u user => u.log msg
 

@@ -15,7 +15,7 @@ module session_document (module page String,
 
   # path to this document as an abstract path
   #
-  data_path := content.get_data_path session.user.read page
+  data_path := content.get_data_path (session_login_bm.env.exclusive ()->session.user.get) page
 
 
   # the actual file name of the current document
@@ -26,7 +26,7 @@ module session_document (module page String,
   # is the user of the given session allowed to
   # access the requested page?
   #
-  permitted := content.access_permitted session.user.read page
+  permitted := content.access_permitted (session_login_bm.env.exclusive ()->session.user.get) page
 
 
   # generate html code to replace ITEM_RECENT_TOOTS
@@ -293,7 +293,7 @@ module session_document (module page String,
             d String => io.path.of d
             nil =>
               # no dir, try userdata
-              match session.user.read
+              match (session_login_bm.env.exclusive ()->session.user.get)
                 u user => u.base_dir
                 nil => dp.parent.or_panic # index of current dir
 
@@ -473,7 +473,7 @@ module session_document (module page String,
   page_link (to String)
     pre debug: !to.starts_with "/"
   =>
-    title := document.get_title to (content.get_data_path_unsafe session.user.read to)
+    title := document.get_title to (content.get_data_path_unsafe (session_login_bm.env.exclusive ()->session.user.get) to)
     template.page_link to title
 
 
@@ -557,7 +557,7 @@ module session_document (module page String,
         l := pp
           .bind (p -> p.resolve x .as_string)
           .or_else x
-        template.attractive_link l ((is_toc ? "start: " : "next: ") + (document.get_title l (content.get_data_path session.user.read l)))
+        template.attractive_link l ((is_toc ? "start: " : "next: ") + (document.get_title l (content.get_data_path (session_login_bm.env.exclusive ()->session.user.get) l)))
 
     arrow_link(str String) =>
       "<i class='far fa-angle-$str' aria-hidden='true'></i>"
