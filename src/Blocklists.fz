@@ -17,9 +17,9 @@ module Blocklists ref is
   #
   update_interval := time.duration.minutes 120
 
-  module from_file := concur.atomic (container.Set net.ip_address) .new (container.ps_set net.ip_address).empty
+  module from_file := global_fetch_am.env.var (container.Set net.ip_address) (container.ps_set net.ip_address).empty
 
-  module tor_exits := concur.atomic (container.Set net.ip_address) .new (container.ps_set net.ip_address).empty
+  module tor_exits := global_fetch_am.env.var (container.Set net.ip_address) (container.ps_set net.ip_address).empty
 
 
   # init background thread to periodically update
@@ -58,7 +58,7 @@ module Blocklists ref is
                .map (.or_panic)
 
     c := container.ps_set net.ip_address .new addrs
-    from_file.write c
+    _ := from_file.update _->c
 
 
   # download, parse and store the tor project's exit list
@@ -74,4 +74,4 @@ module Blocklists ref is
                 .map (.or_panic)
 
     c := container.ps_set net.ip_address .new addrs
-    tor_exits.write c
+    _ := tor_exits.update _->c
