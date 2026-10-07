@@ -58,7 +58,7 @@ module Blocklists ref is
                .map (.or_panic)
 
     c := container.ps_set net.ip_address .new addrs
-    _ := from_file.update _->c
+    from_file <- c
 
 
   # download, parse and store the tor project's exit list
@@ -74,4 +74,4 @@ module Blocklists ref is
                 .map (.or_panic)
 
     c := container.ps_set net.ip_address .new addrs
-    _ := tor_exits.update _->c
+    tor_exits <- c

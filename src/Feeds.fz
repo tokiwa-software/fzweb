@@ -129,7 +129,7 @@ module Feeds ref is
         Sequence rss_feed_entry .empty
 
 
-    _ := github.update _->commits.as_array
+    github <- commits.as_array
 
 
   # download, parse and store the mastodon rss-feed
@@ -189,4 +189,4 @@ module Feeds ref is
           []
       .as_array
 
-    _ := mastodon.update _->m_feed
+    mastodon <- m_feed
