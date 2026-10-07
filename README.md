@@ -2,8 +2,6 @@
 
 ## A webserver written in the Fuzion language.
 
-> Please note that this webserver is work in progress.
-
 ---
 
 <!--ts-->
@@ -17,10 +15,9 @@
 
 ## About
 
-This webserver is intended to replace our current Java-based webserver
-for the [Fuzion website](https://fuzion-lang.dev/). It can be built and
-run without any internal files, but the actual website content is not
-public.
+This webserver is powering the [Fuzion website](https://fuzion-lang.dev/). It
+can be built and run without any internal files, but the actual website content
+is not public.
 
 ## Clone
 
