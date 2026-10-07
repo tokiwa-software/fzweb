@@ -35,8 +35,10 @@ module Session (client net.ip_address,
 
   # session history information
   #
-  module current_page := concur.atomic session_document .new (session_document "index" Session.this)
-  last_pushed_history := concur.atomic (option session_document) .new nil
+  # NYI: ENHANCEMENT: might need mutate with lock on Session instance?
+  #
+  module current_page := session_history_bm.env.var session_document (session_document "index" Session.this)
+  last_pushed_history := session_history_bm.env.var (option session_document) nil
 
 
   # initialize user and login state
@@ -137,12 +139,13 @@ module Session (client net.ip_address,
   # send history information about session's visited pages
   #
   send_push_history =>
-    last := last_pushed_history.read
-    c := current_page.read
+    session_history_bm.env.exclusive ()->
+      last := last_pushed_history
+      c := current_page
 
-    if last=nil || c.page != last.or_panic.page
-      last_pushed_history.write c
-      send_event "pushHistory" "/$(c.page)"
+      if last = nil || c.page != last.or_panic.page
+        last_pushed_history <- c
+        send_event "pushHistory" "/$(c.page)"
 
 
   # send data on the session's connection
@@ -262,7 +265,7 @@ module Session (client net.ip_address,
   #
   module add_session_info_to_html_bytes(b Sequence u8) option (Sequence u8) =>
 
-    cp := current_page.read
+    cp := session_history_bm.env.exclusive ()->current_page.get
 
     match cp.get_content
       nil => nil
@@ -278,7 +281,7 @@ module Session (client net.ip_address,
   # the message to send via an event connection
   #
   module event_msg =>
-    match current_page.read.get_content
+    match session_history_bm.env.exclusive ()->current_page.get .get_content
       nil =>
         """
           id: 0
@@ -304,4 +307,5 @@ module Session (client net.ip_address,
   module set_current (page String) =>
     p := document.strip_html page
     d := session_document p Session.this
-    current_page.write d
+    session_history_bm.env.exclusive ()->
+      current_page <- d

@@ -18,6 +18,7 @@ run =>
 
     global_fetch_am
       .and (outcome void) _ session_connection_bm
+      .and session_history_bm
       .and session_last_accessed_bm
       .and session_login_bm
       .call ()->
@@ -59,5 +60,6 @@ run =>
 
 module global_fetch_am : concur.atomic_mutate is
 module session_connection_bm : concur.blocking_mutate is
+module session_history_bm : concur.blocking_mutate is
 module session_last_accessed_bm : concur.blocking_mutate is
 module session_login_bm : concur.blocking_mutate is
