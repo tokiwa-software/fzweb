@@ -16,8 +16,9 @@ run =>
   res := net.server.start net.family.ipv4 net.protocol.tcp port ()->
     logger.log "started listening on port: $port"
 
-    session_connection_bm
-      .and (outcome void) _ session_last_accessed_bm
+    global_fetch_am
+      .and (outcome void) _ session_connection_bm
+      .and session_last_accessed_bm
       .and session_login_bm
       .call ()->
         g := global true
@@ -56,6 +57,7 @@ run =>
 
   logger.log $res
 
+module global_fetch_am : concur.atomic_mutate is
 module session_connection_bm : concur.blocking_mutate is
 module session_last_accessed_bm : concur.blocking_mutate is
 module session_login_bm : concur.blocking_mutate is

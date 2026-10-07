@@ -92,8 +92,8 @@ module session_document (module page String,
 
     html_content =>
       html := add_session_info_to_html str
-          .replace "##ITEM_RECENT_TOOTS##" (rss_html global.env.feeds.mastodon.read)
-          .replace "##ITEM_RECENT_COMMITS##" (commits_html global.env.feeds.github.read)
+          .replace "##ITEM_RECENT_TOOTS##" (rss_html global.env.feeds.mastodon.get)
+          .replace "##ITEM_RECENT_COMMITS##" (commits_html global.env.feeds.github.get)
 
       if has_embedded_html html
         [embed_html_in_iframe html]

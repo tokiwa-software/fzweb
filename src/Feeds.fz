@@ -15,9 +15,9 @@ module Feeds ref is
   #
   update_interval := time.duration.minutes 15
 
-  module github   := concur.atomic (Sequence rss_feed_entry) .new []
+  module github   := global_fetch_am.env.var (Sequence rss_feed_entry) []
 
-  module mastodon := concur.atomic (Sequence rss_feed_entry) .new []
+  module mastodon := global_fetch_am.env.var (Sequence rss_feed_entry) []
 
 
   # init background thread to periodically update
@@ -129,7 +129,7 @@ module Feeds ref is
         Sequence rss_feed_entry .empty
 
 
-    github.write commits.as_array
+    _ := github.update _->commits.as_array
 
 
   # download, parse and store the mastodon rss-feed
@@ -189,4 +189,4 @@ module Feeds ref is
           []
       .as_array
 
-    mastodon.write m_feed
+    _ := mastodon.update _->m_feed
