@@ -48,6 +48,7 @@ pipeline {
                 Build failed. Check the console output:
                 ${env.BUILD_URL}
             """,
+            to: '$DEFAULT_RECIPIENTS',
             recipientProviders: [developers(), requestor()]
         )
       }
