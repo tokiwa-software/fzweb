@@ -368,7 +368,7 @@ module user (module base_dir io.path) is
             .make deleted_users_dir
             .or_else (() -> u.log "failed making dir: $(deleted_users_dir)")
 
-        io.file.move u.base_dir (deleted_users_dir.resolve $time.now.env)
+        io.file.move u.base_dir (deleted_users_dir.resolve $time.now.env.get)
 
 
   # delete an account by a login name
