@@ -420,7 +420,7 @@ module user (module base_dir io.path) is
   type.noreply_tokiwa_software => "noreply@tokiwa.software"
 
   type.users_dir => io.path.of "./users"
-  type.deleted_users_dir => io.path.of "./users_deleted"
+  type.deleted_users_dir => users_dir.resolve "-deleted-users-" # dash is invalid for usernames
   type.user_file => "user.txt"
   type.log_file => "log.txt"
   type.run_dir => "runDir"
