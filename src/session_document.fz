@@ -333,25 +333,36 @@ module session_document (module page String,
     id := uuid.create_random.as_string
     code := read_file_as_string (data_path.or_panic.parent.or_panic.resolve m["file"].or_panic)
       .or_default "# no code is available here"
-    """
-    <div class="runcode-wrapper">
-      <i class="far fa-spinner fa-spin"></i>
-      <div class="mb-15 runcode" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,40ch), min(100%, 80ch))); max-width: 102rem; opacity: 0;">
-        <div class="position-relative">
-          <form id="$(id)">
-            <label for="$(id).code" class="visually-hidden">Code input</label>
-            <textarea class="code-input" required="required" maxlength="4096" id="$(id).code" name="code" rows="$(max 3 code.lines.count)" spellcheck="false">$(code)</textarea>
-            <div class="position-absolute run-buttons">
-              <input type="button" onclick="runit('$(id)')"    class="run-button" value="Run!" />
-              <input type="button" onclick="runiteff('$(id)')" class="run-button" value="Effects!" />
-              <a href="/tutorial/effects.html"><i>What are effects?</i></a>
-            </div>
-          </form>
+    is_executable := !m.has "not_executable"
+
+    buttons =>
+      """
+        <div class="position-absolute run-buttons">
+          <input type="button" onclick="runit('$(id)')" class="run-button" value="Run!" />
+          <input type="button" onclick="runiteff('$(id)')" class="run-button" value="Effects!" />
+          <a href="/tutorial/effects.html"><i>What are effects?</i></a>
         </div>
+      """
+    output =>
+      """
         <div class="computer-output" id="$(id).result"></div>
+      """
+
+    """
+      <div class="runcode-wrapper">
+        <i class="far fa-spinner fa-spin"></i>
+        <div class="mb-15 runcode" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,40ch), min(100%, 80ch))); max-width: 102rem; opacity: 0;">
+          <div class="position-relative">
+            <form id="$(id)">
+              <label for="$(id).code" class="visually-hidden">Code input</label>
+              <textarea class="code-input" required="required" maxlength="4096" id="$(id).code" name="code" rows="$(max 3 code.lines.count)" spellcheck="false">$(code)</textarea>
+              $(if is_executable then buttons else "")
+            </form>
+          </div>
+          $(if is_executable then output else "")
+        </div>
       </div>
-    </div>
-  """
+    """
 
 
   # extract attribute contents from a String, helper method for recursion
