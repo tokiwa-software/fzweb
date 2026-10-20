@@ -232,9 +232,9 @@ module user (module base_dir io.path) is
       error "Username contains illegal characters. Only A-Z, a-z, 0-9, and _ are allowed."
     else if !(3 < username0.or_panic.codepoint_count < 100)
       error "Username must have at least three characters and must not be longer than 100 characters."
-    else if global.env.blocklists.from_file.read.contains client
+    else if global.env.blocklists.from_file.get.contains client
       error "Must not sign up from this IP address."
-    else if global.env.blocklists.tor_exits.read.contains client
+    else if global.env.blocklists.tor_exits.get.contains client
       error "Tor exits are banned from registering due to abuse."
     else
       full_name := full_name first_name last_name email0.or_panic
@@ -368,7 +368,14 @@ module user (module base_dir io.path) is
             .make deleted_users_dir
             .or_else (() -> u.log "failed making dir: $(deleted_users_dir)")
 
-        io.file.move u.base_dir (deleted_users_dir.resolve $time.now.env)
+        io.file.move u.base_dir (deleted_users_dir.resolve $time.now.env.get)
+          .bind _->
+            subject := "[fuzion-lang.dev] - Account deleted"
+            io.file.read (content.templates_dir.resolve "email_account_deleted.txt")
+              .bind (tmplt ->
+                      body := tmplt.replace "##NAME##" (u.name.or_default "fuzion-lang.dev user")
+
+                      email_service.send_text_mail_with_footer user.noreply_tokiwa_software (u.email.or_default "") subject body)
 
 
   # delete an account by a login name
@@ -420,7 +427,7 @@ module user (module base_dir io.path) is
   type.noreply_tokiwa_software => "noreply@tokiwa.software"
 
   type.users_dir => io.path.of "./users"
-  type.deleted_users_dir => io.path.of "./users_deleted"
+  type.deleted_users_dir => users_dir.resolve "-deleted-users-" # dash is invalid for usernames
   type.user_file => "user.txt"
   type.log_file => "log.txt"
   type.run_dir => "runDir"

@@ -68,7 +68,7 @@ module identifier (module file_to_send option io.path,
           ("Content-Length", data.count.as_string),
           ("Content-Type", "text/html")
         ]
-        s.log "*** 404 : Not Found $(s.current_page.read.page)"
+        s.log "*** 404 : Not Found $(session_history_bm.env.exclusive ()->s.current_page.get .page)"
         response.new 404 attributes data
       e error =>
         s.log "*** error sending content: $(e)"

@@ -44,9 +44,6 @@ benchmarks =>
     say "Session.event_msg $(where) iter/s: $(x)"
     x
 
-  g := io.Out.instate _ io.Out.blackhole ()->
-    global false
-
   sites := [
     "idioms/index",
     "docs/base/index",
@@ -55,14 +52,22 @@ benchmarks =>
     "index"
   ]
 
-  g ! ()->
-    session_last_accessed_bm ! ()->
-      for s in sites do
-        freq := session_event_msg s
-        send "fzweb_benchmark,benchmark=event_$(s) value=$(freq.as_hz)"
-      for s in sites do
-        freq := session_document_get_content s
-        send "fzweb_benchmark,benchmark=get_content_$(s) value=$(freq.as_hz)"
+  global_fetch_am
+    .and unit _ session_connection_bm
+    .and session_history_bm
+    .and session_last_accessed_bm
+    .and session_login_bm
+    .call ()->
+      g := io.Out.instate _ io.Out.blackhole ()->
+        global false
+
+      g ! ()->
+        for s in sites do
+          freq := session_event_msg s
+          send "fzweb_benchmark,benchmark=event_$(s) value=$(freq.as_hz)"
+        for s in sites do
+          freq := session_document_get_content s
+          send "fzweb_benchmark,benchmark=get_content_$(s) value=$(freq.as_hz)"
 
   send(str String) =>
     match envir.Vars.env.get "INFLUXDB_TOKEN"
