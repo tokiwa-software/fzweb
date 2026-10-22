@@ -357,33 +357,61 @@ module session_document (module page String,
   # extract attribute contents from a String, helper method for recursion
   # like: <page file="http/index" />
   #
+  # boolean attributes without a value, like `not_executable` in
+  # <page not_executable file="http/index" />, are stored with an empty value
+  #
+  # values may be enclosed in double or single quotes or be unquoted, and
+  # whitespace around the `=` is allowed
+  #
   extract_attribute_contents (s String, m container.ordered_map String String) container.ordered_map String String
   =>
+
     st := s.trim_start
 
     if st.is_empty
       m
     else
-      a := st.split_n "=\"" 1
-      match a.first
-        nil =>
-          session.log "invalid attribute string on $page (no attribute found): $st"
-          m
-        k String =>
-          match a.nth 1
-            nil =>
-              session.log "invalid attribute string on $page (no value found): $st"
-              m
-            ppv String =>
-              pv := ppv.split_n "\"" 1
-              match pv.first
-                nil =>
-                  session.log "invalid attribute string on $page (end of value not found): $st"
-                  m
-                v String =>
-                  nm := m.add k v
-                  rest := pv.nth 1 .or_default ""
-                  extract_attribute_contents rest nm
+      attr := st.split.first.or_panic
+      name_end :=
+        match attr.find "="
+          eq i64 => eq
+          nil => attr.byte_count
+      attr_name := attr.substring 0 name_end
+      rest := (st.substring attr_name.byte_count).trim_start
+
+      if attr_name.is_empty
+        session.log "invalid attribute string on $page (no attribute found): $st"
+        m
+      else if rest.starts_with "="
+        after_eq := (rest.substring 1).trim_start
+        if after_eq.is_empty
+          m.add attr_name ""
+        else
+          q :=
+            if after_eq.starts_with "\""
+              "\""
+            else if after_eq.starts_with "'"
+              "'"
+            else
+              ""
+          if q.is_empty
+            # unquoted value
+            v := after_eq.split.first.or_panic
+            nm := m.add attr_name v
+            extract_attribute_contents (after_eq.substring v.byte_count) nm
+          else
+            match after_eq.find q 1
+              nil =>
+                session.log "invalid attribute string on $page (end of value not found): $st"
+                m
+              end i64 =>
+                v := after_eq.substring 1 end
+                nm := m.add attr_name v
+                extract_attribute_contents (after_eq.substring (end + 1)) nm
+      else
+        # attribute without value, i.e. a boolean HTML attribute
+        nm := m.add attr_name ""
+        extract_attribute_contents rest nm
 
 
   # extract attribute contents of a String like
