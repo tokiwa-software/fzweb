@@ -641,7 +641,7 @@ module session_document (module page String,
           for res := container.expanding_array String .empty, {
                 e_idx
                   .bind e->
-                    attr := rest2.substring 0+start.byte_count e # NYI: CLEANUP: why 0+?
+                    attr := rest2.substring start.byte_count e
                     c := extract_attribute_contents attr
                     c[val].bind val_val->
                       res.add val_val
