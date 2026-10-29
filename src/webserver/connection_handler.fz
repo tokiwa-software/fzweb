@@ -27,7 +27,11 @@ request_context (LM type : mutate, connection net.connection) is
     x_forwarded_for
       .or_else (net.endpoint.env.get_peer_address.or_else (net.ip_address u128.zero))
 
+
   # send an HTTP response on the current socket
+  #
+  # closes the connection after sending or
+  # if /events connection saves it in the session
   #
   # return_code specifies the HTTP status code of the response
   # attributes defines the headers of the response
@@ -43,14 +47,58 @@ request_context (LM type : mutate, connection net.connection) is
           e error => logger.log e
           unit    =>
 
+    match response.session
+      nil =>
+        match connection.close
+          e error => logger.log "failed closing connection $(e)"
+          unit    =>
+      s Session =>
+        check debug : path = "/events"
+        s.set_connection connection
+
+
 
 # entry point to the handling the request
 #
 module handle_connection (LM type : mutate, conn net.connection) unit =>
+
   req_context := request_context LM conn
+
   logger.log "$(req_context.request.method) $(req_context.request.target)"
 
-  process_request LM req_context
+  match form_data req_context
+    fd container.Map =>
+      resp := match req_context.request.method
+        http.get, http.post_r => route_request req_context.path req_context.request.method req_context.client fd req_context.query_string
+        * => response.new 500
+
+      req_context.send resp
+
+      log_request_duration req_context fd["page"]
+
+    e error =>
+      logger.log e
+      req_context.send (response.new 415 (map_of_strings [("Accept", "application/x-www-form-urlencode, multipart/form-data")]))
+
+
+
+# log long running requests
+#
+log_request_duration(LM type : mutate, req_context request_context LM, page option String) =>
+
+  # do not log anything for connection that is intentionally kept open
+  if req_context.path != "/events"
+    max_time := time.duration.ms 500
+    request_duration := time.Nano.env.read - req_context.timestamp
+    if request_duration ≥ max_time
+      msg :=
+        if req_context.path = "/goto" && page.ok
+          "took $(request_duration) to process request for $(page.or_panic) (via eventstream)"
+        else
+          "took $(request_duration) to process request for $(req_context.path)"
+
+      logger.log msg
+
 
 
 # extract form data from request_context
@@ -90,50 +138,3 @@ form_data(LM type : mutate, req_context request_context LM) =>
         content_type_boundary := val["boundary"].or_default ""
         get_form_data post_data req_context.request.method req_context.query_string content_type content_type_boundary
       .or_else (get_form_data post_data req_context.request.method req_context.query_string "" "")
-
-
-# get the response for the current request
-#
-get_response(LM type : mutate, req_context request_context LM, fd outcome (container.Map String String)) =>
-  match fd
-    x container.Map String String =>
-      route_request req_context.path req_context.request.method req_context.client x req_context.query_string
-    e error =>
-      logger.log e
-      response.new 415 (map_of_strings [("Accept", "application/x-www-form-urlencode, multipart/form-data")])
-
-
-# helper to process the request
-#
-process_request(LM type : mutate, req_context request_context LM) =>
-
-  form_data_res := form_data req_context
-
-  resp := match req_context.request.method
-    http.get => get_response req_context form_data_res
-    http.post_r => get_response req_context form_data_res
-    * => response.new 500
-
-  req_context.send resp
-  match resp.session
-    nil =>
-      match req_context.connection.close
-        e error => logger.log "failed closing connection $(e)"
-        unit    =>
-    s Session =>
-      check debug : req_context.path = "/events"
-      s.set_connection req_context.connection
-
-  request_duration := time.Nano.env.read - req_context.timestamp
-  if req_context.path != "/events" && request_duration ≥ time.duration.ms 750
-    page_if_available := form_data_res
-      .bind fd->
-        fd["page"]
-
-    msg :=
-      if req_context.path = "/goto" && page_if_available.ok
-        "took $(request_duration) to process request for $(page_if_available.or_panic) (via eventstream)"
-      else
-        "took $(request_duration) to process request for $(req_context.path)"
-
-    logger.log msg
