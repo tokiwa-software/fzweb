@@ -280,7 +280,7 @@ module Session (client net.ip_address,
 
   # the message to send via an event connection
   #
-  module event_msg =>
+  event_msg =>
     match session_history_bm.env.exclusive ()->current_page.get .get_content
       nil =>
         """
