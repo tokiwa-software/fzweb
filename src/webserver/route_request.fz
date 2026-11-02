@@ -152,9 +152,14 @@ module route_request (raw_path0 String, cmd http.request_method, client net.ip_a
     send_ok_or_reload s
   else if raw_path = "/events"
     events s
-  else if raw_path = "/login"
-    s.login form_data["login"].or_panic form_data["password"].or_panic
-    send_ok_or_reload s s.status_string
+  else if cmd = http.post_r && raw_path = "/login"
+    username := form_data["username"]
+    password := form_data["password"]
+    if username?? && password??
+      s.login username.or_panic password.or_panic
+      send_ok_or_reload s s.status_string
+    else
+      response.new 400
   else if raw_path = "/logout"
     s.logout
     send_ok_or_reload s s.status_string
