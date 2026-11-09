@@ -34,7 +34,7 @@ module response (returncode i64,
 
   # get the bytes of this response
   #
-  module bytes(LM type : mutate) =>
+  module bytes(LM : mutate) =>
     attributes.put "Server" "Fuzion WebServer v0.0.2"
     if !attributes["Connection"].ok
       attributes.put "Connection" "close"
