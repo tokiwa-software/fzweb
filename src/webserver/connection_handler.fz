@@ -9,7 +9,7 @@
 # contains convenient access of request
 # like header fields, a send feature etc.
 #
-request_context (LM type : mutate, connection net.connection) is
+request_context (LM : mutate, connection net.connection) is
   timestamp := time.Nano.env.read
   request := (http.read_request LM).or_panic
 
@@ -60,7 +60,7 @@ request_context (LM type : mutate, connection net.connection) is
 
 # entry point to the handling the request
 #
-module handle_connection (LM type : mutate, conn net.connection) unit =>
+module handle_connection (LM : mutate, conn net.connection) unit =>
 
   req_context := request_context LM conn
 
@@ -84,7 +84,7 @@ module handle_connection (LM type : mutate, conn net.connection) unit =>
 
 # log long running requests
 #
-log_request_duration(LM type : mutate, req_context request_context LM, page option String) =>
+log_request_duration(LM : mutate, req_context request_context LM, page option String) =>
 
   # do not log anything for connection that is intentionally kept open
   if req_context.path != "/events"
@@ -103,7 +103,7 @@ log_request_duration(LM type : mutate, req_context request_context LM, page opti
 
 # extract form data from request_context
 #
-form_data(LM type : mutate, req_context request_context LM) =>
+form_data(LM : mutate, req_context request_context LM) =>
 
   # get the content length from the headers
   #

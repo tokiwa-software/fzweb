@@ -13,7 +13,7 @@
 
 tests =>
 
-  Test(EQ type : property.equatable, exp EQ, l Lazy EQ) ref : Function bool is
+  Test(EQ : property.equatable, exp EQ, l Lazy EQ) ref : Function bool is
     public redef call bool =>
       l = exp
 
