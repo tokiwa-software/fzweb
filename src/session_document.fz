@@ -115,8 +115,7 @@ module session_document (module page String,
             encodings.html.encode line true
       [
         "<h1>$(encodings.html.encode title.as_string true)</h1>\n",
-        # opacity is reset in main.js:initAnsiUp()
-        "<pre class='code' style='opacity: 0'>\n"
+        "<pre class='code'>\n"
       ] ++ preformatted ++ [ "</pre>\n" ]
 
 
@@ -351,7 +350,7 @@ module session_document (module page String,
     """
       <div class="runcode-wrapper">
         <i class="far fa-spinner fa-spin"></i>
-        <div class="mb-15 runcode" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,40ch), min(100%, 80ch))); max-width: 102rem; opacity: 0;">
+        <div class="mb-15 runcode">
           <div class="position-relative">
             <form id="$(id)">
               <label for="$(id).code" class="visually-hidden">Code input</label>
