@@ -115,8 +115,7 @@ module session_document (module page String,
             encodings.html.encode line true
       [
         "<h1>$(encodings.html.encode title.as_string true)</h1>\n",
-        # opacity is reset in main.js:initAnsiUp()
-        "<pre class='code' style='opacity: 0'>\n"
+        "<pre class='code'>\n"
       ] ++ preformatted ++ [ "</pre>\n" ]
 
 
