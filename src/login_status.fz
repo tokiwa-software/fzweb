@@ -12,7 +12,7 @@
 module unauthenticated is
 
 
-# auth_fail -- feature indicating the session has encounted a failure
+# auth_fail -- feature indicating the session has encountered a failure
 # during the last attempted authentication
 #
 module auth_fail is

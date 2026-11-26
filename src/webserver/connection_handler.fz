@@ -58,7 +58,7 @@ request_context (LM : mutate, connection net.connection) is
 
 
 
-# entry point to the handling the request
+# entry point for handling the request
 #
 module handle_connection (LM : mutate, conn net.connection) unit =>
 
@@ -78,7 +78,7 @@ module handle_connection (LM : mutate, conn net.connection) unit =>
 
     e error =>
       logger.log e
-      req_context.send (response.new 415 (map_of_strings [("Accept", "application/x-www-form-urlencode, multipart/form-data")]))
+      req_context.send (response.new 415 (map_of_strings [("Accept", "application/x-www-form-urlencoded, multipart/form-data")]))
 
 
 
