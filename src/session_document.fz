@@ -227,7 +227,7 @@ module session_document (module page String,
       |> replace_tag "browse" browse_tag
 
 
-  # page tag replacer, used to replace HTML this:
+  # page tag replacer, used to replace HTML like this:
   #
   # <page file="sqlite/index" />
   #
@@ -241,7 +241,7 @@ module session_document (module page String,
       |> page_link
 
 
-  # browse tag replacer, used to replace HTML this:
+  # browse tag replacer, used to replace HTML like this:
   #
   # <browse dir="../../link/clang/src/"/>
   #
@@ -482,7 +482,7 @@ module session_document (module page String,
     html.find "<!DOCTYPE html>" != nil && html.find "</html>" != nil
 
 
-  # check if the html structure correct than replace the iframe tag
+  # wrap HTML with a doctype and a closing </html> tag in an iframe
   #
   embed_html_in_iframe(html String) String =>
     match html.find "<!DOCTYPE html>"
@@ -629,7 +629,7 @@ module session_document (module page String,
   #
   read_toc_from_index_html =>
 
-    # NYI: CLEANUP: code is a ugly and inefficient
+    # NYI: CLEANUP: code is ugly and inefficient
 
     match global.env.read_file_as_string <| data_path.or_panic.parent.or_panic.resolve "index.html"
       s String =>

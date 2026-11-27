@@ -22,7 +22,7 @@ html_response(returncode i64, datastr String) =>
 
 
 # send an HTTP 200 response with the given data if there is a session,
-# and data can be send back over the session, otherwise, return a 500
+# and data can be sent back over the session, otherwise, return a 500
 # response and ask the client to reload
 #
 module send_ok_or_reload (s Session, datastr String) response =>

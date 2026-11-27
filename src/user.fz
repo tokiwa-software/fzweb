@@ -30,7 +30,7 @@ module user (module base_dir io.path) is
       false
 
 
-  # log a message to this users' log file
+  # log a message to this user's log file
   #
   module log (s String) =>
     logger.log log_path s
@@ -160,7 +160,7 @@ module user (module base_dir io.path) is
       !u.has_registration_token && u.verify_login username password
 
 
-  # get user by loginname or email
+  # get user by login name or email
   #
   module type.get (login_or_email String) =>
     get_user u->
@@ -190,7 +190,7 @@ module user (module base_dir io.path) is
     user (users_dir.resolve no_user)
 
 
-  # register a using the data submitted by the form
+  # register a user using the data submitted by the form
   #
   module type.register (client net.ip_address, form_data container.Map String String) outcome String =>
     full_name (first, last, email String) =>
@@ -273,7 +273,7 @@ module user (module base_dir io.path) is
 
   # create and store user information on the file system
   #
-  type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, pazzword String, terms, newsletter bool, date String) outcome String =>
+  type.create_user_txt (first_name, last_name, full_name, affiliation, username, email, password String, terms, newsletter bool, date String) outcome String =>
     user_dir := user.users_dir.resolve username
     user_text := user_dir.resolve user.user_file
     if io.file.exists user_text
@@ -294,7 +294,7 @@ module user (module base_dir io.path) is
       match make_if_exists
         e error => e
         unit =>
-          match crypto.password_hash pazzword
+          match crypto.password_hash password
             e error => e
             hash String =>
               token := generate_uuid

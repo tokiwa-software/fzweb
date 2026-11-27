@@ -6,7 +6,7 @@
 #
 # -----------------------------------------------------------------------
 
-# extract mime values from a given part of formdata
+# extract MIME values from a given part of form data
 #
 extract_mime_values(part String) =>
   part_lines := part.split "\r\n" .as_array_backed

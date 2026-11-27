@@ -4,7 +4,7 @@
 #
 #  Source code of tools.mk
 #
-#  collections of tools to ease development of fzweb
+#  collection of tools to ease development of fzweb
 #
 # -----------------------------------------------------------------------
 

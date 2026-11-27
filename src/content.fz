@@ -51,7 +51,7 @@ module content is
     start < end ? sp.subpath start end : io.path.of ""
 
 
-  # look the given attribute in the access.txt file
+  # look up the given attribute in the access.txt file
   # for simple_path
   #
   type.access_attr (simple_path, attribute, default String) String =>
@@ -78,7 +78,7 @@ module content is
   # Check if the given path points to a directory that contains an index.html
   # file that contains a <browse> tag to browse a directory
   #
-  # returns a Map of <browse>-tags attributes and its values.
+  # returns a Map of the <browse> tag's attributes and their values.
   #
   type.parse_browse_tag (jndex io.path) option (container.Map String String) =>
     read_file_as_string jndex

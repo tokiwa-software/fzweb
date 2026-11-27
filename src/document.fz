@@ -22,7 +22,7 @@ module document is
       page
 
 
-  # added the html extension to the page filename
+  # add the HTML extension to the page filename
   #
   module add_html(page String) String =>
     if !content.is_known_preformatted_file page

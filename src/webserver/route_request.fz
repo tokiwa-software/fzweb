@@ -56,7 +56,7 @@ confirm_account_deletion(s Session, query String) =>
 
 # handle goto events
 #
-# sends data via the /event connection
+# sends data via the /events connection
 #
 goto(s Session, form_data container.Map String String) =>
   match form_data["page"]
