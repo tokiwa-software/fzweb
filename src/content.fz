@@ -80,8 +80,8 @@ module content is
   #
   # returns a Map of the <browse> tag's attributes and their values.
   #
-  type.parse_browse_tag (index_path io.path) option (container.Map String String) =>
-    read_file_as_string index_path
+  type.parse_browse_tag (jndex io.path) option (container.Map String String) =>
+    read_file_as_string jndex
       .bind str->
         for
           l in str.split "\n"
